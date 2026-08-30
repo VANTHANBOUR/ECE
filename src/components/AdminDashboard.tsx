@@ -500,18 +500,18 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                           <select
                             value={user.assignedClassId || ''}
                             onChange={(e) => {
-                              const found = classrooms.find(c => c.id === e.target.value);
                               updateAccount(user.id, {
                                 assignedClassId: e.target.value,
-                                assignedClassName: found?.name,
-                                ageGroup: found?.ageGroup,
+                                assignedClassName: e.target.value,
+                                ageGroup: e.target.value,
                               });
                             }}
                             className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600"
                           >
-                            {classrooms.map(c => (
-                              <option key={c.id} value={c.id}>{c.name} ({c.room})</option>
-                            ))}
+                            <option value="Toddlers">Toddlers</option>
+                            <option value="Nursery">Nursery</option>
+                            <option value="Pre-School">Pre-School</option>
+                            <option value="Kindergarten">Kindergarten</option>
                           </select>
                         ) : (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold">

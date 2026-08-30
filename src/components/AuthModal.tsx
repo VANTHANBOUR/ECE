@@ -50,7 +50,7 @@ export const AuthModal: React.FC = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('teacher');
   const [title, setTitle] = useState('');
-  const [assignedClassId, setAssignedClassId] = useState('cls_butterflies');
+  const [assignedClassId, setAssignedClassId] = useState('Toddlers');
 
   if (!isAuthModalOpen) return null;
 
@@ -75,7 +75,6 @@ export const AuthModal: React.FC = () => {
       return;
     }
 
-    const selectedClass = classrooms.find(c => c.id === assignedClassId);
     setIsLoading(true);
 
     try {
@@ -87,8 +86,8 @@ export const AuthModal: React.FC = () => {
         role,
         title: title.trim() || (role === 'admin' ? 'School Administrator' : role === 'academic_officer' ? 'Academic Review Officer' : 'Early Childhood Lead Educator'),
         assignedClassId: role === 'teacher' ? assignedClassId : undefined,
-        assignedClassName: role === 'teacher' ? selectedClass?.name : undefined,
-        ageGroup: role === 'teacher' ? selectedClass?.ageGroup : undefined,
+        assignedClassName: role === 'teacher' ? assignedClassId : undefined,
+        ageGroup: role === 'teacher' ? assignedClassId : undefined,
       });
     } finally {
       setIsLoading(false);
@@ -477,11 +476,10 @@ export const AuthModal: React.FC = () => {
                     onChange={(e) => setAssignedClassId(e.target.value)}
                     className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
                   >
-                    {classrooms.map(cls => (
-                      <option key={cls.id} value={cls.id}>
-                        {cls.name} ({cls.ageGroup}) - {cls.room}
-                      </option>
-                    ))}
+                    <option value="Toddlers">Toddlers</option>
+                    <option value="Nursery">Nursery</option>
+                    <option value="Pre-School">Pre-School</option>
+                    <option value="Kindergarten">Kindergarten</option>
                   </select>
                 </div>
               )}
