@@ -70,8 +70,8 @@ export const CampusTabsBar: React.FC<CampusTabsBarProps> = ({
   }
 
   return (
-    <div className={`w-full overflow-x-auto no-scrollbar py-1 ${className}`}>
-      <div className="flex items-center gap-1.5 min-w-max bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs">
+    <div className={`w-full overflow-x-auto no-scrollbar py-1 flex justify-center ${className}`}>
+      <div className="flex items-center justify-center gap-1.5 min-w-max bg-slate-100/90 p-1.5 rounded-2xl border border-slate-200/90 shadow-2xs">
         {visibleCampuses.map((campus) => {
           const isSelected = selectedCampusId === campus.id;
           return (
