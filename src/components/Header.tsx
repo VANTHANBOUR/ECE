@@ -393,20 +393,18 @@ export const Header: React.FC<HeaderProps> = ({
       </div>
 
       {/* Sub-strip Campus Tabs Bar */}
-      {currentUser.role !== 'teacher' && (
-        <div className="bg-slate-50/90 border-t border-slate-200/80 px-3 sm:px-6 lg:px-8 py-1.5 flex items-center justify-between gap-3">
-          <div className="flex items-center gap-2 text-xs text-slate-500 font-bold shrink-0 hidden sm:flex">
-            <Building2 className="w-3.5 h-3.5 text-emerald-600" />
-            <span>Campus Tab:</span>
-          </div>
-          <CampusTabsBar 
-            selectedCampusId={selectedCampusId}
-            onSelectCampus={setSelectedCampusId}
-            variant="tabs"
-            className="flex-1"
-          />
+      <div className="bg-slate-50/90 border-t border-slate-200/80 px-3 sm:px-6 lg:px-8 py-1.5 flex flex-wrap items-center justify-center gap-x-4 gap-y-1">
+        <div className="flex items-center gap-1.5 text-xs text-slate-500 font-bold shrink-0">
+          <Building2 className="w-3.5 h-3.5 text-emerald-600" />
+          <span>Campus Tab:</span>
         </div>
-      )}
+        <CampusTabsBar 
+          selectedCampusId={selectedCampusId}
+          onSelectCampus={setSelectedCampusId}
+          variant="tabs"
+          className="w-auto"
+        />
+      </div>
 
       {/* Mobile Drawer / Navigation */}
       {isMobileMenuOpen && (
