@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { BrandLogo, DCHShield, DIShield } from './BrandLogo';
+import { BrandLogo, DCHShield, DIShield, DKShield } from './BrandLogo';
 import { UserRole, CampusId, CAMPUS_LIST } from '../types';
 import { CampusTabsBar } from './CampusTabsBar';
 import { 
@@ -237,7 +237,13 @@ export const AuthGate: React.FC = () => {
               <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-[#006838] p-5 sm:p-6 text-white space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
-                    {activeCampus.id === 'ALL' ? <DIShield size={36} /> : <DCHShield size={36} />}
+                    {activeCampus.id === 'ALL' ? (
+                      <DIShield size={36} />
+                    ) : activeCampus.brand === 'DK' ? (
+                      <DKShield size={36} />
+                    ) : (
+                      <DCHShield size={36} />
+                    )}
                     <div>
                       <div className="flex items-center gap-2">
                         <span className="font-extrabold text-base text-white font-['Outfit']">

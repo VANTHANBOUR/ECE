@@ -1,6 +1,7 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
 import { INITIAL_SCHOOL_PROFILE } from '../data/mockData';
+import { CAMPUS_LIST } from '../types';
 
 export interface BrandLogoProps {
   variant?: 'full-letterhead' | 'header' | 'compact' | 'shield-only' | 'monochrome';
@@ -250,13 +251,61 @@ export const DCHShield: React.FC<{ size?: number; className?: string }> = ({ siz
   );
 };
 
+export const DKShield: React.FC<{ size?: number; className?: string }> = ({ size = 48, className = '' }) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 500 500"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 select-none ${className}`}
+      aria-label="Dewey Kindergarten (DK) Official Logo"
+    >
+      {/* Clear circular or rounded layout container */}
+      <circle cx="250" cy="250" r="235" fill="#FFFFFF" stroke="#008242" strokeWidth="6" />
+
+      {/* "DK" Text Centered with premium Serif style */}
+      <text
+        x="250"
+        y="255"
+        fill="#008242"
+        fontFamily="'Times New Roman', 'Baskerville', 'Georgia', serif"
+        fontSize="195"
+        fontWeight="bold"
+        textAnchor="middle"
+        letterSpacing="-5"
+      >
+        DK
+      </text>
+
+      {/* Dual Open-Book Wings (Orange and Green) underneath the letters "DK" */}
+      {/* 1. Orange Top Wing Ribbon */}
+      <path
+        d="M 70,360 C 130,390 190,400 250,420 C 310,400 370,390 430,360 C 370,410 310,420 250,430 C 190,420 130,410 70,360 Z"
+        fill="#F58220"
+      />
+
+      {/* 2. Green Bottom Wing Ribbon */}
+      <path
+        d="M 70,380 C 130,410 190,420 250,440 C 310,420 370,410 430,380 C 370,430 310,440 250,450 C 190,440 130,430 70,380 Z"
+        fill="#008242"
+      />
+    </svg>
+  );
+};
+
 export const SchoolLogoIcon: React.FC<{
   size?: number;
   className?: string;
   customLogoUrl?: string | null;
   forceDefaultShield?: boolean;
-}> = ({ size = 48, className = '', customLogoUrl, forceDefaultShield = false }) => {
-  const { schoolProfile } = useAppSafe();
+  brand?: 'DCH' | 'DK' | 'CENTRAL';
+}> = ({ size = 48, className = '', customLogoUrl, forceDefaultShield = false, brand }) => {
+  const appState = useAppSafe();
+  const schoolProfile = appState?.schoolProfile;
+  const selectedCampusId = appState && 'selectedCampusId' in appState ? appState.selectedCampusId : null;
+  
   const effectiveLogoUrl = forceDefaultShield 
     ? null 
     : (customLogoUrl !== undefined ? customLogoUrl : schoolProfile?.customLogoUrl);
@@ -286,6 +335,16 @@ export const SchoolLogoIcon: React.FC<{
     );
   }
 
+  // Determine which shield to show
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const effectiveBrand = brand || activeCampus?.brand || 'DCH';
+
+  if (effectiveBrand === 'CENTRAL') {
+    return <DIShield size={size} className={className} />;
+  }
+  if (effectiveBrand === 'DK') {
+    return <DKShield size={size} className={className} />;
+  }
   return <DCHShield size={size} className={className} />;
 };
 
