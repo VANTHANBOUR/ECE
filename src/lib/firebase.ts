@@ -41,12 +41,12 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Initialize Firestore with ignoreUndefinedProperties & experimentalAutoDetectLongPolling to ensure resilient connection in iframe/proxy environments
+// Initialize Firestore with ignoreUndefinedProperties & experimentalForceLongPolling to ensure resilient connection in iframe/proxy environments
 export const db: Firestore = (() => {
   try {
     return initializeFirestore(app, {
       ignoreUndefinedProperties: true,
-      experimentalAutoDetectLongPolling: true
+      experimentalForceLongPolling: true
     }, (firebaseConfig as any).firestoreDatabaseId);
   } catch {
     return getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
