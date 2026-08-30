@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { BrandLogo, DCHShield } from './BrandLogo';
-import { UserRole, EarlyChildhoodAgeGroup } from '../types';
+import { UserRole, EarlyChildhoodAgeGroup, CampusId, CAMPUS_LIST } from '../types';
 import { 
   X, 
   Mail, 
@@ -51,6 +51,7 @@ export const AuthModal: React.FC = () => {
   const [role, setRole] = useState<UserRole>('teacher');
   const [title, setTitle] = useState('');
   const [assignedClassId, setAssignedClassId] = useState('Toddlers');
+  const [signUpCampusId, setSignUpCampusId] = useState<CampusId>('DCH_SYW');
 
   if (!isAuthModalOpen) return null;
 
@@ -85,6 +86,9 @@ export const AuthModal: React.FC = () => {
         password: password || 'password123',
         role,
         title: title.trim() || (role === 'admin' ? 'School Administrator' : role === 'academic_officer' ? 'Academic Review Officer' : 'Early Childhood Lead Educator'),
+        campusId: signUpCampusId,
+        campusName: CAMPUS_LIST.find(c => c.id === signUpCampusId)?.shortName,
+        registeredCampusIds: [signUpCampusId],
         assignedClassId: role === 'teacher' ? assignedClassId : undefined,
         assignedClassName: role === 'teacher' ? assignedClassId : undefined,
         ageGroup: role === 'teacher' ? assignedClassId : undefined,
@@ -465,22 +469,39 @@ export const AuthModal: React.FC = () => {
                 </div>
               </div>
 
-              {/* Classroom Assignment if Teacher */}
+              {/* Campus & Classroom Assignment if Teacher */}
               {role === 'teacher' && (
-                <div className="space-y-1 p-3 bg-slate-50 rounded-xl border border-slate-200">
-                  <label className="text-xs font-bold text-slate-700 block">
-                    Assigned Kindergarten Classroom & Level
-                  </label>
-                  <select
-                    value={assignedClassId}
-                    onChange={(e) => setAssignedClassId(e.target.value)}
-                    className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
-                  >
-                    <option value="Toddlers">Toddlers</option>
-                    <option value="Nursery">Nursery</option>
-                    <option value="Pre-School">Pre-School</option>
-                    <option value="Kindergarten">Kindergarten</option>
-                  </select>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Primary Registered Campus
+                    </label>
+                    <select
+                      value={signUpCampusId}
+                      onChange={(e) => setSignUpCampusId(e.target.value as CampusId)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
+                    >
+                      {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
+                        <option key={c.id} value={c.id}>{c.shortName} ({c.brand})</option>
+                      ))}
+                    </select>
+                  </div>
+
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-slate-700 block">
+                      Assigned Level / Classroom
+                    </label>
+                    <select
+                      value={assignedClassId}
+                      onChange={(e) => setAssignedClassId(e.target.value)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
+                    >
+                      <option value="Toddlers">Toddlers</option>
+                      <option value="Nursery">Nursery</option>
+                      <option value="Pre-School">Pre-School</option>
+                      <option value="Kindergarten">Kindergarten</option>
+                    </select>
+                  </div>
                 </div>
               )}
 

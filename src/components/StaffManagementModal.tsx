@@ -152,6 +152,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
       role,
       title: title.trim(),
       campusId,
+      registeredCampusIds: Array.from(new Set([...(user.registeredCampusIds || []), campusId])) as CampusId[],
       assignedClassId: role === 'teacher' ? assignedClassId : undefined,
       assignedClassName: role === 'teacher' ? assignedClassId : undefined,
       ageGroup: role === 'teacher' ? assignedClassId : undefined,

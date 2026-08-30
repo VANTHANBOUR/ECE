@@ -144,6 +144,7 @@ export interface UserAccount {
   title: string;
   campusId?: CampusId;
   campusName?: string;
+  registeredCampusIds?: CampusId[];
   assignedClassId?: string;
   assignedClassName?: string;
   ageGroup?: EarlyChildhoodAgeGroup;

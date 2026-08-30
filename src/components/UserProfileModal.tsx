@@ -1,6 +1,6 @@
 import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
-import { UserAccount } from '../types';
+import { UserAccount, CampusId, CAMPUS_LIST } from '../types';
 import { 
   X, 
   Camera, 
@@ -13,7 +13,9 @@ import {
   FileText, 
   Globe,
   CheckCircle2,
-  AlertCircle
+  AlertCircle,
+  School,
+  Building2
 } from 'lucide-react';
 
 interface UserProfileModalProps {
@@ -48,6 +50,7 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) =
   const [phone, setPhone] = useState(currentUser.phone || '');
   const [roomNumber, setRoomNumber] = useState(currentUser.roomNumber || '');
   const [bio, setBio] = useState(currentUser.bio || '');
+  const [campusId, setCampusId] = useState<CampusId>(currentUser.campusId || 'DCH_SYW');
   
   // Avatar Editing State
   const [avatar, setAvatar] = useState(currentUser.avatar || '');
@@ -144,6 +147,9 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) =
       return;
     }
 
+    const currentRegistered = currentUser.registeredCampusIds || (currentUser.campusId ? [currentUser.campusId] : ['DCH_SYW']);
+    const updatedRegistered = Array.from(new Set([...currentRegistered, campusId])) as CampusId[];
+
     const updates: Partial<UserAccount> = {
       name: name.trim(),
       khmerName: khmerName.trim(),
@@ -151,7 +157,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) =
       phone: phone.trim(),
       roomNumber: roomNumber.trim(),
       bio: bio.trim(),
-      avatar: avatar
+      avatar: avatar,
+      campusId: campusId,
+      campusName: CAMPUS_LIST.find(c => c.id === campusId)?.shortName,
+      registeredCampusIds: updatedRegistered
     };
 
     updateAccount(currentUser.id, updates);
@@ -386,7 +395,24 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) =
               />
             </div>
 
-            {/* Job Title */}
+            {/* Primary Registered Campus */}
+            <div className="space-y-1.5">
+              <label className="text-xs font-black text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
+                <School className="w-3.5 h-3.5 text-[#007A43]" />
+                <span>Primary Campus Assignment</span>
+              </label>
+              <select
+                value={campusId}
+                onChange={(e) => setCampusId(e.target.value as CampusId)}
+                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 focus:bg-white focus:outline-emerald-600 font-bold"
+              >
+                {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
+                  <option key={c.id} value={c.id}>{c.shortName} - {c.location}</option>
+                ))}
+              </select>
+            </div>
+
+            {/* Professional Title / Role */}
             <div className="space-y-1.5">
               <label className="text-xs font-black text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
                 <Briefcase className="w-3.5 h-3.5 text-[#007A43]" />
