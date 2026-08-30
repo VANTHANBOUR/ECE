@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { BrandLogo, DCHShield } from './BrandLogo';
+import { BrandLogo, DCHShield, DIShield } from './BrandLogo';
 import { UserRole, CampusId, CAMPUS_LIST } from '../types';
 import { CampusTabsBar } from './CampusTabsBar';
 import { 
@@ -127,7 +127,7 @@ export const AuthGate: React.FC = () => {
       <header className="border-b border-white/10 bg-black/40 backdrop-blur-md sticky top-0 z-30">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3.5">
-            <DCHShield size={44} />
+            <DIShield size={44} />
             <div className="flex flex-col">
               <span className="text-base sm:text-lg font-bold text-emerald-400 font-['Battambang',sans-serif] tracking-tight leading-tight">
                 ការិយាល័យកណ្តាលអប់រំកុមារតូច ឌូអី
