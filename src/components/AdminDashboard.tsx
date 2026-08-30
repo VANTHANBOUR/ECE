@@ -62,7 +62,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     addLevel,
     updateLevel,
     deleteLevel,
-    selectedCampusId
+    selectedCampusId,
+    formatAgeGroup
   } = useApp();
 
   // Filters
@@ -223,7 +224,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
               School-Wide Lesson Plan Oversight Hub
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl">
-              Confidential administrative portal. Review early childhood weekly lesson plans across all grade levels (Toddlers to K2), trilingual curricula, sensory stations, and provide feedback.
+              Confidential administrative portal. Review early childhood weekly lesson plans across all grade levels ({formatAgeGroup('Toddlers')} to K2), trilingual curricula, sensory stations, and provide feedback.
             </p>
           </div>
 
@@ -508,7 +509,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                             }}
                             className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600"
                           >
-                            <option value="Toddlers">Toddlers</option>
+                            <option value="Toddlers">{formatAgeGroup('Toddlers', user.campusId)}</option>
                             <option value="Nursery">Nursery</option>
                             <option value="Pre-School">Pre-School</option>
                             <option value="Kindergarten">Kindergarten</option>
@@ -748,7 +749,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                   className="w-full px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800"
                 >
                   <option value="all">All Levels</option>
-                  <option value="Toddlers">Toddlers</option>
+                  <option value="Toddlers">{formatAgeGroup('Toddlers')}</option>
                   <option value="Nursery">Nursery</option>
                   <option value="Pre-School">Pre-School</option>
                   <option value="Kindergarten">Kindergarten</option>

@@ -595,7 +595,7 @@ export const AuthGate: React.FC = () => {
                             onChange={(e) => setAssignedClassId(e.target.value)}
                             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
                           >
-                            <option value="Toddlers">Toddlers</option>
+                            <option value="Toddlers">{activeCampus.brand === 'DK' ? 'Toddlers' : 'Pre-Nursery'}</option>
                             <option value="Nursery">Nursery</option>
                             <option value="Pre-School">Pre-School</option>
                             <option value="Kindergarten">Kindergarten</option>

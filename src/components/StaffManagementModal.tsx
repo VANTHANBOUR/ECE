@@ -57,7 +57,8 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
     deleteAccount, 
     classrooms, 
     lessonPlans,
-    showToast 
+    showToast,
+    formatAgeGroup
   } = useApp();
 
   if (!user) return null;
@@ -469,7 +470,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                         onChange={(e) => setAssignedClassId(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
                       >
-                        <option value="Toddlers">Toddlers</option>
+                        <option value="Toddlers">{formatAgeGroup('Toddlers', user.campusId)}</option>
                         <option value="Nursery">Nursery</option>
                         <option value="Pre-School">Pre-School</option>
                         <option value="Kindergarten">Kindergarten</option>

@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { Classroom, LessonPlan, PlanAttachment, SchoolProfile, SystemAuditLog, UserAccount, UserRole, WeeklyComplianceRecord, SchoolLevel, CampusId, CAMPUS_LIST } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_AUDIT_LOGS, INITIAL_CLASSROOMS, INITIAL_LESSON_PLANS, INITIAL_SCHOOL_PROFILE } from '../data/mockData';
 import { 
@@ -121,6 +121,7 @@ interface AppContextType {
   setActiveTab: (tab: NavigationTab) => void;
   selectedCampusId: CampusId;
   setSelectedCampusId: (campusId: CampusId) => void;
+  formatAgeGroup: (group: string, campusId?: CampusId) => string;
 
   // School Profile & Branding
   schoolProfile: SchoolProfile;
@@ -318,6 +319,38 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       localStorage.setItem(STORAGE_KEYS.SELECTED_CAMPUS, campusId);
     } catch {}
   };
+
+  const formatAgeGroup = useCallback((group: string, campusId?: CampusId) => {
+    if (!group) return '';
+    const targetCampusId = campusId || selectedCampusId;
+    const activeCampus = CAMPUS_LIST.find((c) => c.id === targetCampusId);
+    const isDCH = activeCampus ? activeCampus.brand === 'DCH' : true;
+    if (isDCH) {
+      return group
+        .replace(/Toddlers/gi, 'Pre-Nursery')
+        .replace(/Toddler/gi, 'Pre-Nursery')
+        .replace(/Pre-nursery/g, 'Pre-Nursery');
+    }
+    return group;
+  }, [selectedCampusId]);
+
+  const processedLevels = useMemo(() => {
+    const activeCampus = CAMPUS_LIST.find((c) => c.id === selectedCampusId);
+    const isDCH = activeCampus ? activeCampus.brand === 'DCH' : true;
+    if (isDCH) {
+      return levels.map((lvl) => {
+        if (lvl.name === 'Toddlers' || lvl.name === 'Toddler' || lvl.name === 'Pre-nursery' || lvl.name === 'Pre-Nursery') {
+          return {
+            ...lvl,
+            name: 'Pre-Nursery',
+            displayName: lvl.displayName.replace(/Toddlers/gi, 'Pre-Nursery').replace(/Toddler/gi, 'Pre-Nursery').replace(/Pre-nursery/g, 'Pre-Nursery'),
+          };
+        }
+        return lvl;
+      });
+    }
+    return levels;
+  }, [levels, selectedCampusId]);
 
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
   
@@ -1577,7 +1610,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addClassroom,
         updateClassroom,
         deleteClassroom,
-        levels,
+        levels: processedLevels,
         addLevel,
         updateLevel,
         deleteLevel,
@@ -1590,6 +1623,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setActiveTab,
         selectedCampusId,
         setSelectedCampusId,
+        formatAgeGroup,
         schoolProfile,
         updateSchoolProfile,
         uploadCustomLogo,

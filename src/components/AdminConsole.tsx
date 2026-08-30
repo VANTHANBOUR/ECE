@@ -57,7 +57,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
     auditLogs,
     showToast,
     openSignUpModal,
-    schoolProfile
+    schoolProfile,
+    formatAgeGroup
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<'users' | 'plans' | 'classrooms' | 'logs' | 'profile'>('users');
@@ -454,7 +455,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                           }}
                           className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600"
                         >
-                          <option value="Toddlers">Toddlers</option>
+                          <option value="Toddlers">{formatAgeGroup('Toddlers', user.campusId)}</option>
                           <option value="Nursery">Nursery</option>
                           <option value="Pre-School">Pre-School</option>
                           <option value="Kindergarten">Kindergarten</option>

@@ -35,7 +35,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onSelectPlan,
   onEditPlan,
 }) => {
-  const { currentUser, userLessonPlans, submitLessonPlan, classrooms, showToast } = useApp();
+  const { currentUser, userLessonPlans, submitLessonPlan, classrooms, showToast, formatAgeGroup } = useApp();
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -132,7 +132,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
               <p className="text-xs sm:text-sm text-emerald-100 font-medium flex items-center gap-2">
                 <School className="w-4 h-4 text-amber-300" />
                 <span>
-                  {currentUser.assignedClassName || myClass.name} · {currentUser.ageGroup || myClass.ageGroup} · {currentUser.roomNumber || myClass.room}
+                  {currentUser.assignedClassName || myClass.name} · {formatAgeGroup(currentUser.ageGroup || myClass.ageGroup, currentUser.campusId || myClass.campusId)} · {currentUser.roomNumber || myClass.room}
                 </span>
               </p>
             </div>
@@ -330,7 +330,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                   {/* Badges row */}
                   <div className="flex flex-wrap items-center gap-2 pt-1 text-[11px] text-slate-500">
                     <span className="font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded">
-                      {plan.className} ({plan.ageGroup})
+                      {plan.className} ({formatAgeGroup(plan.ageGroup, plan.campusId)})
                     </span>
                     {plan.attachments && plan.attachments.length > 0 && (
                       <span className="flex items-center gap-1 text-slate-600 bg-slate-100 px-2 py-0.5 rounded">

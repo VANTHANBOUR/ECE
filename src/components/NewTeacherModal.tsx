@@ -8,7 +8,7 @@ interface NewTeacherModalProps {
 }
 
 export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => {
-  const { registerTeacher, classrooms, showToast } = useApp();
+  const { registerTeacher, classrooms, showToast, formatAgeGroup } = useApp();
 
   const [name, setName] = useState('');
   const [khmerName, setKhmerName] = useState('');
@@ -155,7 +155,7 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
                 onChange={(e) => setAssignedLevel(e.target.value as EarlyChildhoodAgeGroup)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-emerald-600"
               >
-                <option value="Toddlers">Toddlers</option>
+                <option value="Toddlers">{formatAgeGroup('Toddlers')}</option>
                 <option value="Nursery">Nursery</option>
                 <option value="Pre-School">Pre-School</option>
                 <option value="Kindergarten">Kindergarten</option>

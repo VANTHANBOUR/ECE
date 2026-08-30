@@ -21,7 +21,7 @@ interface ClassroomDirectoryProps {
 }
 
 export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelectPlan }) => {
-  const { classrooms, allAccounts, lessonPlans, currentUser, deleteClassroom, selectedCampusId } = useApp();
+  const { classrooms, allAccounts, lessonPlans, currentUser, deleteClassroom, selectedCampusId, formatAgeGroup } = useApp();
   const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
   const [selectedClassroomToEdit, setSelectedClassroomToEdit] = useState<Classroom | null>(null);
 
@@ -58,7 +58,7 @@ export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelect
               Dewey Childcare House Classrooms & Age Groups
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              Trilingual progressive learning environments from Toddlers (1.5 yrs) up to Kindergarten (6.5 yrs).
+              Trilingual progressive learning environments from {formatAgeGroup('Toddlers')} (1.5 yrs) up to Kindergarten (6.5 yrs).
             </p>
           </div>
 
@@ -151,7 +151,7 @@ export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelect
                       {cls.khmerName}
                     </p>
                     <p className="text-xs text-slate-500 font-medium mt-1">
-                      {cls.ageGroup} · {cls.room}
+                      {formatAgeGroup(cls.ageGroup, cls.campusId)} · {cls.room}
                     </p>
                   </div>
 
