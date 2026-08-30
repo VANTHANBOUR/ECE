@@ -1,0 +1,6 @@
+{
+  "name": "Dewey Childcare House - Early Childhood School Management & Lesson Plan System",
+  "description": "Comprehensive Early Childhood School Management System for Dewey Childcare House (DCH) International Trilingual Kindergarten. Features teacher account lesson plan submissions, curriculum domains, and administrator submission oversight.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

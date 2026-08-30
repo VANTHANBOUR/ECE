@@ -1,0 +1,100 @@
+{
+  "entities": {
+    "User": {
+      "title": "User Account",
+      "description": "User profile with role-based permissions (admin, academic_officer, teacher)",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "name": { "type": "string", "maxLength": 150 },
+        "khmerName": { "type": "string", "maxLength": 150 },
+        "email": { "type": "string", "maxLength": 150 },
+        "role": { "type": "string", "enum": ["admin", "academic_officer", "teacher"] },
+        "title": { "type": "string", "maxLength": 150 },
+        "avatar": { "type": "string", "maxLength": 500 },
+        "assignedClassId": { "type": "string", "maxLength": 100 },
+        "assignedClassName": { "type": "string", "maxLength": 100 },
+        "ageGroup": { "type": "string", "maxLength": 50 },
+        "status": { "type": "string", "enum": ["active", "pending", "suspended"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "name", "email", "role", "title"]
+    },
+    "LessonPlan": {
+      "title": "Lesson Plan",
+      "description": "Weekly trilingual early childhood lesson plan and activity matrix",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "classId": { "type": "string", "maxLength": 100 },
+        "className": { "type": "string", "maxLength": 100 },
+        "teacherId": { "type": "string", "maxLength": 128 },
+        "teacherName": { "type": "string", "maxLength": 150 },
+        "weekNumber": { "type": "number" },
+        "academicTerm": { "type": "string", "maxLength": 50 },
+        "academicYear": { "type": "string", "maxLength": 50 },
+        "startDate": { "type": "string", "maxLength": 50 },
+        "endDate": { "type": "string", "maxLength": 50 },
+        "themeTitle": { "type": "string", "maxLength": 200 },
+        "themeKhmer": { "type": "string", "maxLength": 200 },
+        "themeChinese": { "type": "string", "maxLength": 200 },
+        "status": { "type": "string", "enum": ["draft", "submitted", "reviewed", "approved", "rejected"] },
+        "createdAt": { "type": "string" },
+        "updatedAt": { "type": "string" }
+      },
+      "required": ["id", "classId", "teacherId", "weekNumber", "themeTitle", "status"]
+    },
+    "Classroom": {
+      "title": "Classroom",
+      "description": "Classroom room details and student capacity",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 100 },
+        "name": { "type": "string", "maxLength": 100 },
+        "khmerName": { "type": "string", "maxLength": 100 },
+        "ageGroup": { "type": "string", "maxLength": 50 },
+        "room": { "type": "string", "maxLength": 50 },
+        "capacity": { "type": "number" },
+        "enrolled": { "type": "number" },
+        "leadTeacherId": { "type": "string", "maxLength": 128 },
+        "leadTeacherName": { "type": "string", "maxLength": 150 }
+      },
+      "required": ["id", "name", "ageGroup"]
+    },
+    "SystemAuditLog": {
+      "title": "System Audit Log",
+      "description": "Security and academic audit logs for compliance tracking",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "maxLength": 128 },
+        "timestamp": { "type": "string" },
+        "actorId": { "type": "string", "maxLength": 128 },
+        "actorName": { "type": "string", "maxLength": 150 },
+        "actorRole": { "type": "string", "maxLength": 50 },
+        "action": { "type": "string", "maxLength": 100 },
+        "details": { "type": "string", "maxLength": 1000 },
+        "targetId": { "type": "string", "maxLength": 128 }
+      },
+      "required": ["id", "timestamp", "actorId", "actorName", "action", "details"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": {
+      "schema": { "$ref": "#/entities/User" },
+      "description": "User accounts and staff directory"
+    },
+    "/lessonPlans/{planId}": {
+      "schema": { "$ref": "#/entities/LessonPlan" },
+      "description": "Weekly trilingual lesson plans submitted by teachers and reviewed by academic officers"
+    },
+    "/classrooms/{classId}": {
+      "schema": { "$ref": "#/entities/Classroom" },
+      "description": "Kindergarten classroom levels and teacher allocations"
+    },
+    "/auditLogs/{logId}": {
+      "schema": { "$ref": "#/entities/SystemAuditLog" },
+      "description": "Academic and administrative event log entries"
+    }
+  }
+}
