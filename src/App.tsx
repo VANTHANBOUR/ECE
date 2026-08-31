@@ -127,6 +127,7 @@ const MainContent: React.FC = () => {
             />
           ) : (
             <TeacherDashboard
+              activeTab={activeTab}
               onOpenNewPlan={handleOpenNewPlan}
               onSelectPlan={handleSelectPlan}
               onEditPlan={handleEditPlan}

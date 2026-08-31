@@ -25,12 +25,14 @@ import {
 } from 'lucide-react';
 
 interface TeacherDashboardProps {
+  activeTab: string;
   onOpenNewPlan: () => void;
   onSelectPlan: (plan: LessonPlan) => void;
   onEditPlan: (plan: LessonPlan) => void;
 }
 
 export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
+  activeTab,
   onOpenNewPlan,
   onSelectPlan,
   onEditPlan,
@@ -183,71 +185,73 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
       )}
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <div 
-          onClick={() => setStatusFilter('all')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'all' ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-500/20' : 'bg-white border-slate-200/80 hover:border-emerald-200'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">My Total Plans</span>
-            <div className="p-2 bg-emerald-100/60 text-[#007A43] rounded-xl">
-              <BookOpen className="w-4 h-4" />
+      {activeTab === 'dashboard' && (
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+          <div 
+            onClick={() => setStatusFilter('all')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              statusFilter === 'all' ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-500/20' : 'bg-white border-slate-200/80 hover:border-emerald-200'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">My Total Plans</span>
+              <div className="p-2 bg-emerald-100/60 text-[#007A43] rounded-xl">
+                <BookOpen className="w-4 h-4" />
+              </div>
             </div>
+            <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{userLessonPlans.length}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Across Term 1</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{userLessonPlans.length}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Across Term 1</p>
-        </div>
 
-        <div 
-          onClick={() => setStatusFilter('approved')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'approved' ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-500/20' : 'bg-white border-slate-200/80 hover:border-emerald-200'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Approved</span>
-            <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
-              <CheckCircle2 className="w-4 h-4" />
+          <div 
+            onClick={() => setStatusFilter('approved')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              statusFilter === 'approved' ? 'bg-emerald-50/80 border-emerald-300 ring-2 ring-emerald-500/20' : 'bg-white border-slate-200/80 hover:border-emerald-200'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Approved</span>
+              <div className="p-2 bg-emerald-100 text-emerald-700 rounded-xl">
+                <CheckCircle2 className="w-4 h-4" />
+              </div>
             </div>
+            <p className="text-2xl sm:text-3xl font-black text-emerald-700 mt-2">{approvedCount}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Ready for classroom teaching</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-emerald-700 mt-2">{approvedCount}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Ready for classroom teaching</p>
-        </div>
 
-        <div 
-          onClick={() => setStatusFilter('submitted')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'submitted' ? 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-500/20' : 'bg-white border-slate-200/80 hover:border-blue-200'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Pending Review</span>
-            <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
-              <Clock className="w-4 h-4" />
+          <div 
+            onClick={() => setStatusFilter('submitted')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              statusFilter === 'submitted' ? 'bg-blue-50/80 border-blue-300 ring-2 ring-blue-500/20' : 'bg-white border-slate-200/80 hover:border-blue-200'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Pending Review</span>
+              <div className="p-2 bg-blue-100 text-blue-700 rounded-xl">
+                <Clock className="w-4 h-4" />
+              </div>
             </div>
+            <p className="text-2xl sm:text-3xl font-black text-blue-700 mt-2">{submittedCount}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Under Principal review</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-blue-700 mt-2">{submittedCount}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Under Principal review</p>
-        </div>
 
-        <div 
-          onClick={() => setStatusFilter('draft')}
-          className={`p-4 rounded-2xl border transition-all cursor-pointer ${
-            statusFilter === 'draft' ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/20' : 'bg-white border-slate-200/80 hover:border-amber-200'
-          }`}
-        >
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Drafts / In Progress</span>
-            <div className="p-2 bg-amber-100 text-amber-700 rounded-xl">
-              <Edit3 className="w-4 h-4" />
+          <div 
+            onClick={() => setStatusFilter('draft')}
+            className={`p-4 rounded-2xl border transition-all cursor-pointer ${
+              statusFilter === 'draft' ? 'bg-amber-50/80 border-amber-300 ring-2 ring-amber-500/20' : 'bg-white border-slate-200/80 hover:border-amber-200'
+            }`}
+          >
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold text-slate-500">Drafts / In Progress</span>
+              <div className="p-2 bg-amber-100 text-amber-700 rounded-xl">
+                <Edit3 className="w-4 h-4" />
+              </div>
             </div>
+            <p className="text-2xl sm:text-3xl font-black text-amber-700 mt-2">{draftCount}</p>
+            <p className="text-[10px] text-slate-400 mt-0.5">Need submission</p>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-amber-700 mt-2">{draftCount}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Need submission</p>
         </div>
-      </div>
+      )}
 
       {/* Lesson Plan Submissions List */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden">
