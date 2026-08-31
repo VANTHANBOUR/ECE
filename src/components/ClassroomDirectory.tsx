@@ -27,6 +27,10 @@ export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelect
 
   const isAdmin = currentUser?.role === 'admin';
 
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
+  const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : 'Dewey Childcare House';
+
   const displayedClassrooms = classrooms.filter(cls => {
     if (!selectedCampusId || selectedCampusId === 'ALL') return true;
     return cls.campusId === selectedCampusId;
@@ -55,10 +59,10 @@ export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelect
               <span>Early Childhood Learning Environments</span>
             </span>
             <h2 className="text-2xl font-black text-slate-900 font-['Outfit']">
-              Dewey Childcare House Classrooms & Age Groups
+              {institutionEnglish} Classrooms & Age Groups
             </h2>
             <p className="text-xs sm:text-sm text-slate-500">
-              Trilingual progressive learning environments from {formatAgeGroup('Toddlers')} (1.5 yrs) up to Kindergarten (6.5 yrs).
+              Trilingual progressive learning environments.
             </p>
           </div>
 
@@ -144,14 +148,11 @@ export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelect
                   </div>
 
                   <div>
-                    <h3 className="text-lg font-black text-slate-900 group-hover:text-[#007A43] transition-colors">
-                      {cls.name}
-                    </h3>
-                    <p className="text-xs font-bold text-emerald-800 font-['Battambang'] mt-0.5">
+                    <h3 className="text-lg font-black text-slate-900 group-hover:text-[#007A43] transition-colors font-['Battambang']">
                       {cls.khmerName}
-                    </p>
+                    </h3>
                     <p className="text-xs text-slate-500 font-medium mt-1">
-                      {formatAgeGroup(cls.ageGroup, cls.campusId)} · {cls.room}
+                      {cls.room}
                     </p>
                   </div>
 

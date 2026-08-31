@@ -343,7 +343,19 @@ export const SchoolLogoIcon: React.FC<{
     return <DIShield size={size} className={className} />;
   }
   if (effectiveBrand === 'DK') {
-    return <DKShield size={size} className={className} />;
+    return (
+      <div 
+        style={{ width: size, height: size * 0.4 }} 
+        className={`shrink-0 flex items-center justify-center ${className}`}
+      >
+        <img
+          src="/dk-logo-new.png"
+          alt="Dewey Kindergarten Logo"
+          className="w-full h-full object-contain"
+          referrerPolicy="no-referrer"
+        />
+      </div>
+    );
   }
   return <DCHShield size={size} className={className} />;
 };
@@ -361,13 +373,19 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   taglineEnglish,
   portalBadgeText,
 }) => {
-  const { schoolProfile } = useAppSafe();
+  const { schoolProfile, selectedCampusId } = useAppSafe();
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
 
-  const khmerTitle = schoolNameKhmer || schoolProfile?.schoolNameKhmer || INITIAL_SCHOOL_PROFILE.schoolNameKhmer;
-  const engTitle = schoolNameEnglish || schoolProfile?.schoolNameEnglish || INITIAL_SCHOOL_PROFILE.schoolNameEnglish;
+  const isDKCampus = activeCampus?.brand === 'DK';
+  const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolNameKhmer || schoolProfile?.schoolNameKhmer || INITIAL_SCHOOL_PROFILE.schoolNameKhmer);
+  const engTitle = isDKCampus ? 'DEWEY KINDERGARTEN' : (schoolNameEnglish || schoolProfile?.schoolNameEnglish || INITIAL_SCHOOL_PROFILE.schoolNameEnglish);
+  
+  // Determine if we should override branding
+  const displayBrand = isDKCampus ? 'DK' : undefined;
+
   const khmerSub = taglineKhmer || schoolProfile?.taglineKhmer || INITIAL_SCHOOL_PROFILE.taglineKhmer;
   const engSub = taglineEnglish || schoolProfile?.taglineEnglish || INITIAL_SCHOOL_PROFILE.taglineEnglish;
-  const badgeLabel = portalBadgeText || schoolProfile?.portalBadgeText || INITIAL_SCHOOL_PROFILE.portalBadgeText;
+  const badgeLabel = isDKCampus ? 'DK Portal' : (portalBadgeText || schoolProfile?.portalBadgeText || INITIAL_SCHOOL_PROFILE.portalBadgeText);
 
   if (variant === 'shield-only') {
     const shieldSize = size === 'sm' ? 32 : size === 'md' ? 44 : size === 'lg' ? 60 : size === 'xl' ? 76 : 96;
@@ -376,7 +394,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
         size={shieldSize} 
         className={className} 
         customLogoUrl={customLogoUrl} 
-        forceDefaultShield={forceDefaultShield} 
+        forceDefaultShield={forceDefaultShield}
+        brand={displayBrand}
       />
     );
   }
@@ -390,6 +409,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
             className="shrink-0" 
             customLogoUrl={customLogoUrl} 
             forceDefaultShield={forceDefaultShield} 
+            brand={displayBrand}
           />
           <div className="flex flex-col text-left justify-center">
             <h1 className="text-2xl sm:text-3xl font-extrabold text-[#008242] font-['Battambang',sans-serif] tracking-wide leading-tight">
@@ -424,6 +444,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
           size={36} 
           customLogoUrl={customLogoUrl} 
           forceDefaultShield={forceDefaultShield} 
+          brand={displayBrand}
         />
         <div className="flex flex-col leading-tight">
           <span className="text-xs font-bold text-[#008242] font-['Battambang',sans-serif]">{khmerTitle}</span>
@@ -442,7 +463,8 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
       <SchoolLogoIcon 
         size={shieldSize} 
         customLogoUrl={customLogoUrl} 
-        forceDefaultShield={forceDefaultShield} 
+        forceDefaultShield={forceDefaultShield}
+        brand={displayBrand}
       />
       <div className="flex flex-col justify-center">
         <div className="flex items-baseline gap-2">

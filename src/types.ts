@@ -1,11 +1,10 @@
 export type UserRole = 'admin' | 'academic_officer' | 'teacher';
 
-export type EarlyChildhoodAgeGroup = 'Toddlers' | 'Nursery' | 'Pre-School' | 'Kindergarten';
+export type EarlyChildhoodAgeGroup = 'Pre-Nursery' | 'Nursery' | 'Pre-School' | 'Kindergarten';
 
 export interface SchoolLevel {
   id: string;
   name: string;
-  ageRange: string;
   displayName: string;
   khmerName?: string;
   description?: string;
@@ -161,7 +160,7 @@ export interface SystemAuditLog {
   actorId: string;
   actorName: string;
   actorRole: UserRole;
-  action: 'CREATE_PLAN' | 'UPDATE_PLAN' | 'SUBMIT_PLAN' | 'APPROVE_PLAN' | 'REVISE_PLAN' | 'DELETE_PLAN' | 'USER_SIGNUP' | 'USER_LOGIN' | 'ROLE_CHANGE' | 'DELETE_USER' | 'ADD_CLASSROOM' | 'UPDATE_CLASSROOM' | 'DELETE_CLASSROOM' | 'UPDATE_SCHOOL_PROFILE' | 'UPDATE_LOGO' | 'RESET_LOGO' | 'FORCE_SYNC' | 'PUSH_LIVE_UPDATE';
+  action: 'CREATE_PLAN' | 'UPDATE_PLAN' | 'SUBMIT_PLAN' | 'APPROVE_PLAN' | 'REVISE_PLAN' | 'DELETE_PLAN' | 'USER_SIGNUP' | 'USER_LOGIN' | 'ROLE_CHANGE' | 'DELETE_USER' | 'ADD_CLASSROOM' | 'UPDATE_CLASSROOM' | 'DELETE_CLASSROOM' | 'UPDATE_SCHOOL_PROFILE' | 'UPDATE_LOGO' | 'RESET_LOGO' | 'FORCE_SYNC' | 'PUSH_LIVE_UPDATE' | 'PASSWORD_RESET_REQUEST';
   details: string;
   targetId?: string;
 }

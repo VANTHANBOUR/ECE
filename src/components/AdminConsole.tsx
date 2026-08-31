@@ -397,7 +397,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-bold border border-slate-200">
                           <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
-                          <span>DCH SYW</span>
+                          <span>DK SYW</span>
                         </span>
                       )}
                     </td>
@@ -890,7 +890,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Are you sure you want to remove <strong className="text-slate-900">{userToDelete.name}</strong> from Dewey Childcare House? Their credentials and access to the portal will be terminated immediately.
+              Are you sure you want to remove <strong className="text-slate-900">{userToDelete.name}</strong> from Dewey Kindergarten? Their credentials and access to the portal will be terminated immediately.
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">

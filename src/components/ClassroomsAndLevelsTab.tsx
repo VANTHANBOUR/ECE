@@ -56,7 +56,6 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
   
   // Form values for Level
   const [levelName, setLevelName] = useState('');
-  const [levelAgeRange, setLevelAgeRange] = useState('');
   const [levelKhmerName, setLevelKhmerName] = useState('');
   const [levelDescription, setLevelDescription] = useState('');
 
@@ -83,7 +82,6 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
   const handleOpenAddLevel = () => {
     setEditingLevel(null);
     setLevelName('');
-    setLevelAgeRange('');
     setLevelKhmerName('');
     setLevelDescription('');
     setIsLevelModalOpen(true);
@@ -92,7 +90,6 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
   const handleOpenEditLevel = (lvl: SchoolLevel) => {
     setEditingLevel(lvl);
     setLevelName(lvl.name);
-    setLevelAgeRange(lvl.ageRange);
     setLevelKhmerName(lvl.khmerName || '');
     setLevelDescription(lvl.description || '');
     setIsLevelModalOpen(true);
@@ -102,12 +99,10 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
     e.preventDefault();
     if (!levelName.trim()) return;
 
-    const ageRangeStr = levelAgeRange.trim() ? ` (${levelAgeRange.trim()})` : '';
-    const displayName = `${levelName.trim()}${ageRangeStr}`;
+    const displayName = levelName.trim();
 
     const levelData = {
       name: levelName.trim(),
-      ageRange: levelAgeRange.trim(),
       displayName,
       khmerName: levelKhmerName.trim() || undefined,
       description: levelDescription.trim() || undefined,
@@ -336,7 +331,7 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
                     <div className="space-y-3">
                       <div className="flex items-center justify-between">
                         <span className="px-2.5 py-1 rounded-lg text-[10px] font-black text-emerald-900 bg-emerald-100/80 border border-emerald-200">
-                          {lvl.ageRange || 'All Ages'}
+                          {lvl.name}
                         </span>
                         
                         <div className="flex items-center gap-1.5">
@@ -441,19 +436,7 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
                     required
                     value={levelName}
                     onChange={(e) => setLevelName(e.target.value)}
-                    placeholder="e.g. Toddlers, Nursery, K1"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-600"
-                  />
-                </div>
-
-                <div className="space-y-1">
-                  <label className="text-[11px] font-bold text-slate-600 block">Age Range (Years / Months) *</label>
-                  <input
-                    type="text"
-                    required
-                    value={levelAgeRange}
-                    onChange={(e) => setLevelAgeRange(e.target.value)}
-                    placeholder="e.g. 1.5 - 2.5 yrs or 3.5 - 4.5 yrs"
+                    placeholder="e.g. Pre-Nursery, Nursery, K1"
                     className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-600"
                   />
                 </div>
@@ -481,11 +464,11 @@ export const ClassroomsAndLevelsTab: React.FC<ClassroomsAndLevelsTabProps> = ({
                 />
               </div>
 
-              {levelName.trim() && levelAgeRange.trim() && (
+              {levelName.trim() && (
                 <div className="p-3 bg-emerald-50/60 border border-emerald-100 rounded-xl space-y-1">
                   <p className="text-[10px] font-bold text-emerald-800 uppercase tracking-wider">Preview Level Format</p>
                   <p className="text-xs font-black text-slate-800">
-                    {levelName.trim()} ({levelAgeRange.trim()}) {levelKhmerName.trim() ? ` · ${levelKhmerName.trim()}` : ''}
+                    {levelName.trim()} {levelKhmerName.trim() ? ` · ${levelKhmerName.trim()}` : ''}
                   </p>
                 </div>
               )}

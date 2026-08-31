@@ -18,6 +18,7 @@ import {
   signOut as firebaseSignOut, 
   onAuthStateChanged,
   updateProfile,
+  sendPasswordResetEmail,
   User as FirebaseUser
 } from 'firebase/auth';
 import { 
@@ -131,6 +132,7 @@ interface AppContextType {
   isProfileModalOpen: boolean;
   setIsProfileModalOpen: (open: boolean) => void;
   openProfileModal: () => void;
+  resetUserPassword: (email: string) => Promise<void>;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -149,10 +151,10 @@ const STORAGE_KEYS = {
 };
 
 const DEFAULT_LEVELS: SchoolLevel[] = [
-  { id: 'lvl_toddlers', name: 'Toddlers', ageRange: '1.5 - 2.5 yrs', displayName: 'Toddlers (1.5 - 2.5 yrs)', khmerName: 'ថ្នាក់កូនក្មេង' },
-  { id: 'lvl_nursery', name: 'Nursery', ageRange: '2.5 - 3.5 yrs', displayName: 'Nursery (2.5 - 3.5 yrs)', khmerName: 'ថ្នាក់មត្តេយ្យទាប' },
-  { id: 'lvl_pre_school', name: 'Pre-School', ageRange: '3.5 - 4.5 yrs', displayName: 'Pre-School (3.5 - 4.5 yrs)', khmerName: 'ថ្នាក់មត្តេយ្យមធ្យម' },
-  { id: 'lvl_kindergarten', name: 'Kindergarten', ageRange: '4.5 - 6.5 yrs', displayName: 'Kindergarten (4.5 - 6.5 yrs)', khmerName: 'ថ្នាក់មត្តេយ្យខ្ពស់' },
+  { id: 'lvl_toddlers', name: 'Pre-Nursery', displayName: 'Pre-Nursery', khmerName: 'ថ្នាក់កូនក្មេង' },
+  { id: 'lvl_nursery', name: 'Nursery', displayName: 'Nursery', khmerName: 'ថ្នាក់មត្តេយ្យទាប' },
+  { id: 'lvl_pre_school', name: 'Pre-School', displayName: 'Pre-School', khmerName: 'ថ្នាក់មត្តេយ្យមធ្យម' },
+  { id: 'lvl_kindergarten', name: 'Kindergarten', displayName: 'Kindergarten', khmerName: 'ថ្នាក់មត្តេយ្យខ្ពស់' },
 ];
 
 // Cross-tab & multi-window instant live synchronization helper
@@ -320,37 +322,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch {}
   };
 
-  const formatAgeGroup = useCallback((group: string, campusId?: CampusId) => {
+  const formatAgeGroup = useCallback((group: string) => {
     if (!group) return '';
-    const targetCampusId = campusId || selectedCampusId;
-    const activeCampus = CAMPUS_LIST.find((c) => c.id === targetCampusId);
-    const isDCH = activeCampus ? activeCampus.brand === 'DCH' : true;
-    if (isDCH) {
-      return group
-        .replace(/Toddlers/gi, 'Pre-Nursery')
-        .replace(/Toddler/gi, 'Pre-Nursery')
-        .replace(/Pre-nursery/g, 'Pre-Nursery');
-    }
-    return group;
-  }, [selectedCampusId]);
+    return group
+      .replace(/Toddlers/gi, 'Pre-Nursery')
+      .replace(/Toddler/gi, 'Pre-Nursery')
+      .replace(/Pre-nursery/g, 'Pre-Nursery');
+  }, []);
 
   const processedLevels = useMemo(() => {
-    const activeCampus = CAMPUS_LIST.find((c) => c.id === selectedCampusId);
-    const isDCH = activeCampus ? activeCampus.brand === 'DCH' : true;
-    if (isDCH) {
-      return levels.map((lvl) => {
-        if (lvl.name === 'Toddlers' || lvl.name === 'Toddler' || lvl.name === 'Pre-nursery' || lvl.name === 'Pre-Nursery') {
-          return {
-            ...lvl,
-            name: 'Pre-Nursery',
-            displayName: lvl.displayName.replace(/Toddlers/gi, 'Pre-Nursery').replace(/Toddler/gi, 'Pre-Nursery').replace(/Pre-nursery/g, 'Pre-Nursery'),
-          };
-        }
-        return lvl;
-      });
-    }
-    return levels;
-  }, [levels, selectedCampusId]);
+    return levels.map((lvl) => {
+      if (lvl.name === 'Toddlers' || lvl.name === 'Toddler' || lvl.name === 'Pre-nursery' || lvl.name === 'Pre-Nursery') {
+        return {
+          ...lvl,
+          name: 'Pre-Nursery',
+          displayName: lvl.displayName.replace(/Toddlers/gi, 'Pre-Nursery').replace(/Toddler/gi, 'Pre-Nursery').replace(/Pre-nursery/g, 'Pre-Nursery'),
+        };
+      }
+      return lvl;
+    });
+  }, [levels]);
 
   const [toastMessage, setToastMessage] = useState<{ text: string; type: 'success' | 'info' | 'warning' | 'error' } | null>(null);
   
@@ -1565,6 +1556,17 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     showToast('School logo reset to official DCH master insignia', 'info');
   };
 
+  const resetUserPassword = async (email: string) => {
+    try {
+      await sendPasswordResetEmail(auth, email);
+      showToast(`Password reset email sent to ${email}`, 'success');
+      addAuditLog('PASSWORD_RESET_REQUEST', `Sent password reset email to ${email}`);
+    } catch (error: any) {
+      console.error('Password reset error:', error);
+      showToast(`Failed to send password reset email: ${error.message}`, 'error');
+    }
+  };
+
   const openProfileModal = () => {
     setIsProfileModalOpen(true);
   };
@@ -1631,6 +1633,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isProfileModalOpen,
         setIsProfileModalOpen,
         openProfileModal,
+        resetUserPassword,
       }}
     >
       {children}

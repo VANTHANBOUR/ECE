@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { BrandLogo, DCHShield } from './BrandLogo';
+import { BrandLogo, SchoolLogoIcon } from './BrandLogo';
 import { UserRole, EarlyChildhoodAgeGroup, CampusId, CAMPUS_LIST } from '../types';
 import { 
   X, 
@@ -34,8 +34,14 @@ export const AuthModal: React.FC = () => {
     classrooms,
     showToast,
     isFirebaseConnected,
-    firebaseConfigInfo
+    firebaseConfigInfo,
+    selectedCampusId,
+    schoolProfile
   } = useApp();
+
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
+  const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
 
   const [isLoading, setIsLoading] = useState(false);
 
@@ -125,10 +131,12 @@ export const AuthModal: React.FC = () => {
         <div className="bg-gradient-to-r from-slate-900 via-emerald-950 to-[#006838] p-6 text-white relative">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <DCHShield size={38} />
+              <div className="bg-white/95 rounded-xl p-1 shadow-sm shrink-0 flex items-center justify-center">
+                <SchoolLogoIcon size={38} />
+              </div>
               <div>
                 <h3 className="text-lg font-black tracking-tight text-white font-['Outfit']">
-                  Dewey Childcare House
+                  {institutionEnglish}
                 </h3>
                 <p className="text-xs text-emerald-200 font-medium">
                   Early Childhood School Management & Lesson Plan System

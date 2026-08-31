@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LessonPlan, UserAccount, UserRole, Classroom, SchoolLevel } from '../types';
+import { LessonPlan, UserAccount, UserRole, Classroom, SchoolLevel, CAMPUS_LIST } from '../types';
 import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { ClassroomsAndLevelsTab } from './ClassroomsAndLevelsTab';
@@ -158,10 +158,14 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     });
   };
 
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
+  const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : 'Dewey Childcare House';
+
   const exportSummaryReport = () => {
-    showToast('Exporting Dewey Childcare House Weekly Curriculum Binder...', 'info');
+    showToast(`Exporting ${institutionEnglish} Weekly Curriculum Binder...`, 'info');
     setTimeout(() => {
-      showToast('DCH_Weekly_Curriculum_Binder_Week12.pdf generated and ready!', 'success');
+      showToast(`${isDKCampus ? 'DK' : 'DCH'}_Weekly_Curriculum_Binder_Week12.pdf generated and ready!`, 'success');
     }, 1000);
   };
 
@@ -903,7 +907,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             <p className="text-xs text-slate-600 leading-relaxed">
-              Are you sure you want to remove <strong className="text-slate-900">{userToDelete.name}</strong> from Dewey Childcare House? Their credentials and access to the portal will be terminated immediately.
+              Are you sure you want to remove <strong className="text-slate-900">{userToDelete.name}</strong> from {institutionEnglish}? Their credentials and access to the portal will be terminated immediately.
             </p>
 
             <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">

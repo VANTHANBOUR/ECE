@@ -143,7 +143,7 @@ const MainContent: React.FC = () => {
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 space-y-2 mt-auto">
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <span className="font-bold text-[#007A43]">Dewey Childcare House</span>
+            <span className="font-bold text-[#007A43]">Dewey Kindergarten</span>
             <span>·</span>
             <span className="font-['Battambang'] text-emerald-900">ឌូវី ឆាល់ឃែរ៍ ហោស៍</span>
           </div>

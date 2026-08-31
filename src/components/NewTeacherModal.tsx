@@ -67,7 +67,7 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
             <div>
               <h2 className="text-base font-bold">Register Educator Account</h2>
               <p className="text-xs text-emerald-100 font-medium">
-                Dewey Childcare House Faculty Provisioning
+                Faculty & Educator Provisioning
               </p>
             </div>
           </div>

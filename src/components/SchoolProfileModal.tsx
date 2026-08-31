@@ -25,7 +25,7 @@ export const SchoolProfileModal: React.FC = () => {
                 Update Web App Profile & Replace Logo
               </h2>
               <p className="text-xs text-gray-500">
-                Dewey Childcare House Administration Control
+                Institutional Administration Control
               </p>
             </div>
           </div>

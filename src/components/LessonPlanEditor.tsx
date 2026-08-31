@@ -6,10 +6,11 @@ import {
   LessonPlan, 
   PlanAttachment,
   SessionActivityRow,
-  OfficialSessionPlan 
+  OfficialSessionPlan,
+  CAMPUS_LIST
 } from '../types';
 import { OfficialTemplateView } from './OfficialTemplateView';
-import { DCHShield } from './BrandLogo';
+import { SchoolLogoIcon } from './BrandLogo';
 import { 
   X, 
   UploadCloud, 
@@ -57,7 +58,12 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   onClose,
   onSaved,
 }) => {
-  const { currentUser, classrooms, createLessonPlan, updateLessonPlan, showToast } = useApp();
+  const { currentUser, classrooms, createLessonPlan, updateLessonPlan, showToast, selectedCampusId, schoolProfile } = useApp();
+
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
+  const institutionKhmer = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolProfile?.schoolNameKhmer || 'សាលាមត្តេយ្យ ដេវី');
+  const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
 
   // Active Editor View Tab
   const [activeTab, setActiveTab] = useState<'official_format' | 'curriculum_matrix' | 'print_preview'>('official_format');
@@ -356,7 +362,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       document.body.removeChild(a);
       showToast(`Downloading "${att.name}"`, 'success');
     } else {
-      const content = `Dewey Childcare House Lesson Plan Attachment\nTheme: ${themeTitle}\nClass: ${selectedClass.name}\nFile: ${att.name}`;
+      const content = `${institutionEnglish} Lesson Plan Attachment\nTheme: ${themeTitle}\nClass: ${selectedClass.name}\nFile: ${att.name}`;
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -597,24 +603,26 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
       <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
         
-        {/* Modal Header: Custom DCH Institutional Header */}
+        {/* Modal Header: Custom Institutional Header (DK / DCH) */}
         <div className="px-6 py-3.5 bg-gradient-to-r from-emerald-950 via-[#006838] to-emerald-900 text-white flex items-center justify-between shrink-0 border-b border-white/10 shadow-md">
           <div className="flex items-center gap-3.5">
-            <DCHShield size={48} className="brightness-110 drop-shadow-[0_2px_8px_rgba(0,0,0,0.2)]" />
+            <div className="bg-white/95 rounded-xl p-1.5 shadow-sm border border-white/20 shrink-0 flex items-center justify-center">
+              <SchoolLogoIcon size={44} />
+            </div>
             <div className="leading-tight text-left">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-bold text-amber-300 font-['Battambang',sans-serif] tracking-normal leading-none">
-                  សាលាមត្តេយ្យ ដេវី
+                  {institutionKhmer}
                 </span>
                 <span className="text-[9px] font-extrabold uppercase tracking-widest px-1.5 py-0.2 rounded bg-amber-500 text-amber-950">
-                  Official Template
+                  {isDKCampus ? 'DK Template' : 'Official Template'}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-black tracking-wide uppercase font-['Outfit',sans-serif] text-white leading-tight mt-0.5">
-                Dewey Childcare House — Lesson Plan Editor
+                {institutionEnglish} — Lesson Plan Editor
               </h2>
               <p className="text-[10px] text-emerald-200/90 font-medium">
-                Early Childhood Division · Warm up, 1st Session, 2nd Session, and Dismissal Blocks
+                {institutionEnglish} · Early Childhood Division · Warm up, 1st Session, 2nd Session, and Dismissal Blocks
               </p>
             </div>
           </div>
@@ -708,7 +716,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                     className="text-xl font-extrabold tracking-tight uppercase"
                     style={{ color: '#006838', fontFamily: 'Georgia, Cambria, serif' }}
                   >
-                    Dewey Childcare House
+                    {institutionEnglish}
                   </h3>
                   <h4 className="text-base font-bold underline underline-offset-4 mt-0.5 text-slate-900">
                     Lesson Plan Editor

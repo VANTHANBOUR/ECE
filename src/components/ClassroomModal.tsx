@@ -22,7 +22,7 @@ interface ClassroomModalProps {
 }
 
 const AGE_GROUPS: EarlyChildhoodAgeGroup[] = [
-  'Toddlers',
+  'Pre-Nursery',
   'Nursery',
   'Pre-School',
   'Kindergarten',
@@ -41,7 +41,7 @@ const COLOR_PRESETS = [
 
 const NAME_PRESETS = [
   { name: 'Butterflies', khmer: 'ថ្នាក់មេអំបៅ', ageGroup: 'Pre-School' as EarlyChildhoodAgeGroup, code: 'PRE-K A', color: '#007A43' },
-  { name: 'Ladybugs', khmer: 'ថ្នាក់កូនសត្វល្អិត', ageGroup: 'Toddlers' as EarlyChildhoodAgeGroup, code: 'TOD-A', color: '#E11D48' },
+  { name: 'Ladybugs', khmer: 'ថ្នាក់កូនសត្វល្អិត', ageGroup: 'Pre-Nursery' as EarlyChildhoodAgeGroup, code: 'PNUR-A', color: '#E11D48' },
   { name: 'Sunflowers', khmer: 'ថ្នាក់ផ្កាឈូករ័ត្ន', ageGroup: 'Kindergarten' as EarlyChildhoodAgeGroup, code: 'K1-A', color: '#D97706' },
   { name: 'Honey Bees', khmer: 'ថ្នាក់កូនឃ្មុំឧស្សាហ៍', ageGroup: 'Nursery' as EarlyChildhoodAgeGroup, code: 'NUR-A', color: '#0D9488' },
   { name: 'Little Pandas', khmer: 'ថ្នាក់ខ្លាឃ្មុំផេនដា', ageGroup: 'Kindergarten' as EarlyChildhoodAgeGroup, code: 'K2-A', color: '#7C3AED' },
@@ -88,7 +88,6 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
   const [isLevelFormOpen, setIsLevelFormOpen] = useState(false);
   const [levelFormMode, setLevelFormMode] = useState<'add' | 'edit'>('add');
   const [inlineLevelName, setInlineLevelName] = useState('');
-  const [inlineLevelAgeRange, setInlineLevelAgeRange] = useState('');
   const [inlineLevelKhmer, setInlineLevelKhmer] = useState('');
   const [inlineLevelDesc, setInlineLevelDesc] = useState('');
 
@@ -126,7 +125,6 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
 
   const handleInlineAddLevel = () => {
     setInlineLevelName('');
-    setInlineLevelAgeRange('');
     setInlineLevelKhmer('');
     setInlineLevelDesc('');
     setLevelFormMode('add');
@@ -141,7 +139,6 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
       return;
     }
     setInlineLevelName(currentLvl.name);
-    setInlineLevelAgeRange(currentLvl.ageRange);
     setInlineLevelKhmer(currentLvl.khmerName || '');
     setInlineLevelDesc(currentLvl.description || '');
     setLevelFormMode('edit');
@@ -151,16 +148,14 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
 
   const handleInlineSaveLevel = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!inlineLevelName.trim() || !inlineLevelAgeRange.trim()) {
-      showToast('Level name and Age range are required', 'warning');
+    if (!inlineLevelName.trim()) {
+      showToast('Level name is required', 'warning');
       return;
     }
-    const ageRangeStr = inlineLevelAgeRange.trim() ? ` (${inlineLevelAgeRange.trim()})` : '';
-    const displayName = `${inlineLevelName.trim()}${ageRangeStr}`;
+    const displayName = inlineLevelName.trim();
 
     const levelData = {
       name: inlineLevelName.trim(),
-      ageRange: inlineLevelAgeRange.trim(),
       displayName,
       khmerName: inlineLevelKhmer.trim() || undefined,
       description: inlineLevelDesc.trim() || undefined,
@@ -331,7 +326,7 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
                 </span>
               </div>
               <p className="text-xs text-emerald-200 font-medium">
-                Dewey Childcare House early childhood room & grade allocation
+                Early childhood room & grade allocation
               </p>
             </div>
           </div>
@@ -532,24 +527,11 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
                       type="text"
                       value={inlineLevelName}
                       onChange={(e) => setInlineLevelName(e.target.value)}
-                      placeholder="e.g. Toddlers, Nursery"
+                      placeholder="e.g. Pre-Nursery, Nursery"
                       className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:outline-emerald-600"
                     />
                   </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-600 block">Age Range *</label>
-                    <input
-                      type="text"
-                      value={inlineLevelAgeRange}
-                      onChange={(e) => setInlineLevelAgeRange(e.target.value)}
-                      placeholder="e.g. 1.5 - 2.5 yrs"
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-bold text-slate-900 focus:outline-emerald-600"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div className="space-y-1">
                     <label className="text-[10px] font-bold text-slate-600 block">Khmer Title</label>
                     <input
@@ -560,17 +542,17 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
                       className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 font-['Battambang'] focus:outline-emerald-600"
                     />
                   </div>
+                </div>
 
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-slate-600 block">Milestones Description</label>
-                    <input
-                      type="text"
-                      value={inlineLevelDesc}
-                      onChange={(e) => setInlineLevelDesc(e.target.value)}
-                      placeholder="e.g. Early vocabulary, sensory milestone focus"
-                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-emerald-600"
-                    />
-                  </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] font-bold text-slate-600 block">Milestones Description</label>
+                  <input
+                    type="text"
+                    value={inlineLevelDesc}
+                    onChange={(e) => setInlineLevelDesc(e.target.value)}
+                    placeholder="e.g. Early vocabulary, sensory milestone focus"
+                    className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-xs font-semibold text-slate-900 focus:outline-emerald-600"
+                  />
                 </div>
 
                 <div className="flex justify-end gap-1.5 pt-1">

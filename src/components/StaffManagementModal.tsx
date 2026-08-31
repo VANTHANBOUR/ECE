@@ -58,8 +58,15 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
     classrooms, 
     lessonPlans,
     showToast,
-    formatAgeGroup
+    formatAgeGroup,
+    resetUserPassword
   } = useApp();
+
+  const handleResetPassword = async () => {
+    if (window.confirm(`Are you sure you want to send a password reset email to ${user.email}?`)) {
+      await resetUserPassword(user.email);
+    }
+  };
 
   if (!user) return null;
 
@@ -217,7 +224,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
               <div>
                 <h3 className="text-sm font-black text-rose-950">Confirm Permanent Removal of Staff</h3>
                 <p className="text-xs text-rose-800 mt-1 leading-relaxed">
-                  You are about to remove <strong className="text-rose-950">{user.name}</strong> ({user.title}) from the Dewey Childcare House directory.
+                  You are about to remove <strong className="text-rose-950">{user.name}</strong> ({user.title}) from the staff directory.
                   {userPlansCount > 0 && (
                     <span className="block mt-1 font-semibold text-rose-900">
                       ⚠️ Note: This staff member has authored {userPlansCount} lesson plan(s) in the system.
@@ -583,7 +590,15 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
 
           {/* Modal Actions Footer */}
           <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3">
-            <div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={handleResetPassword}
+                className="px-3 py-2 text-indigo-700 hover:text-indigo-900 hover:bg-indigo-50 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-colors border border-indigo-200"
+              >
+                <Lock className="w-4 h-4" />
+                <span>Reset Password</span>
+              </button>
               {!isSelf && (
                 <button
                   type="button"

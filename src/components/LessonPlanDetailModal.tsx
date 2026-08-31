@@ -138,7 +138,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
       <html>
       <head>
         <meta charset="utf-8">
-        <title>Dewey Childcare House - ${plan.themeTitle}</title>
+        <title>Dewey Kindergarten - ${plan.themeTitle}</title>
         <style>
           body { font-family: Calibri, Arial, sans-serif; margin: 40px; color: #000; }
           .header { text-align: center; margin-bottom: 25px; }
@@ -156,7 +156,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
       </head>
       <body>
         <div class="header">
-          <div class="school-title">Dewey Childcare House</div>
+          <div class="school-title">Dewey Kindergarten</div>
           <div class="doc-title">Lesson Plan</div>
         </div>
 
@@ -240,7 +240,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
     const url = URL.createObjectURL(blob);
     const downloadLink = document.createElement('a');
     downloadLink.href = url;
-    downloadLink.download = `Dewey_Childcare_House_${plan.className.replace(/\s+/g, '_')}_Week_${plan.weekNumber}.doc`;
+    downloadLink.download = `Dewey_Kindergarten_${plan.className.replace(/\s+/g, '_')}_Week_${plan.weekNumber}.doc`;
     document.body.appendChild(downloadLink);
     downloadLink.click();
     document.body.removeChild(downloadLink);
@@ -261,7 +261,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
       document.body.removeChild(a);
       showToast(`Downloading "${att.name}"`, 'success');
     } else {
-      const content = `Dewey Childcare House Lesson Plan Attachment\nTheme: ${plan.themeTitle}\nClass: ${plan.className} (${plan.ageGroup})\nDocument: ${att.name}\nSize: ${att.size}\nDate: ${att.uploadedAt}\n\nOfficial curriculum records for Dewey Childcare House (DCH).`;
+      const content = `Dewey Kindergarten Lesson Plan Attachment\nTheme: ${plan.themeTitle}\nClass: ${plan.className} (${plan.ageGroup})\nDocument: ${att.name}\nSize: ${att.size}\nDate: ${att.uploadedAt}\n\nOfficial curriculum records for Dewey Kindergarten (DK).`;
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -742,10 +742,10 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
           {/* Letterhead Footer */}
           <div className="pt-4 border-t border-slate-200 text-center space-y-1">
             <p className="text-[11px] text-slate-500 font-semibold">
-              Dewey Childcare House · Early Childhood Trilingual Academic Excellence · Phnom Penh, Cambodia
+              Dewey Kindergarten · Early Childhood Trilingual Academic Excellence · Phnom Penh, Cambodia
             </p>
             <p className="text-[10px] text-slate-400">
-              Approved records are archived permanently in the DCH Academic Management Information System.
+              Approved records are archived permanently in the DK Academic Management Information System.
             </p>
           </div>
         </div>

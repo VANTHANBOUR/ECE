@@ -1,7 +1,7 @@
 import React from 'react';
-import { LessonPlan } from '../types';
+import { LessonPlan, CAMPUS_LIST } from '../types';
 import { useApp } from '../context/AppContext';
-import { SchoolLogoIcon, DCHShield } from './BrandLogo';
+import { SchoolLogoIcon } from './BrandLogo';
 
 interface OfficialTemplateViewProps {
   plan?: LessonPlan | null;
@@ -20,7 +20,14 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
   className = '',
   isPrintOnly = false,
 }) => {
-  const { classrooms } = useApp();
+  const { classrooms, selectedCampusId, schoolProfile } = useApp();
+
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
+  const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolProfile?.schoolNameKhmer || 'សាលាមត្តេយ្យ ដេវី');
+  const engTitle = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
+  const portalSub = isDKCampus ? 'Dewey Kindergarten Portal' : 'School Management & Lesson Plan Portal';
+  const formatLabel = isDKCampus ? 'Official DK Format' : 'Official DCH Format';
 
   const assignedClass = classrooms.find(c => c.id === plan?.classId);
   const classNameDisplay = plan?.className || assignedClass?.name || '.......................................';
@@ -86,16 +93,16 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
           <SchoolLogoIcon size={64} className="shrink-0" />
           <div className="text-left">
             <h1 className="text-xs font-bold tracking-normal text-[#006838] font-['Battambang',sans-serif] leading-none mb-1">
-              សាលាមត្តេយ្យ ដេវី
+              {khmerTitle}
             </h1>
             <h2 
               className="text-xl sm:text-2xl font-extrabold tracking-tight uppercase leading-tight text-[#006838]"
               style={{ fontFamily: 'Georgia, Cambria, "Times New Roman", serif' }}
             >
-              Dewey Childcare House
+              {engTitle}
             </h2>
             <p className="text-[11px] font-semibold tracking-wider uppercase text-slate-500 font-['Plus_Jakarta_Sans',sans-serif]">
-              Early Childhood Education Portal
+              {portalSub}
             </p>
           </div>
         </div>
@@ -104,7 +111,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
             Lesson Plan
           </h3>
           <span className="text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-50 text-[#006838] border border-emerald-200/60 font-bold mt-1">
-            Official DCH Format
+            {formatLabel}
           </span>
         </div>
       </div>

@@ -53,7 +53,7 @@ export const AuthGate: React.FC = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('teacher');
   const [title, setTitle] = useState('');
-  const [assignedClassId, setAssignedClassId] = useState('Toddlers');
+  const [assignedClassId, setAssignedClassId] = useState('Pre-Nursery');
   const [roomNumber, setRoomNumber] = useState('');
 
   const activeCampus = CAMPUS_LIST.find(c => c.id === selectedCampusId) || CAMPUS_LIST[0];
