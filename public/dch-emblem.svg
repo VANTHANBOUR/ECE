@@ -1,0 +1,172 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500" fill="none">
+  <!-- Crisp Solid White Background -->
+  <rect width="500" height="500" rx="36" fill="#FFFFFF"/>
+
+  <defs>
+    <!-- Outer Shield Path for clipping and borders -->
+    <path id="dchShieldOuterPath" d="
+      M 250, 62
+      C 308, 62 364, 73 410, 85
+      C 418, 178 421, 264 380, 348
+      C 346, 404 296, 434 250, 452
+      C 204, 434 154, 404 120, 348
+      C 79, 264 82, 178 90, 85
+      C 136, 73 192, 62 250, 62 Z
+    "/>
+
+    <!-- Inner Shield Path (inside orange border) -->
+    <path id="dchShieldInnerPath" d="
+      M 250, 78
+      C 304, 78 354, 88 395, 99
+      C 403, 182 405, 258 368, 335
+      C 336, 386 290, 416 250, 432
+      C 210, 416 164, 386 132, 335
+      C 95, 258 97, 182 105, 99
+      C 146, 88 196, 78 250, 78 Z
+    "/>
+
+    <clipPath id="dchInnerClip">
+      <use href="#dchShieldInnerPath" />
+    </clipPath>
+
+    <!-- Clip path for the right half -->
+    <clipPath id="dchRightClip">
+      <rect x="250" y="0" width="250" height="500" />
+    </clipPath>
+  </defs>
+
+  <!-- 1. Outer Green Shield Base -->
+  <use href="#dchShieldOuterPath" fill="#008A4B" />
+
+  <!-- 2. Orange / Amber Inner Border -->
+  <path
+    d="
+      M 250, 71
+      C 306, 71 359, 81 403, 92
+      C 411, 180 413, 261 374, 342
+      C 341, 395 293, 425 250, 442
+      C 207, 425 159, 395 126, 342
+      C 87, 261 89, 180 97, 92
+      C 141, 81 194, 71 250, 71 Z
+    "
+    fill="none"
+    stroke="#FA9E1B"
+    stroke-width="12"
+    stroke-linejoin="round"
+    stroke-linecap="round"
+  />
+
+  <!-- 3. Inner Shield Content Area (Clipped inside inner shield) -->
+  <g clip-path="url(#dchInnerClip)">
+    <!-- Base: Left half is Solid Green, Right half white initially -->
+    <rect x="0" y="0" width="250" height="500" fill="#008A4B" />
+    <rect x="250" y="0" width="250" height="500" fill="#FFFFFF" />
+
+    <!-- RIGHT HALF: Solid Green Bottom below the curved book lines -->
+    <path
+      d="M 250, 365 C 290, 342 342, 308 405, 272 L 405, 450 L 250, 450 Z"
+      fill="#008A4B"
+    />
+
+    <!-- Two Parallel Green Curved Stripes representing open book pages -->
+    <!-- Lower green stripe -->
+    <path
+      d="M 250, 350 C 290, 327 342, 294 405, 258"
+      stroke="#008A4B"
+      stroke-width="6.5"
+      fill="none"
+      stroke-linecap="round"
+    />
+    <!-- Upper green stripe -->
+    <path
+      d="M 250, 335 C 290, 312 342, 280 405, 245"
+      stroke="#008A4B"
+      stroke-width="5"
+      fill="none"
+      stroke-linecap="round"
+    />
+
+    <!-- Vertical Center Divider -->
+    <line x1="250" y1="78" x2="250" y2="432" stroke="#008A4B" stroke-width="1.5" />
+
+    <!-- LEFT HALF: Vertical D C H Monogram in Serif White -->
+    <text
+      x="176"
+      y="184"
+      fill="#FFFFFF"
+      font-family="'Times New Roman', 'Baskerville', 'Georgia', serif"
+      font-size="94"
+      font-weight="bold"
+      text-anchor="middle"
+      letter-spacing="0"
+    >D</text>
+
+    <text
+      x="176"
+      y="272"
+      fill="#FFFFFF"
+      font-family="'Times New Roman', 'Baskerville', 'Georgia', serif"
+      font-size="94"
+      font-weight="bold"
+      text-anchor="middle"
+      letter-spacing="0"
+    >C</text>
+
+    <text
+      x="176"
+      y="360"
+      fill="#FFFFFF"
+      font-family="'Times New Roman', 'Baskerville', 'Georgia', serif"
+      font-size="94"
+      font-weight="bold"
+      text-anchor="middle"
+      letter-spacing="0"
+    >H</text>
+
+    <!-- RIGHT HALF: Graduation Cap & Orange Book Pages -->
+    <g clip-path="url(#dchRightClip)">
+      <!-- 1. GRADUATION MORTARBOARD -->
+      <polygon
+        points="324,142 376,158 324,174 272,158"
+        fill="#008A4B"
+      />
+      <path
+        d="M 281, 161 C 281, 161 281, 196 324, 202 C 367, 196 367, 161 367, 161 C 352, 178 338, 185 324, 185 C 310, 185 296, 178 281, 161 Z"
+        fill="#008A4B"
+      />
+      <circle cx="324" cy="158" r="3.5" fill="#006838" />
+
+      <!-- Tassel -->
+      <path
+        d="M 324, 158 C 302, 156 280, 158 270, 162 L 270, 198"
+        stroke="#008A4B"
+        stroke-width="2.5"
+        stroke-linecap="round"
+        fill="none"
+      />
+      <path
+        d="M 268, 198 L 272, 198 L 273, 206 L 267, 206 Z"
+        fill="#008A4B"
+      />
+
+      <!-- 2. OPEN BOOK: Radiating Orange Leaves -->
+      <path
+        d="M 322, 234 C 308, 212 284, 204 256, 218 C 274, 222 300, 224 320, 235 Z"
+        fill="#FA9E1B"
+      />
+      <path
+        d="M 322, 237 C 304, 228 274, 224 254, 228 C 274, 234 300, 237 320, 238 Z"
+        fill="#FA9E1B"
+      />
+
+      <path
+        d="M 326, 234 C 340, 212 364, 204 392, 218 C 374, 222 348, 224 328, 235 Z"
+        fill="#FA9E1B"
+      />
+      <path
+        d="M 326, 237 C 344, 228 374, 224 394, 228 C 374, 234 348, 237 328, 238 Z"
+        fill="#FA9E1B"
+      />
+    </g>
+  </g>
+</svg>

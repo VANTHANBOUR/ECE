@@ -128,130 +128,11 @@ export const DIOvalLogo: React.FC<{ size?: number; className?: string }> = ({ si
 
 export const DIShield = DIOvalLogo;
 
-export const DCHShield: React.FC<{ size?: number; className?: string }> = ({ size = 48, className = '' }) => {
-  return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 1000 1140"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      className={`shrink-0 select-none ${className}`}
-      aria-label="Dewey Childcare House (DCH) Official Shield Logo"
-    >
-      <defs>
-        {/* Unique IDs per instance to prevent clashes */}
-        <clipPath id="innerShieldClipReact">
-          <path d="M 500,86 C 685,86 896,132 896,132 C 896,445 870,720 500,1050 C 130,720 104,445 104,132 C 104,132 315,86 500,86 Z" />
-        </clipPath>
-        <clipPath id="rightHalfClipReact">
-          <rect x="500" y="0" width="500" height="1140" />
-        </clipPath>
-      </defs>
-
-      {/* 1. Outer Shield (Green Base) */}
-      <path
-        d="M 500,60 C 705,60 940,110 940,110 C 940,460 912,750 500,1080 C 88,750 60,460 60,110 C 60,110 295,60 500,60 Z"
-        fill="#008242"
-      />
-
-      {/* 2. Orange / Gold Accent Border Line */}
-      <path
-        d="M 500,86 C 685,86 896,132 896,132 C 896,445 870,720 500,1050 C 130,720 104,445 104,132 C 104,132 315,86 500,86 Z"
-        fill="none"
-        stroke="#F58220"
-        strokeWidth="18"
-        strokeLinejoin="round"
-        strokeLinecap="round"
-      />
-
-      {/* 3. Inner Shield Content Area (Masked) */}
-      <g clipPath="url(#innerShieldClipReact)">
-        {/* Left Side: Solid Emerald Green */}
-        <rect x="0" y="0" width="500" height="1140" fill="#008242" />
-
-        {/* Right Side: Clean White Canvas */}
-        <rect x="500" y="0" width="500" height="1140" fill="#FFFFFF" />
-
-        {/* Vertical Split Guideline */}
-        <line x1="500" y1="86" x2="500" y2="1050" stroke="#008242" strokeWidth="2" />
-
-        {/* LEFT HALF: D C H Vertical Serif Monogram */}
-        <g fill="#FFFFFF" fontFamily="'Times New Roman', 'Baskerville', 'Georgia', 'Times', serif" fontWeight="bold" textAnchor="middle">
-          {/* Letter D */}
-          <text x="290" y="348" fontSize="240" letterSpacing="2">D</text>
-          {/* Letter C */}
-          <text x="290" y="582" fontSize="240" letterSpacing="2">C</text>
-          {/* Letter H */}
-          <text x="290" y="816" fontSize="240" letterSpacing="2">H</text>
-        </g>
-
-        {/* RIGHT HALF: Academic Cap & Open Book */}
-        <g clipPath="url(#rightHalfClipReact)">
-          
-          {/* 1. GRADUATION MORTARBOARD (Cap) */}
-          <polygon points="700,268 852,308 700,348 548,308" fill="#008242" />
-          
-          <path d="M 588,335 C 588,335 588,390 700,412 C 812,390 812,335 812,335 C 812,335 776,374 700,374 C 624,374 588,335 588,335 Z" fill="#008242" />
-          
-          <path d="M 558,308 L 558,405" stroke="#008242" strokeWidth="6" strokeLinecap="round" />
-          <circle cx="558" cy="412" r="7.5" fill="#008242" />
-          
-          <ellipse cx="700" cy="308" rx="7" ry="5" fill="#FFFFFF" />
-          <ellipse cx="700" cy="308" rx="4" ry="3" fill="#008242" />
-
-          {/* 2. OPEN BOOK: Golden/Orange Top Wings */}
-          <path
-            d="M 698,532 C 672,475 588,446 515,482 C 555,496 630,504 682,530 Z"
-            fill="#F58220"
-          />
-          <path
-            d="M 554,435 C 598,435 660,462 696,520 C 660,488 596,468 540,460 Z"
-            fill="#F58220"
-          />
-
-          <path
-            d="M 702,532 C 728,475 812,446 885,482 C 845,496 770,504 718,530 Z"
-            fill="#F58220"
-          />
-          <path
-            d="M 846,435 C 802,435 740,462 704,520 C 740,488 804,468 860,460 Z"
-            fill="#F58220"
-          />
-
-          {/* 3. OPEN BOOK: Stylized Green Curved Lower Pages & Sweeps */}
-          <path
-            d="M 500,580 C 650,555 810,578 905,618 L 905,638 C 810,598 650,575 500,600 Z"
-            fill="#008242"
-          />
-
-          <path
-            d="M 500,600 C 650,575 810,598 905,638 C 875,760 760,860 500,900 L 500,600 Z"
-            fill="#FFFFFF"
-          />
-
-          <path
-            d="M 500,685 C 620,630 755,640 885,700 C 850,718 730,662 500,715 Z"
-            fill="#008242"
-          />
-
-          <path
-            d="M 500,740 C 610,695 725,705 845,775 C 805,792 700,730 500,772 Z"
-            fill="#008242"
-          />
-
-          <path
-            d="M 500,798 C 590,758 680,770 785,848 C 730,868 645,808 500,832 Z"
-            fill="#008242"
-          />
-
-        </g>
-      </g>
-    </svg>
-  );
-};
-
-export const DKShield: React.FC<{ size?: number; className?: string }> = ({ size = 48, className = '' }) => {
+export const DCHShield: React.FC<{ size?: number; className?: string; rounded?: boolean }> = ({ 
+  size = 48, 
+  className = '',
+  rounded = true 
+}) => {
   return (
     <svg
       width={size}
@@ -260,38 +141,319 @@ export const DKShield: React.FC<{ size?: number; className?: string }> = ({ size
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
       className={`shrink-0 select-none ${className}`}
-      aria-label="Dewey Kindergarten (DK) Official Logo"
+      aria-label="Dewey Childcare House (DCH) Official Shield Logo"
     >
-      {/* Clear circular or rounded layout container */}
-      <circle cx="250" cy="250" r="235" fill="#FFFFFF" stroke="#008242" strokeWidth="6" />
+      {/* 0. Solid Crisp White Background matching official branding */}
+      <rect width="500" height="500" rx={rounded ? "36" : "0"} fill="#FFFFFF" />
 
-      {/* "DK" Text Centered with premium Serif style */}
+      <defs>
+        {/* Outer Shield Boundary Path */}
+        <path id="dchOuterPathReact" d="
+          M 250, 62
+          C 308, 62 364, 73 410, 85
+          C 418, 178 421, 264 380, 348
+          C 346, 404 296, 434 250, 452
+          C 204, 434 154, 404 120, 348
+          C 79, 264 82, 178 90, 85
+          C 136, 73 192, 62 250, 62 Z
+        " />
+
+        {/* Inner Shield Boundary Path (inside orange border) */}
+        <path id="dchInnerPathReact" d="
+          M 250, 78
+          C 304, 78 354, 88 395, 99
+          C 403, 182 405, 258 368, 335
+          C 336, 386 290, 416 250, 432
+          C 210, 416 164, 386 132, 335
+          C 95, 258 97, 182 105, 99
+          C 146, 88 196, 78 250, 78 Z
+        " />
+
+        <clipPath id="dchInnerClipReact">
+          <use href="#dchInnerPathReact" />
+        </clipPath>
+
+        <clipPath id="dchRightClipReact">
+          <rect x="250" y="0" width="250" height="500" />
+        </clipPath>
+      </defs>
+
+      {/* 1. Outer Green Shield Base */}
+      <use href="#dchOuterPathReact" fill="#008A4B" />
+
+      {/* 2. Orange / Amber Inner Accent Border */}
+      <path
+        d="
+          M 250, 71
+          C 306, 71 359, 81 403, 92
+          C 411, 180 413, 261 374, 342
+          C 341, 395 293, 425 250, 442
+          C 207, 425 159, 395 126, 342
+          C 87, 261 89, 180 97, 92
+          C 141, 81 194, 71 250, 71 Z
+        "
+        fill="none"
+        stroke="#FA9E1B"
+        strokeWidth="12"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+
+      {/* 3. Inner Shield Content Area (Clipped inside inner shield) */}
+      <g clipPath="url(#dchInnerClipReact)">
+        {/* Base: Left half is Solid Green, Right half white initially */}
+        <rect x="0" y="0" width="250" height="500" fill="#008A4B" />
+        <rect x="250" y="0" width="250" height="500" fill="#FFFFFF" />
+
+        {/* RIGHT HALF: Solid Green Bottom below the curved book lines */}
+        <path
+          d="M 250, 365 C 290, 342 342, 308 405, 272 L 405, 450 L 250, 450 Z"
+          fill="#008A4B"
+        />
+
+        {/* Two Parallel Green Curved Stripes representing open book pages */}
+        {/* Lower green stripe */}
+        <path
+          d="M 250, 350 C 290, 327 342, 294 405, 258"
+          stroke="#008A4B"
+          strokeWidth="6.5"
+          fill="none"
+          strokeLinecap="round"
+        />
+        {/* Upper green stripe */}
+        <path
+          d="M 250, 335 C 290, 312 342, 280 405, 245"
+          stroke="#008A4B"
+          strokeWidth="5"
+          fill="none"
+          strokeLinecap="round"
+        />
+
+        {/* Vertical Center Divider */}
+        <line x1="250" y1="78" x2="250" y2="432" stroke="#008A4B" strokeWidth="1.5" />
+
+        {/* LEFT HALF: Vertical D C H Monogram in Serif White */}
+        <text
+          x="176"
+          y="184"
+          fill="#FFFFFF"
+          fontFamily="'Times New Roman', 'Baskerville', 'Georgia', serif"
+          fontSize="94"
+          fontWeight="bold"
+          textAnchor="middle"
+          letterSpacing="0"
+        >
+          D
+        </text>
+
+        <text
+          x="176"
+          y="272"
+          fill="#FFFFFF"
+          fontFamily="'Times New Roman', 'Baskerville', 'Georgia', serif"
+          fontSize="94"
+          fontWeight="bold"
+          textAnchor="middle"
+          letterSpacing="0"
+        >
+          C
+        </text>
+
+        <text
+          x="176"
+          y="360"
+          fill="#FFFFFF"
+          fontFamily="'Times New Roman', 'Baskerville', 'Georgia', serif"
+          fontSize="94"
+          fontWeight="bold"
+          textAnchor="middle"
+          letterSpacing="0"
+        >
+          H
+        </text>
+
+        {/* RIGHT HALF: Academic Cap & Orange Book Pages */}
+        <g clipPath="url(#dchRightClipReact)">
+          {/* 1. GRADUATION MORTARBOARD */}
+          <polygon
+            points="324,142 376,158 324,174 272,158"
+            fill="#008A4B"
+          />
+          <path
+            d="M 281, 161 C 281, 161 281, 196 324, 202 C 367, 196 367, 161 367, 161 C 352, 178 338, 185 324, 185 C 310, 185 296, 178 281, 161 Z"
+            fill="#008A4B"
+          />
+          <circle cx="324" cy="158" r="3.5" fill="#006838" />
+
+          {/* Tassel: Cord draped to left corner and hanging down */}
+          <path
+            d="M 324, 158 C 302, 156 280, 158 270, 162 L 270, 198"
+            stroke="#008A4B"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            fill="none"
+          />
+          <path
+            d="M 268, 198 L 272, 198 L 273, 206 L 267, 206 Z"
+            fill="#008A4B"
+          />
+
+          {/* 2. OPEN BOOK: Radiating Orange Leaves/Wings */}
+          {/* Left Upper Leaf */}
+          <path
+            d="M 322, 234 C 308, 212 284, 204 256, 218 C 274, 222 300, 224 320, 235 Z"
+            fill="#FA9E1B"
+          />
+          {/* Left Lower Leaf */}
+          <path
+            d="M 322, 237 C 304, 228 274, 224 254, 228 C 274, 234 300, 237 320, 238 Z"
+            fill="#FA9E1B"
+          />
+
+          {/* Right Upper Leaf */}
+          <path
+            d="M 326, 234 C 340, 212 364, 204 392, 218 C 374, 222 348, 224 328, 235 Z"
+            fill="#FA9E1B"
+          />
+          {/* Right Lower Leaf */}
+          <path
+            d="M 326, 237 C 344, 228 374, 224 394, 228 C 374, 234 348, 237 328, 238 Z"
+            fill="#FA9E1B"
+          />
+        </g>
+      </g>
+    </svg>
+  );
+};
+
+export const DKLogoEmblem: React.FC<{ size?: number; className?: string; rounded?: boolean }> = ({ size = 48, className = '', rounded = true }) => {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 320 280"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 select-none ${className}`}
+      aria-label="Dewey Kindergarten (DK) Official Logo Emblem"
+    >
+      {/* 0. Solid Crisp White Background */}
+      <rect width="320" height="280" rx={rounded ? "36" : "0"} fill="#FFFFFF" />
+
+      {/* 1. "DK" Letters in Official Forest Green */}
       <text
-        x="250"
-        y="255"
-        fill="#008242"
-        fontFamily="'Times New Roman', 'Baskerville', 'Georgia', serif"
-        fontSize="195"
+        x="154"
+        y="166"
+        fill="#007A3D"
+        fontFamily="'Times New Roman', 'Georgia', 'Baskerville', 'Palatino', serif"
+        fontSize="172"
         fontWeight="bold"
         textAnchor="middle"
-        letterSpacing="-5"
+        letterSpacing="-3"
       >
         DK
       </text>
 
-      {/* Dual Open-Book Wings (Orange and Green) underneath the letters "DK" */}
-      {/* 1. Orange Top Wing Ribbon */}
+      {/* 2. Open Book Ribbon: Upper Orange Wing */}
       <path
-        d="M 70,360 C 130,390 190,400 250,420 C 310,400 370,390 430,360 C 370,410 310,420 250,430 C 190,420 130,410 70,360 Z"
+        d="M 28 185 C 68 198 110 211 154 215 C 198 211 240 198 280 185 C 283 187 281 190 277 192 C 238 209 196 221 154 223 C 112 221 70 209 31 192 C 27 190 25 187 28 185 Z"
         fill="#F58220"
       />
 
-      {/* 2. Green Bottom Wing Ribbon */}
+      {/* 3. Open Book Ribbon: Lower Green Wing with Center Spine V-Point */}
       <path
-        d="M 70,380 C 130,410 190,420 250,440 C 310,420 370,410 430,380 C 370,430 310,440 250,450 C 190,440 130,430 70,380 Z"
-        fill="#008242"
+        d="M 26 197 C 68 211 110 225 154 228 C 198 225 240 211 282 197 C 285 199 283 202 278 205 C 238 222 196 238 154 244 C 112 238 70 222 30 205 C 25 202 23 199 26 197 Z"
+        fill="#007A3D"
       />
     </svg>
+  );
+};
+
+export const DKLogoFull: React.FC<{ 
+  height?: number; 
+  className?: string;
+  showDivider?: boolean;
+  rounded?: boolean;
+}> = ({ height = 48, className = '', showDivider = true, rounded = true }) => {
+  return (
+    <svg
+      height={height}
+      viewBox="0 0 680 260"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      className={`shrink-0 select-none ${className}`}
+      aria-label="Dewey Kindergarten (DK) Official Full Logo"
+    >
+      {/* 0. Solid Crisp White Background */}
+      <rect width="680" height="260" rx={rounded ? "24" : "0"} fill="#FFFFFF" />
+
+      {/* 1. DK Monogram */}
+      <text
+        x="145"
+        y="160"
+        fill="#007A3D"
+        fontFamily="'Times New Roman', 'Georgia', 'Baskerville', 'Palatino', serif"
+        fontSize="165"
+        fontWeight="bold"
+        textAnchor="middle"
+        letterSpacing="-3"
+      >
+        DK
+      </text>
+
+      {/* 2. Orange Upper Book Swoosh */}
+      <path
+        d="M 28 178 C 68 191 108 204 145 208 C 182 204 222 191 262 178 C 265 180 263 183 259 185 C 222 202 183 214 145 216 C 107 214 68 202 31 185 C 27 183 25 180 28 178 Z"
+        fill="#F58220"
+      />
+
+      {/* 3. Green Lower Book Swoosh with Center V-Point */}
+      <path
+        d="M 26 190 C 66 204 108 218 145 221 C 182 221 224 204 264 190 C 267 192 265 195 260 197 C 224 214 183 230 145 236 C 107 230 66 214 30 197 C 25 195 23 192 26 190 Z"
+        fill="#007A3D"
+      />
+
+      {showDivider && (
+        <line x1="295" y1="36" x2="295" y2="238" stroke="#007A3D" strokeWidth="4" strokeLinecap="round" />
+      )}
+
+      {/* 4. DEWEY text */}
+      <text
+        x="320"
+        y="112"
+        fill="#007A3D"
+        fontFamily="'Times New Roman', 'Georgia', 'Baskerville', serif"
+        fontSize="66"
+        fontWeight="bold"
+        letterSpacing="3"
+      >
+        DEWEY
+      </text>
+
+      {/* 5. KINDERGARTEN text */}
+      <text
+        x="320"
+        y="194"
+        fill="#007A3D"
+        fontFamily="'Times New Roman', 'Georgia', 'Baskerville', serif"
+        fontSize="44"
+        fontWeight="bold"
+        letterSpacing="2.5"
+      >
+        KINDERGARTEN
+      </text>
+    </svg>
+  );
+};
+
+export const DKShield: React.FC<{ size?: number; className?: string }> = ({ size = 48, className = '' }) => {
+  return (
+    <div 
+      style={{ width: size, height: size }} 
+      className={`shrink-0 flex items-center justify-center rounded-xl bg-white shadow-xs border border-emerald-200/80 p-1 ${className}`}
+    >
+      <DKLogoEmblem size={Math.max(20, size - 4)} />
+    </div>
   );
 };
 
@@ -306,6 +468,10 @@ export const SchoolLogoIcon: React.FC<{
   const schoolProfile = appState?.schoolProfile;
   const selectedCampusId = appState && 'selectedCampusId' in appState ? appState.selectedCampusId : null;
   
+  // Determine active brand
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
+  const effectiveBrand = brand || (activeCampus?.brand as 'DCH' | 'DK' | 'CENTRAL') || (selectedCampusId?.startsWith('DK_') ? 'DK' : 'DCH');
+
   const effectiveLogoUrl = forceDefaultShield 
     ? null 
     : (customLogoUrl !== undefined ? customLogoUrl : schoolProfile?.customLogoUrl);
@@ -316,11 +482,12 @@ export const SchoolLogoIcon: React.FC<{
     setHasError(false);
   }, [effectiveLogoUrl]);
 
-  if (effectiveLogoUrl && !hasError) {
+  // If a custom logo URL is provided (and this isn't DK falling back to a default DCH logo)
+  if (effectiveLogoUrl && !hasError && (effectiveBrand !== 'DK' || customLogoUrl)) {
     return (
       <div 
         style={{ width: size, height: size }} 
-        className={`shrink-0 flex items-center justify-center relative overflow-hidden rounded-xl bg-white shadow-xs border border-emerald-100 p-1 ${className}`}
+        className={`shrink-0 flex items-center justify-center relative overflow-hidden rounded-2xl bg-white shadow-xs border border-emerald-200/80 p-1 ${className}`}
       >
         <img
           src={effectiveLogoUrl}
@@ -335,29 +502,36 @@ export const SchoolLogoIcon: React.FC<{
     );
   }
 
-  // Determine which shield to show
-  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
-  const effectiveBrand = brand || activeCampus?.brand || 'DCH';
-
   if (effectiveBrand === 'CENTRAL') {
-    return <DIShield size={size} className={className} />;
-  }
-  if (effectiveBrand === 'DK') {
     return (
       <div 
-        style={{ width: size, height: size * 0.4 }} 
-        className={`shrink-0 flex items-center justify-center ${className}`}
+        style={{ width: size, height: size }}
+        className={`shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xs border border-emerald-200/80 p-1 ${className}`}
       >
-        <img
-          src="/dk-logo-new.png"
-          alt="Dewey Kindergarten Logo"
-          className="w-full h-full object-contain"
-          referrerPolicy="no-referrer"
-        />
+        <DIShield size={Math.max(24, size - 6)} />
       </div>
     );
   }
-  return <DCHShield size={size} className={className} />;
+
+  if (effectiveBrand === 'DK') {
+    return (
+      <div 
+        style={{ width: size, height: size }} 
+        className={`shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xs border border-emerald-200/80 p-1 ${className}`}
+      >
+        <DKLogoEmblem size={Math.max(24, size - 6)} />
+      </div>
+    );
+  }
+
+  return (
+    <div 
+      style={{ width: size, height: size }}
+      className={`shrink-0 flex items-center justify-center rounded-2xl bg-white shadow-xs border border-emerald-200/80 p-1 ${className}`}
+    >
+      <DCHShield size={Math.max(24, size - 6)} />
+    </div>
+  );
 };
 
 export const BrandLogo: React.FC<BrandLogoProps> = ({
@@ -376,15 +550,17 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const { schoolProfile, selectedCampusId } = useAppSafe();
   const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
 
-  const isDKCampus = activeCampus?.brand === 'DK';
+  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
   const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolNameKhmer || schoolProfile?.schoolNameKhmer || INITIAL_SCHOOL_PROFILE.schoolNameKhmer);
   const engTitle = isDKCampus ? 'DEWEY KINDERGARTEN' : (schoolNameEnglish || schoolProfile?.schoolNameEnglish || INITIAL_SCHOOL_PROFILE.schoolNameEnglish);
   
   // Determine if we should override branding
-  const displayBrand = isDKCampus ? 'DK' : undefined;
+  const displayBrand: 'DCH' | 'DK' | 'CENTRAL' = isDKCampus ? 'DK' : (activeCampus?.brand === 'CENTRAL' ? 'CENTRAL' : 'DCH');
 
   const khmerSub = taglineKhmer || schoolProfile?.taglineKhmer || INITIAL_SCHOOL_PROFILE.taglineKhmer;
-  const engSub = taglineEnglish || schoolProfile?.taglineEnglish || INITIAL_SCHOOL_PROFILE.taglineEnglish;
+  const engSub = isDKCampus 
+    ? 'International Trilingual Kindergarten (English · Khmer · Chinese)' 
+    : (taglineEnglish || schoolProfile?.taglineEnglish || INITIAL_SCHOOL_PROFILE.taglineEnglish);
   const badgeLabel = isDKCampus ? 'DK Portal' : (portalBadgeText || schoolProfile?.portalBadgeText || INITIAL_SCHOOL_PROFILE.portalBadgeText);
 
   if (variant === 'shield-only') {

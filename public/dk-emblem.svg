@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 320 280" fill="none">
+  <!-- Solid Pure White Background -->
+  <rect width="320" height="280" rx="36" fill="#FFFFFF"/>
+  
+  <!-- DK Letters -->
+  <text x="154" y="166" fill="#007A3D" font-family="'Times New Roman', 'Georgia', 'Baskerville', serif" font-size="172" font-weight="bold" text-anchor="middle" letter-spacing="-3">DK</text>
+  
+  <!-- Orange Upper Book Swoosh -->
+  <path d="M 28 185 C 68 198 110 211 154 215 C 198 211 240 198 280 185 C 283 187 281 190 277 192 C 238 209 196 221 154 223 C 112 221 70 209 31 192 C 27 190 25 187 28 185 Z" fill="#F58220"/>
+  
+  <!-- Green Lower Book Swoosh with Spine Point -->
+  <path d="M 26 197 C 68 211 110 225 154 228 C 198 225 240 211 282 197 C 285 199 283 202 278 205 C 238 222 196 238 154 244 C 112 238 70 222 30 205 C 25 202 23 199 26 197 Z" fill="#007A3D"/>
+</svg>

@@ -238,11 +238,15 @@ export const AuthGate: React.FC = () => {
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     {activeCampus.id === 'ALL' ? (
-                      <DIShield size={36} />
+                      <div className="shrink-0 flex items-center justify-center rounded-xl bg-white shadow-xs border border-emerald-200/80 p-1">
+                        <DIShield size={34} />
+                      </div>
                     ) : activeCampus.brand === 'DK' ? (
-                      <DKShield size={36} />
+                      <DKShield size={40} />
                     ) : (
-                      <DCHShield size={36} />
+                      <div className="shrink-0 flex items-center justify-center rounded-xl bg-white shadow-xs border border-emerald-200/80 p-0.5">
+                        <DCHShield size={38} />
+                      </div>
                     )}
                     <div>
                       <div className="flex items-center gap-2">

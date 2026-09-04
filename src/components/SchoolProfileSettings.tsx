@@ -263,7 +263,7 @@ export const SchoolProfileSettings: React.FC<SchoolProfileSettingsProps> = ({
                   </div>
                 ) : (
                   <div className="w-24 h-28 bg-white rounded-xl shadow-xs border border-emerald-200 p-2 flex items-center justify-center">
-                    <DCHShield size={68} />
+                    <SchoolLogoIcon size={68} />
                   </div>
                 )}
 

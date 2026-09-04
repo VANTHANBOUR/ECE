@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 680 260" fill="none">
+  <!-- Solid Pure White Background -->
+  <rect width="680" height="260" rx="24" fill="#FFFFFF"/>
+
+  <!-- DK Letters -->
+  <text x="145" y="160" fill="#007A3D" font-family="'Times New Roman', 'Georgia', 'Baskerville', serif" font-size="165" font-weight="bold" text-anchor="middle" letter-spacing="-3">DK</text>
+  
+  <!-- Orange Upper Book Swoosh -->
+  <path d="M 28 178 C 68 191 108 204 145 208 C 182 204 222 191 262 178 C 265 180 263 183 259 185 C 222 202 183 214 145 216 C 107 214 68 202 31 185 C 27 183 25 180 28 178 Z" fill="#F58220"/>
+  
+  <!-- Green Lower Book Swoosh -->
+  <path d="M 26 190 C 66 204 108 218 145 221 C 182 221 224 204 264 190 C 267 192 265 195 260 197 C 224 214 183 230 145 236 C 107 230 66 214 30 197 C 25 195 23 192 26 190 Z" fill="#007A3D"/>
+  
+  <!-- Vertical Divider Bar -->
+  <line x1="295" y1="36" x2="295" y2="238" stroke="#007A3D" stroke-width="4" stroke-linecap="round"/>
+  
+  <!-- DEWEY text -->
+  <text x="320" y="112" fill="#007A3D" font-family="'Times New Roman', 'Georgia', 'Baskerville', serif" font-size="66" font-weight="bold" letter-spacing="3">DEWEY</text>
+  
+  <!-- KINDERGARTEN text -->
+  <text x="320" y="194" fill="#007A3D" font-family="'Times New Roman', 'Georgia', 'Baskerville', serif" font-size="44" font-weight="bold" letter-spacing="2.5">KINDERGARTEN</text>
+</svg>
