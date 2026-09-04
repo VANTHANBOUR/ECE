@@ -1,6 +1,7 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useMemo, useCallback, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { 
+  Classroom,
   EarlyChildhoodAgeGroup, 
   EarlyChildhoodDomain, 
   LessonPlan, 
@@ -64,6 +65,42 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
   const institutionKhmer = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូវី') : (schoolProfile?.schoolNameKhmer || 'ឌូវី ឆាល់ឃែរ៍ ហោស៍');
   const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
+
+  // Filter classrooms according to active DK / DCH template context
+  const availableClassrooms = useMemo(() => {
+    const filtered = classrooms.filter(c => {
+      if (selectedCampusId && selectedCampusId !== 'ALL') {
+        return c.campusId === selectedCampusId;
+      }
+      if (isDKCampus) {
+        return c.campusId?.startsWith('DK_') || c.code?.includes('K') || ['cls_eagles', 'cls_sunflowers', 'cls_starfish', 'cls_dolphins'].includes(c.id);
+      } else {
+        return c.campusId?.startsWith('DCH_') || c.campusId === 'CENTRAL' || ['cls_explorers', 'cls_pandas', 'cls_butterflies', 'cls_lotus'].includes(c.id);
+      }
+    });
+    return filtered.length > 0 ? filtered : classrooms;
+  }, [classrooms, selectedCampusId, isDKCampus]);
+
+  // Format label for Classroom & Level options (DK: K1, K2, K3 | DCH: Pre-School, Nursery, Kindergarten)
+  const getClassroomAndLevelLabel = useCallback((c: Classroom) => {
+    if (isDKCampus) {
+      let level = 'K1';
+      if (c.code?.includes('K3') || c.name.includes('K3') || c.name.toLowerCase().includes('k3') || c.khmerName?.includes('៣')) {
+        level = 'K3';
+      } else if (c.code?.includes('K2') || c.name.includes('K2') || c.name.toLowerCase().includes('k2') || c.khmerName?.includes('២') || c.ageGroup === 'Pre-School') {
+        level = 'K2';
+      } else if (c.code?.includes('K1') || c.name.includes('K1') || c.name.toLowerCase().includes('k1') || c.khmerName?.includes('១') || c.ageGroup === 'Kindergarten' || c.ageGroup === 'Nursery') {
+        level = 'K1';
+      }
+      const cleanName = c.name.replace(/\s*\((K1|K2|K3|Kindergarten|Pre-School|Nursery|Pre-Nursery|Prep)\)/gi, '').trim();
+      return `${cleanName} (${level})`;
+    } else {
+      let level = (c.ageGroup as string) || 'Pre-School';
+      if (level === 'Toddlers') level = 'Pre-Nursery';
+      const cleanName = c.name.replace(/\s*\((Pre-School|Nursery|Kindergarten|Pre-Nursery|K1|K2|K3|Prep)\)/gi, '').trim();
+      return `${cleanName} (${level})`;
+    }
+  }, [isDKCampus]);
 
   // Active Editor View Tab
   const [activeTab, setActiveTab] = useState<'official_format' | 'curriculum_matrix' | 'print_preview'>('official_format');
@@ -234,7 +271,13 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   const [previewAttachment, setPreviewAttachment] = useState<PlanAttachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedClass = classrooms.find(c => c.id === classId) || classrooms[0];
+  const selectedClass = availableClassrooms.find(c => c.id === classId) || availableClassrooms[0] || classrooms[0];
+
+  useEffect(() => {
+    if (availableClassrooms.length > 0 && !availableClassrooms.some(c => c.id === classId)) {
+      setClassId(availableClassrooms[0].id);
+    }
+  }, [availableClassrooms, classId]);
 
   // Helper Row Methods for Session 1 & Session 2
   const addSessionRow = (session: 1 | 2) => {
@@ -837,9 +880,9 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                         onChange={(e) => setClassId(e.target.value)}
                         className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
                       >
-                        {classrooms.map(c => (
+                        {availableClassrooms.map(c => (
                           <option key={c.id} value={c.id}>
-                            {c.name} ({c.ageGroup})
+                            {getClassroomAndLevelLabel(c)}
                           </option>
                         ))}
                       </select>
@@ -967,9 +1010,9 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                         onChange={(e) => setClassId(e.target.value)}
                         className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
                       >
-                        {classrooms.map(c => (
+                        {availableClassrooms.map(c => (
                           <option key={c.id} value={c.id}>
-                            {c.name} ({c.ageGroup})
+                            {getClassroomAndLevelLabel(c)}
                           </option>
                         ))}
                       </select>
