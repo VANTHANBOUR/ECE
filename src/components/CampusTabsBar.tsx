@@ -23,6 +23,16 @@ export const CampusTabsBar: React.FC<CampusTabsBarProps> = ({
 
   const isTeacher = currentUser?.role === 'teacher';
   
+  // Central Admin & Central Academic Officer cross-campus override authorization
+  const isCentralRole = React.useMemo(() => {
+    if (!currentUser) return true; // Before login: users can select target campus gate freely
+    if (currentUser.email === 'vanthanbour@diu.edu.kh') return true;
+    if ((currentUser.role === 'admin' || currentUser.role === 'academic_officer') && (!currentUser.campusId || currentUser.campusId === 'ALL')) {
+      return true;
+    }
+    return false;
+  }, [currentUser]);
+
   // Teacher's registered campuses list
   const teacherRegisteredIds: CampusId[] = React.useMemo(() => {
     if (!currentUser || !isTeacher) return [];
@@ -37,6 +47,25 @@ export const CampusTabsBar: React.FC<CampusTabsBarProps> = ({
   };
 
   const handleCampusClick = (campus: CampusInfo) => {
+    // Campus Security Enforcement: Restrict non-central users from switching to unauthorized campuses
+    if (currentUser && !isCentralRole) {
+      const userCampusId = currentUser.campusId;
+      if (userCampusId && userCampusId !== 'ALL' && campus.id !== userCampusId) {
+        // Allow teachers if they registered for multiple campuses
+        if (isTeacher && currentUser.registeredCampusIds?.includes(campus.id)) {
+          onSelectCampus(campus.id);
+          return;
+        }
+
+        const assignedCampus = CAMPUS_LIST.find(c => c.id === userCampusId);
+        showToast(
+          `Access Restricted: Your account (${currentUser.role === 'teacher' ? 'Lead Teacher' : 'Campus Staff'}) is assigned to ${assignedCampus?.shortName || 'your local campus'}. Only Central Admin & Central Academic Officers can switch across all campuses.`,
+          'warning'
+        );
+        return;
+      }
+    }
+
     const registered = checkIsRegistered(campus.id);
     if (registered) {
       onSelectCampus(campus.id);

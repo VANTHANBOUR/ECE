@@ -133,7 +133,7 @@ export const AuthGate: React.FC = () => {
                 ការិយាល័យកណ្តាលអប់រំកុមារតូច ឌូអី
               </span>
               <span className="text-xs sm:text-sm font-black text-white tracking-wide uppercase font-['Outfit',sans-serif] leading-tight">
-                DEWEY INTERNATIONAL EARLY CHILDHOOD EDUCATION
+                DEWEY EARLY CHILDHOOD EDUCATION CENTRAL OFFICE
               </span>
             </div>
           </div>
@@ -158,11 +158,11 @@ export const AuthGate: React.FC = () => {
             <div className="flex items-center gap-2 text-white">
               <Building2 className="w-5 h-5 text-amber-400" />
               <h3 className="text-sm font-black uppercase tracking-wider font-['Outfit']">
-                Select Destination Campus Tab After Login:
+                SELECT TARGET CAMPUS PORTAL TAB BEFORE LOGIN:
               </h3>
             </div>
             <span className="text-xs text-emerald-300/80 font-medium">
-              Click campus tab to open portal gate
+              Select your authorized campus portal before signing in
             </span>
           </div>
 
@@ -185,12 +185,12 @@ export const AuthGate: React.FC = () => {
             <div className="space-y-2">
               <h1 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight font-['Outfit'] leading-tight">
                 {activeCampus.id === 'ALL' 
-                  ? 'Dewey International Early Childhood Portal' 
+                  ? 'Dewey Early Childhood Portal' 
                   : `${activeCampus.shortName} Portal Gate`}
               </h1>
               <p className="text-sm text-slate-300 leading-relaxed">
                 {activeCampus.id === 'ALL'
-                  ? 'Sign in to access curriculum management, trilingual lesson planning, and academic quality moderation across all Dewey International campuses.'
+                  ? 'Sign in to access curriculum management, trilingual lesson planning, and academic quality moderation across all Dewey Early Childhood campuses.'
                   : `Sign in to access ${activeCampus.nameEnglish} (${activeCampus.nameKhmer}) in ${activeCampus.location}.`}
               </p>
             </div>
@@ -474,11 +474,11 @@ export const AuthGate: React.FC = () => {
                   /* SIGN UP FORM */
                   <form onSubmit={handleSignUpSubmit} className="space-y-3.5">
                     
-                    {/* Active Destination Campus Badge */}
+                    {/* Active Target Campus Badge */}
                     <div className="p-2.5 bg-emerald-50 border border-emerald-200 rounded-xl flex items-center justify-between text-xs text-emerald-950 font-bold">
                       <div className="flex items-center gap-2">
                         <Building2 className="w-4 h-4 text-emerald-700" />
-                        <span>Target Destination Campus:</span>
+                        <span>Target Campus Portal (Selected Before Login):</span>
                       </div>
                       <span className="px-2.5 py-0.5 rounded-md bg-emerald-700 text-white font-extrabold">
                         {activeCampus.shortName}

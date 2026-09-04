@@ -786,7 +786,16 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, found.id);
     setIsAuthModalOpen(false);
     addAuditLog('USER_LOGIN', `User ${found.name} signed in successfully`, found.id);
-    showToast(`Welcome back, ${found.name}! Signed in as ${found.role.toUpperCase()}.`, 'success');
+
+    // Campus Security Enforcement: Check if user is restricted to a specific campus
+    const isCentralUser = found.email === 'vanthanbour@diu.edu.kh' || (found.campusId === 'ALL' && (found.role === 'admin' || found.role === 'academic_officer'));
+    if (!isCentralUser && found.campusId && found.campusId !== 'ALL' && found.campusId !== selectedCampusId) {
+      setSelectedCampusId(found.campusId);
+      const userCampus = CAMPUS_LIST.find(c => c.id === found.campusId);
+      showToast(`Welcome back, ${found.name}! Redirected to your authorized campus portal (${userCampus?.shortName || found.campusId}).`, 'info');
+    } else {
+      showToast(`Welcome back, ${found.name}! Signed in as ${found.role.toUpperCase()}.`, 'success');
+    }
     return true;
   };
 
