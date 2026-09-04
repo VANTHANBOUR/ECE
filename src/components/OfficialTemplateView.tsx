@@ -29,10 +29,22 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
   const portalSub = isDKCampus ? 'Dewey Kindergarten Portal' : 'School Management & Lesson Plan Portal';
   const formatLabel = isDKCampus ? 'Official DK Format' : 'Official DCH Format';
 
+  const firstClassLabel = plan?.firstSession?.className;
+  const secondClassLabel = plan?.secondSession?.className;
+
   const assignedClass = classrooms.find(c => c.id === plan?.classId);
-  const rawClassName = plan?.className || assignedClass?.name || '.......................................';
+  let rawClassName = plan?.className || assignedClass?.name || '.......................................';
+
+  if (firstClassLabel && secondClassLabel && firstClassLabel !== secondClassLabel) {
+    const clean1 = firstClassLabel.replace(/\s*\((Pre-Nursery|Nursery|Pre-School|Kindergarten|K1|K2|K3|Toddlers|2-3 Years|3-4 Years|4-5 Years|5-6 Years)\)/gi, '').trim();
+    const clean2 = secondClassLabel.replace(/\s*\((Pre-Nursery|Nursery|Pre-School|Kindergarten|K1|K2|K3|Toddlers|2-3 Years|3-4 Years|4-5 Years|5-6 Years)\)/gi, '').trim();
+    if (clean1 && clean2 && clean1 !== clean2) {
+      rawClassName = `${clean1} & ${clean2}`;
+    }
+  }
+
   // Strip any parenthetical age ranges or duplicated age group text if rawClassName contains them
-  const classNameDisplay = rawClassName.replace(/\s*\((Pre-Nursery|Nursery|Pre-School|Kindergarten|K1|K2|Toddlers|2-3 Years|3-4 Years|4-5 Years|5-6 Years)\)/gi, '').trim();
+  const classNameDisplay = rawClassName.replace(/\s*\((Pre-Nursery|Nursery|Pre-School|Kindergarten|K1|K2|K3|Toddlers|2-3 Years|3-4 Years|4-5 Years|5-6 Years)\)/gi, '').trim();
   const dateDisplay = plan?.planDate || (plan?.startDate ? `${plan.startDate} ~ ${plan.endDate}` : '.......................................');
   
   // Format week, term/quarter, and school year: e.g. "13 - Q: 1 - SY: 2026-2027"

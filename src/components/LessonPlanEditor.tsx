@@ -66,24 +66,212 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   const institutionKhmer = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូវី') : (schoolProfile?.schoolNameKhmer || 'ឌូវី ឆាល់ឃែរ៍ ហោស៍');
   const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
 
+  // Direct Level options for DK and DCH
+  const DK_LEVEL_OPTIONS = useMemo<Classroom[]>(() => [
+    {
+      id: 'dk_opt_k1',
+      name: 'K1',
+      khmerName: 'មត្តេយ្យកម្រិត ១ (K1)',
+      code: 'K1',
+      campusId: 'DK_ROMCHEK_4',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 25,
+      room: 'K1 Room',
+      colorTheme: '#10B981',
+      currentTheme: 'K1 Curriculum',
+    },
+    {
+      id: 'dk_opt_k2',
+      name: 'K2',
+      khmerName: 'មត្តេយ្យកម្រិត ២ (K2)',
+      code: 'K2',
+      campusId: 'DK_ROMCHEK_4',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 25,
+      room: 'K2 Room',
+      colorTheme: '#3B82F6',
+      currentTheme: 'K2 Curriculum',
+    },
+    {
+      id: 'dk_opt_k3',
+      name: 'K3',
+      khmerName: 'មត្តេយ្យកម្រិត ៣ (K3)',
+      code: 'K3',
+      campusId: 'DK_ROMCHEK_4',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 25,
+      room: 'K3 Room',
+      colorTheme: '#8B5CF6',
+      currentTheme: 'K3 Curriculum',
+    },
+  ], []);
+
+  const DCH_LEVEL_OPTIONS = useMemo<Classroom[]>(() => [
+    {
+      id: 'dch_opt_prenursery_am',
+      name: 'Pre-Nursery AM',
+      khmerName: 'ថ្នាក់មុនមត្តេយ្យ (ព្រឹក)',
+      code: 'PNUR-AM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Pre-Nursery',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 15,
+      capacity: 18,
+      room: 'Pre-Nursery Suite AM',
+      colorTheme: '#10B981',
+      currentTheme: 'Pre-Nursery AM Curriculum',
+    },
+    {
+      id: 'dch_opt_prenursery_pm',
+      name: 'Pre-Nursery PM',
+      khmerName: 'ថ្នាក់មុនមត្តេយ្យ (រសៀល)',
+      code: 'PNUR-PM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Pre-Nursery',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 15,
+      capacity: 18,
+      room: 'Pre-Nursery Suite PM',
+      colorTheme: '#059669',
+      currentTheme: 'Pre-Nursery PM Curriculum',
+    },
+    {
+      id: 'dch_opt_nursery_am',
+      name: 'Nursery AM',
+      khmerName: 'ថ្នាក់មត្តេយ្យទាប (ព្រឹក)',
+      code: 'NUR-AM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Nursery',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 18,
+      capacity: 20,
+      room: 'Nursery Suite AM',
+      colorTheme: '#0EA5E9',
+      currentTheme: 'Nursery AM Curriculum',
+    },
+    {
+      id: 'dch_opt_nursery_pm',
+      name: 'Nursery PM',
+      khmerName: 'ថ្នាក់មត្តេយ្យទាប (រសៀល)',
+      code: 'NUR-PM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Nursery',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 18,
+      capacity: 20,
+      room: 'Nursery Suite PM',
+      colorTheme: '#0284C7',
+      currentTheme: 'Nursery PM Curriculum',
+    },
+    {
+      id: 'dch_opt_preschool_am',
+      name: 'Pre-School AM',
+      khmerName: 'ថ្នាក់ត្រៀមមត្តេយ្យ (ព្រឹក)',
+      code: 'PREK-AM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Pre-School',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 22,
+      room: 'Pre-School Suite AM',
+      colorTheme: '#8B5CF6',
+      currentTheme: 'Pre-School AM Curriculum',
+    },
+    {
+      id: 'dch_opt_preschool_pm',
+      name: 'Pre-School PM',
+      khmerName: 'ថ្នាក់ត្រៀមមត្តេយ្យ (រសៀល)',
+      code: 'PREK-PM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Pre-School',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 22,
+      room: 'Pre-School Suite PM',
+      colorTheme: '#7C3AED',
+      currentTheme: 'Pre-School PM Curriculum',
+    },
+    {
+      id: 'dch_opt_kindergarten_am',
+      name: 'Kindergarten AM',
+      khmerName: 'ថ្នាក់មត្តេយ្យ (ព្រឹក)',
+      code: 'KIND-AM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 22,
+      capacity: 25,
+      room: 'Kindergarten Suite AM',
+      colorTheme: '#EC4899',
+      currentTheme: 'Kindergarten AM Curriculum',
+    },
+    {
+      id: 'dch_opt_kindergarten_pm',
+      name: 'Kindergarten PM',
+      khmerName: 'ថ្នាក់មត្តេយ្យ (រសៀល)',
+      code: 'KIND-PM',
+      campusId: 'DCH_SYW',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 22,
+      capacity: 25,
+      room: 'Kindergarten Suite PM',
+      colorTheme: '#DB2777',
+      currentTheme: 'Kindergarten PM Curriculum',
+    },
+  ], []);
+
   // Filter classrooms according to active DK / DCH template context
   const availableClassrooms = useMemo(() => {
-    const filtered = classrooms.filter(c => {
-      if (selectedCampusId && selectedCampusId !== 'ALL') {
-        return c.campusId === selectedCampusId;
-      }
-      if (isDKCampus) {
-        return c.campusId?.startsWith('DK_') || c.code?.includes('K') || ['cls_eagles', 'cls_sunflowers', 'cls_starfish', 'cls_dolphins'].includes(c.id);
-      } else {
-        return c.campusId?.startsWith('DCH_') || c.campusId === 'CENTRAL' || ['cls_explorers', 'cls_pandas', 'cls_butterflies', 'cls_lotus'].includes(c.id);
-      }
-    });
-    return filtered.length > 0 ? filtered : classrooms;
-  }, [classrooms, selectedCampusId, isDKCampus]);
+    if (isDKCampus) {
+      const dkClassrooms = classrooms.filter(c => 
+        (selectedCampusId && selectedCampusId !== 'ALL' ? c.campusId === selectedCampusId : (c.campusId?.startsWith('DK_') || c.code?.includes('K') || ['cls_eagles', 'cls_sunflowers', 'cls_starfish', 'cls_dolphins'].includes(c.id)))
+      );
+      const existing = dkClassrooms.filter(c => !['dk_opt_k1', 'dk_opt_k2', 'dk_opt_k3'].includes(c.id));
+      return [...DK_LEVEL_OPTIONS, ...existing];
+    } else {
+      const dchClassrooms = classrooms.filter(c => 
+        (selectedCampusId && selectedCampusId !== 'ALL' ? c.campusId === selectedCampusId : (c.campusId?.startsWith('DCH_') || c.campusId === 'CENTRAL' || ['cls_explorers', 'cls_pandas', 'cls_butterflies', 'cls_lotus'].includes(c.id)))
+      );
+      const existing = dchClassrooms.filter(c => !c.id.startsWith('dch_opt_'));
+      return [...DCH_LEVEL_OPTIONS, ...existing];
+    }
+  }, [classrooms, selectedCampusId, isDKCampus, DK_LEVEL_OPTIONS, DCH_LEVEL_OPTIONS]);
 
-  // Format label for Classroom & Level options (DK: K1, K2, K3 | DCH: Pre-School, Nursery, Kindergarten)
+  // Format label for Classroom & Level options (DK: K1, K2, K3 | DCH: Pre-Nursery AM/PM, Nursery AM/PM, etc.)
   const getClassroomAndLevelLabel = useCallback((c: Classroom) => {
     if (isDKCampus) {
+      if (['dk_opt_k1', 'dk_opt_k2', 'dk_opt_k3'].includes(c.id)) {
+        return c.name; // Just K1, K2, K3
+      }
       let level = 'K1';
       if (c.code?.includes('K3') || c.name.includes('K3') || c.name.toLowerCase().includes('k3') || c.khmerName?.includes('៣')) {
         level = 'K3';
@@ -93,8 +281,14 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
         level = 'K1';
       }
       const cleanName = c.name.replace(/\s*\((K1|K2|K3|Kindergarten|Pre-School|Nursery|Pre-Nursery|Prep)\)/gi, '').trim();
+      if (cleanName === 'K1' || cleanName === 'K2' || cleanName === 'K3') {
+        return cleanName;
+      }
       return `${cleanName} (${level})`;
     } else {
+      if (c.id.startsWith('dch_opt_')) {
+        return c.name;
+      }
       let level = (c.ageGroup as string) || 'Pre-School';
       if (level === 'Toddlers') level = 'Pre-Nursery';
       const cleanName = c.name.replace(/\s*\((Pre-School|Nursery|Kindergarten|Pre-Nursery|K1|K2|K3|Prep)\)/gi, '').trim();
@@ -106,7 +300,12 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   const [activeTab, setActiveTab] = useState<'official_format' | 'curriculum_matrix' | 'print_preview'>('official_format');
 
   // Metadata State
-  const [classId, setClassId] = useState<string>(initialPlan?.classId || currentUser.assignedClassId || classrooms[0]?.id || '');
+  const [firstSessionClassId, setFirstSessionClassId] = useState<string>(
+    initialPlan?.firstSession?.classId || initialPlan?.classId || currentUser.assignedClassId || classrooms[0]?.id || ''
+  );
+  const [secondSessionClassId, setSecondSessionClassId] = useState<string>(
+    initialPlan?.secondSession?.classId || initialPlan?.classId || currentUser.assignedClassId || classrooms[0]?.id || ''
+  );
   const [weekNumber, setWeekNumber] = useState<number>(initialPlan?.weekNumber || 13);
   
   const getInitialQuarter = (termStr?: string): number => {
@@ -271,13 +470,29 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   const [previewAttachment, setPreviewAttachment] = useState<PlanAttachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  const selectedClass = availableClassrooms.find(c => c.id === classId) || availableClassrooms[0] || classrooms[0];
+  const firstSessionClassObj = availableClassrooms.find(c => c.id === firstSessionClassId) || availableClassrooms[0] || classrooms[0];
+  const secondSessionClassObj = availableClassrooms.find(c => c.id === secondSessionClassId) || availableClassrooms[0] || classrooms[0];
+
+  const firstSessionClassName = firstSessionClassObj ? getClassroomAndLevelLabel(firstSessionClassObj) : '';
+  const secondSessionClassName = secondSessionClassObj ? getClassroomAndLevelLabel(secondSessionClassObj) : '';
+
+  let combinedClassName = firstSessionClassName;
+  if (firstSessionClassId !== secondSessionClassId && firstSessionClassName && secondSessionClassName && firstSessionClassName !== secondSessionClassName) {
+    combinedClassName = `${firstSessionClassName} & ${secondSessionClassName}`;
+  }
+
+  const selectedClass = firstSessionClassObj;
 
   useEffect(() => {
-    if (availableClassrooms.length > 0 && !availableClassrooms.some(c => c.id === classId)) {
-      setClassId(availableClassrooms[0].id);
+    if (availableClassrooms.length > 0) {
+      if (!availableClassrooms.some(c => c.id === firstSessionClassId)) {
+        setFirstSessionClassId(availableClassrooms[0].id);
+      }
+      if (!availableClassrooms.some(c => c.id === secondSessionClassId)) {
+        setSecondSessionClassId(availableClassrooms[0].id);
+      }
     }
-  }, [availableClassrooms, classId]);
+  }, [availableClassrooms, firstSessionClassId, secondSessionClassId]);
 
   // Helper Row Methods for Session 1 & Session 2
   const addSessionRow = (session: 1 | 2) => {
@@ -540,9 +755,9 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       teacherName: initialPlan?.teacherName || currentUser.name,
       teacherAvatar: initialPlan?.teacherAvatar || currentUser.avatar,
       teacherEmail: initialPlan?.teacherEmail || currentUser.email,
-      classId: selectedClass.id,
-      className: selectedClass.name,
-      ageGroup: selectedClass.ageGroup,
+      classId: firstSessionClassId,
+      className: combinedClassName,
+      ageGroup: firstSessionClassObj.ageGroup,
       weekNumber: Number(weekNumber),
       term: `Term ${quarter} (Academic Year 2026)`,
       startDate,
@@ -575,10 +790,14 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       firstSession: {
         subject: firstSessionSubject,
         activities: firstSessionActivities,
+        classId: firstSessionClassId,
+        className: firstSessionClassName,
       },
       secondSession: {
         subject: secondSessionSubject,
         activities: secondSessionActivities,
+        classId: secondSessionClassId,
+        className: secondSessionClassName,
       },
       closing,
     };
@@ -609,9 +828,9 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     teacherName: initialPlan?.teacherName || currentUser.name,
     teacherAvatar: initialPlan?.teacherAvatar || currentUser.avatar,
     teacherEmail: initialPlan?.teacherEmail || currentUser.email,
-    classId: selectedClass.id,
-    className: selectedClass.name,
-    ageGroup: selectedClass.ageGroup,
+    classId: firstSessionClassId,
+    className: combinedClassName,
+    ageGroup: firstSessionClassObj.ageGroup,
     weekNumber: Number(weekNumber),
     term: `Term ${quarter} (Academic Year 2026)`,
     startDate,
@@ -644,10 +863,14 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     firstSession: {
       subject: firstSessionSubject,
       activities: firstSessionActivities,
+      classId: firstSessionClassId,
+      className: firstSessionClassName,
     },
     secondSession: {
       subject: secondSessionSubject,
       activities: secondSessionActivities,
+      classId: secondSessionClassId,
+      className: secondSessionClassName,
     },
     closing,
   };
@@ -876,8 +1099,8 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-xs font-bold text-slate-800 shrink-0">Classroom & Level:</span>
                       <select
-                        value={classId}
-                        onChange={(e) => setClassId(e.target.value)}
+                        value={firstSessionClassId}
+                        onChange={(e) => setFirstSessionClassId(e.target.value)}
                         className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
                       >
                         {availableClassrooms.map(c => (
@@ -1006,8 +1229,8 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                     <div className="flex items-center gap-1.5 shrink-0">
                       <span className="text-xs font-bold text-slate-800 shrink-0">Classroom & Level:</span>
                       <select
-                        value={classId}
-                        onChange={(e) => setClassId(e.target.value)}
+                        value={secondSessionClassId}
+                        onChange={(e) => setSecondSessionClassId(e.target.value)}
                         className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
                       >
                         {availableClassrooms.map(c => (

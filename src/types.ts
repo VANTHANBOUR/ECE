@@ -252,6 +252,8 @@ export interface SessionActivityRow {
 export interface OfficialSessionPlan {
   subject: string;
   activities: SessionActivityRow[];
+  classId?: string;
+  className?: string;
 }
 
 export interface LessonPlan {
