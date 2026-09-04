@@ -132,6 +132,37 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
     window.print();
   };
 
+  const formatWeekTermSY = (weekNumber?: number, termStr?: string, startDate?: string): string => {
+    const weekNum = weekNumber ?? 13;
+    let termNum = '1';
+    if (termStr) {
+      const termMatch = termStr.match(/(?:Term|Q|Quarter)\s*(\d+)/i) || termStr.match(/(\d+)/);
+      if (termMatch && termMatch[1]) {
+        termNum = termMatch[1];
+      }
+    }
+    let syStr = '2026-2027';
+    if (termStr) {
+      const syRangeMatch = termStr.match(/(20\d{2})\s*[-–/]\s*(20\d{2})/);
+      if (syRangeMatch) {
+        syStr = `${syRangeMatch[1]}-${syRangeMatch[2]}`;
+      } else {
+        const sySingleMatch = termStr.match(/(20\d{2})/);
+        if (sySingleMatch) {
+          const startYr = parseInt(sySingleMatch[1], 10);
+          syStr = `${startYr}-${startYr + 1}`;
+        }
+      }
+    } else if (startDate) {
+      const yrMatch = startDate.match(/(20\d{2})/);
+      if (yrMatch) {
+        const startYr = parseInt(yrMatch[1], 10);
+        syStr = `${startYr}-${startYr + 1}`;
+      }
+    }
+    return `${weekNum} - Q: ${termNum} - SY: ${syStr}`;
+  };
+
   const handleExportWord = () => {
     const htmlContent = `
       <!DOCTYPE html>
@@ -163,10 +194,10 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
         <table class="meta-table">
           <tr>
             <td width="50%"><strong>Date:</strong> ${plan.planDate || plan.startDate}</td>
-            <td width="50%"><strong>Week:</strong> Week ${plan.weekNumber}</td>
+            <td width="50%"><strong>Week:</strong> ${formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate)}</td>
           </tr>
           <tr>
-            <td><strong>Class:</strong> ${plan.className} (${plan.ageGroup})</td>
+            <td><strong>Class:</strong> ${plan.className.replace(/\s*\([^)]*\)/g, '').trim()}</td>
             <td><strong>Time:</strong> ${plan.timeStart || '08:30 AM'} to ${plan.timeEnd || '11:30 AM'}</td>
           </tr>
         </table>
@@ -261,7 +292,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
       document.body.removeChild(a);
       showToast(`Downloading "${att.name}"`, 'success');
     } else {
-      const content = `Dewey Kindergarten Lesson Plan Attachment\nTheme: ${plan.themeTitle}\nClass: ${plan.className} (${plan.ageGroup})\nDocument: ${att.name}\nSize: ${att.size}\nDate: ${att.uploadedAt}\n\nOfficial curriculum records for Dewey Kindergarten (DK).`;
+      const content = `Dewey Kindergarten Lesson Plan Attachment\nTheme: ${plan.themeTitle}\nClass: ${plan.className.replace(/\s*\([^)]*\)/g, '').trim()}\nDocument: ${att.name}\nSize: ${att.size}\nDate: ${att.uploadedAt}\n\nOfficial curriculum records for Dewey Kindergarten (DK).`;
       const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -430,7 +461,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
                 <div className="flex flex-row sm:flex-col items-start sm:items-end justify-between sm:justify-center gap-1">
                   {getStatusBadge(plan.status)}
                   <span className="text-[11px] text-slate-500 font-medium">
-                    {plan.term} · Week {plan.weekNumber} ({plan.startDate} to {plan.endDate})
+                    Week: {formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate)} ({plan.startDate} to {plan.endDate})
                   </span>
                 </div>
               </div>

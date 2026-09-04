@@ -845,7 +845,7 @@ export const INITIAL_LESSON_PLANS: LessonPlan[] = [
     teacherAvatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&auto=format&fit=crop&q=80',
     teacherEmail: 'chamnan.vong@deweychildcare.edu.kh',
     classId: 'cls_explorers',
-    className: 'Pre-Nursery (Pre-Nursery)',
+    className: 'Pre-Nursery',
     ageGroup: 'Pre-Nursery',
     weekNumber: 12,
     term: 'Term 1 (Academic Year 2026)',
@@ -941,7 +941,7 @@ export const INITIAL_LESSON_PLANS: LessonPlan[] = [
 ];
 
 export const INITIAL_SCHOOL_PROFILE = {
-  schoolNameKhmer: 'ការិយាល័យកណ្តាលអប់រំកុមារតូច ឌូអី',
+  schoolNameKhmer: 'ការិយាល័យកណ្តាលអប់រំកុមារតូច ឌូវី',
   schoolNameEnglish: 'DEWEY EARLY CHILDHOOD EDUCATION CENTRAL OFFICE',
   schoolAbbreviation: 'DCH CENTRAL',
   taglineKhmer: 'មជ្ឈមណ្ឌលអប់រំមត្តេយ្យសិក្សាអន្តរជាតិ ៣ ភាសា ( អង់គ្លេស-ខ្មែរ-ចិន )',

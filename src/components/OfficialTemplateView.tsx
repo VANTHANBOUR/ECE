@@ -24,15 +24,50 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
 
   const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
   const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
-  const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolProfile?.schoolNameKhmer || 'សាលាមត្តេយ្យ ដេវី');
+  const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូវី') : (schoolProfile?.schoolNameKhmer || 'ឌូវី ឆាល់ឃែរ៍ ហោស៍');
   const engTitle = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
   const portalSub = isDKCampus ? 'Dewey Kindergarten Portal' : 'School Management & Lesson Plan Portal';
   const formatLabel = isDKCampus ? 'Official DK Format' : 'Official DCH Format';
 
   const assignedClass = classrooms.find(c => c.id === plan?.classId);
-  const classNameDisplay = plan?.className || assignedClass?.name || '.......................................';
+  const rawClassName = plan?.className || assignedClass?.name || '.......................................';
+  // Strip any parenthetical age ranges or duplicated age group text if rawClassName contains them
+  const classNameDisplay = rawClassName.replace(/\s*\((Pre-Nursery|Nursery|Pre-School|Kindergarten|K1|K2|Toddlers|2-3 Years|3-4 Years|4-5 Years|5-6 Years)\)/gi, '').trim();
   const dateDisplay = plan?.planDate || (plan?.startDate ? `${plan.startDate} ~ ${plan.endDate}` : '.......................................');
-  const weekDisplay = plan?.weekNumber ? `Week ${plan.weekNumber}` : '.......................................';
+  
+  // Format week, term/quarter, and school year: e.g. "13 - Q: 1 - SY: 2026-2027"
+  const formatWeekTermSY = (weekNumber?: number, termStr?: string, startDate?: string): string => {
+    const weekNum = weekNumber ?? 13;
+    let termNum = '1';
+    if (termStr) {
+      const termMatch = termStr.match(/(?:Term|Q|Quarter)\s*(\d+)/i) || termStr.match(/(\d+)/);
+      if (termMatch && termMatch[1]) {
+        termNum = termMatch[1];
+      }
+    }
+    let syStr = '2026-2027';
+    if (termStr) {
+      const syRangeMatch = termStr.match(/(20\d{2})\s*[-–/]\s*(20\d{2})/);
+      if (syRangeMatch) {
+        syStr = `${syRangeMatch[1]}-${syRangeMatch[2]}`;
+      } else {
+        const sySingleMatch = termStr.match(/(20\d{2})/);
+        if (sySingleMatch) {
+          const startYr = parseInt(sySingleMatch[1], 10);
+          syStr = `${startYr}-${startYr + 1}`;
+        }
+      }
+    } else if (startDate) {
+      const yrMatch = startDate.match(/(20\d{2})/);
+      if (yrMatch) {
+        const startYr = parseInt(yrMatch[1], 10);
+        syStr = `${startYr}-${startYr + 1}`;
+      }
+    }
+    return `${weekNum} - Q: ${termNum} - SY: ${syStr}`;
+  };
+
+  const weekDisplay = plan ? formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate) : '.......................................';
   const timeStartDisplay = plan?.timeStart || '08:30 AM';
   const timeEndDisplay = plan?.timeEnd || '11:30 AM';
 
@@ -134,7 +169,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
           <span className="font-bold mr-1.5 shrink-0 text-black">Week:</span>
           {plan ? (
             <span className="font-semibold text-slate-800 border-b border-dotted border-slate-700 grow pb-0.5 px-1">
-              {weekDisplay} {plan?.term ? `(${plan.term})` : ''}
+              {weekDisplay}
             </span>
           ) : (
             <span className="border-b border-dotted border-slate-400 grow h-4 inline-block" />
@@ -146,7 +181,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
           <span className="font-bold mr-1.5 shrink-0 text-black">Class:</span>
           {plan ? (
             <span className="font-semibold text-slate-800 border-b border-dotted border-slate-700 grow pb-0.5 px-1">
-              {classNameDisplay} {plan?.ageGroup ? `· ${plan.ageGroup}` : ''}
+              {classNameDisplay}
             </span>
           ) : (
             <span className="border-b border-dotted border-slate-400 grow h-4 inline-block" />

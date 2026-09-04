@@ -551,7 +551,7 @@ export const BrandLogo: React.FC<BrandLogoProps> = ({
   const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
 
   const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
-  const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolNameKhmer || schoolProfile?.schoolNameKhmer || INITIAL_SCHOOL_PROFILE.schoolNameKhmer);
+  const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូវី') : (schoolNameKhmer || schoolProfile?.schoolNameKhmer || INITIAL_SCHOOL_PROFILE.schoolNameKhmer);
   const engTitle = isDKCampus ? 'DEWEY KINDERGARTEN' : (schoolNameEnglish || schoolProfile?.schoolNameEnglish || INITIAL_SCHOOL_PROFILE.schoolNameEnglish);
   
   // Determine if we should override branding

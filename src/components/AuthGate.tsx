@@ -130,7 +130,7 @@ export const AuthGate: React.FC = () => {
             <DIShield size={44} />
             <div className="flex flex-col">
               <span className="text-base sm:text-lg font-bold text-emerald-400 font-['Battambang',sans-serif] tracking-tight leading-tight">
-                ការិយាល័យកណ្តាលអប់រំកុមារតូច ឌូអី
+                ការិយាល័យកណ្តាលអប់រំកុមារតូច ឌូវី
               </span>
               <span className="text-xs sm:text-sm font-black text-white tracking-wide uppercase font-['Outfit',sans-serif] leading-tight">
                 DEWEY EARLY CHILDHOOD EDUCATION CENTRAL OFFICE

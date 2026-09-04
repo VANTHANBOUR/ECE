@@ -62,7 +62,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
 
   const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
   const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
-  const institutionKhmer = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូអី') : (schoolProfile?.schoolNameKhmer || 'សាលាមត្តេយ្យ ដេវី');
+  const institutionKhmer = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូវី') : (schoolProfile?.schoolNameKhmer || 'ឌូវី ឆាល់ឃែរ៍ ហោស៍');
   const institutionEnglish = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
 
   // Active Editor View Tab
@@ -71,7 +71,17 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   // Metadata State
   const [classId, setClassId] = useState<string>(initialPlan?.classId || currentUser.assignedClassId || classrooms[0]?.id || '');
   const [weekNumber, setWeekNumber] = useState<number>(initialPlan?.weekNumber || 13);
-  const [term, setTerm] = useState<string>(initialPlan?.term || 'Term 1 (Academic Year 2026)');
+  
+  const getInitialQuarter = (termStr?: string): number => {
+    if (!termStr) return 1;
+    const match = termStr.match(/(?:Term|Q|Quarter)\s*(\d+)/i) || termStr.match(/(\d+)/);
+    if (match && match[1]) {
+      const q = parseInt(match[1], 10);
+      if (q >= 1 && q <= 4) return q;
+    }
+    return 1;
+  };
+  const [quarter, setQuarter] = useState<number>(() => getInitialQuarter(initialPlan?.term));
   const [startDate, setStartDate] = useState<string>(initialPlan?.startDate || '2026-09-08');
   const [endDate, setEndDate] = useState<string>(initialPlan?.endDate || '2026-09-12');
   const [planDate, setPlanDate] = useState<string>(initialPlan?.planDate || initialPlan?.startDate || '2026-09-08');
@@ -491,7 +501,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       className: selectedClass.name,
       ageGroup: selectedClass.ageGroup,
       weekNumber: Number(weekNumber),
-      term,
+      term: `Term ${quarter} (Academic Year 2026)`,
       startDate,
       endDate,
       planDate,
@@ -560,7 +570,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     className: selectedClass.name,
     ageGroup: selectedClass.ageGroup,
     weekNumber: Number(weekNumber),
-    term,
+    term: `Term ${quarter} (Academic Year 2026)`,
     startDate,
     endDate,
     planDate,
@@ -723,7 +733,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                   </h4>
                 </div>
 
-                {/* Metadata Fields (Date, Week, Class, Time) */}
+                {/* Metadata Fields (Date, Week, Quarter, Time) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
                   <div>
                     <label className="text-xs font-bold text-slate-800 block mb-1">
@@ -753,18 +763,17 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
 
                   <div>
                     <label className="text-xs font-bold text-slate-800 block mb-1">
-                      Classroom & Level *
+                      Quarter *
                     </label>
                     <select
-                      value={classId}
-                      onChange={(e) => setClassId(e.target.value)}
-                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                      value={quarter}
+                      onChange={(e) => setQuarter(parseInt(e.target.value) || 1)}
+                      className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     >
-                      {classrooms.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.ageGroup})
-                        </option>
-                      ))}
+                      <option value={1}>1</option>
+                      <option value={2}>2</option>
+                      <option value={3}>3</option>
+                      <option value={4}>4</option>
                     </select>
                   </div>
 
@@ -815,20 +824,36 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
 
               {/* SECTION II: 1st Session */}
               <div className="p-5 bg-white border-2 border-slate-300 rounded-2xl space-y-4 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-emerald-800 font-extrabold text-base">II.</span>
                     <span className="font-bold text-sm text-black">1<sup>st</sup> Session</span>
                   </div>
-                  <div className="flex items-center gap-2 grow max-w-md">
-                    <span className="text-xs font-bold text-slate-800 shrink-0">Subject:</span>
-                    <input
-                      type="text"
-                      value={firstSessionSubject}
-                      onChange={(e) => setFirstSessionSubject(e.target.value)}
-                      placeholder="e.g. Language & Trilingual Early Literacy"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
-                    />
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 grow max-w-2xl justify-end">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-xs font-bold text-slate-800 shrink-0">Classroom & Level:</span>
+                      <select
+                        value={classId}
+                        onChange={(e) => setClassId(e.target.value)}
+                        className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
+                      >
+                        {classrooms.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.ageGroup})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-1.5 grow max-w-md">
+                      <span className="text-xs font-bold text-slate-800 shrink-0">Subject:</span>
+                      <input
+                        type="text"
+                        value={firstSessionSubject}
+                        onChange={(e) => setFirstSessionSubject(e.target.value)}
+                        placeholder="e.g. Language & Trilingual Early Literacy"
+                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
@@ -929,20 +954,36 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
 
               {/* SECTION III: 2nd Session */}
               <div className="p-5 bg-white border-2 border-slate-300 rounded-2xl space-y-4 shadow-xs">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-3">
                   <div className="flex items-center gap-2">
                     <span className="text-emerald-800 font-extrabold text-base">III.</span>
                     <span className="font-bold text-sm text-black">2<sup>nd</sup> Session</span>
                   </div>
-                  <div className="flex items-center gap-2 grow max-w-md">
-                    <span className="text-xs font-bold text-slate-800 shrink-0">Subject:</span>
-                    <input
-                      type="text"
-                      value={secondSessionSubject}
-                      onChange={(e) => setSecondSessionSubject(e.target.value)}
-                      placeholder="e.g. Sensory Discovery Science & Creative Arts"
-                      className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
-                    />
+                  <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 grow max-w-2xl justify-end">
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <span className="text-xs font-bold text-slate-800 shrink-0">Classroom & Level:</span>
+                      <select
+                        value={classId}
+                        onChange={(e) => setClassId(e.target.value)}
+                        className="px-2.5 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
+                      >
+                        {classrooms.map(c => (
+                          <option key={c.id} value={c.id}>
+                            {c.name} ({c.ageGroup})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex items-center gap-1.5 grow max-w-md">
+                      <span className="text-xs font-bold text-slate-800 shrink-0">Subject:</span>
+                      <input
+                        type="text"
+                        value={secondSessionSubject}
+                        onChange={(e) => setSecondSessionSubject(e.target.value)}
+                        placeholder="e.g. Sensory Discovery Science & Creative Arts"
+                        className="w-full px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-900 focus:bg-white focus:outline-emerald-500"
+                      />
+                    </div>
                   </div>
                 </div>
 
