@@ -486,11 +486,20 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                         onChange={(e) => setAssignedClassId(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
                       >
-                        {getCampusClassroomOptions(campusId).map(opt => (
-                          <option key={opt.id} value={opt.id}>
-                            {opt.name}
-                          </option>
-                        ))}
+                        <option value="">-- Unassigned --</option>
+                        {classrooms.filter(c => !campusId || campusId === 'ALL' || c.campusId === campusId).length > 0 ? (
+                          classrooms.filter(c => !campusId || campusId === 'ALL' || c.campusId === campusId).map(cls => (
+                            <option key={cls.id} value={cls.id}>
+                              {cls.name} ({cls.code}) - {cls.ageGroup}
+                            </option>
+                          ))
+                        ) : (
+                          getCampusClassroomOptions(campusId).map(opt => (
+                            <option key={opt.id} value={opt.id}>
+                              {opt.name}
+                            </option>
+                          ))
+                        )}
                       </select>
                     </div>
                     <div className="space-y-1">

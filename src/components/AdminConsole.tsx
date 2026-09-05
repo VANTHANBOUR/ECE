@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LessonPlan, UserAccount, UserRole, Classroom, CAMPUS_LIST } from '../types';
+import { LessonPlan, UserAccount, UserRole, Classroom, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
 import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { SchoolProfileSettings } from './SchoolProfileSettings';
@@ -498,28 +498,52 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
                     {/* Assigned Classroom */}
                     <td className="py-3.5 px-4">
-                      {user.role === 'teacher' ? (
-                        <select
-                          value={user.assignedClassId || ''}
-                          onChange={(e) => {
-                            const clsId = e.target.value;
-                            const matchedClass = classrooms.find(c => c.id === clsId || c.code === clsId);
-                            updateAccount(user.id, {
-                              assignedClassId: clsId,
-                              assignedClassName: matchedClass ? matchedClass.name : (clsId || 'Unassigned'),
-                              ageGroup: matchedClass ? matchedClass.ageGroup : undefined,
-                            });
-                          }}
-                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600 max-w-[200px] truncate"
-                        >
-                          <option value="">-- Unassigned --</option>
-                          {classrooms.map((cls) => (
-                            <option key={cls.id} value={cls.id}>
-                              {cls.name} ({cls.code}) - {cls.ageGroup}
-                            </option>
-                          ))}
-                        </select>
-                      ) : (
+                      {user.role === 'teacher' ? (() => {
+                        // Filter classrooms matching staff member's campus location
+                        const campusClassrooms = classrooms.filter(cls => {
+                          if (user.campusId && user.campusId !== 'ALL') {
+                            return cls.campusId === user.campusId;
+                          }
+                          if (selectedConsoleCampus !== 'all') {
+                            return cls.campusId === selectedConsoleCampus;
+                          }
+                          return true;
+                        });
+
+                        const presetOptions = getCampusClassroomOptions(user.campusId);
+
+                        return (
+                          <select
+                            value={user.assignedClassId || ''}
+                            onChange={(e) => {
+                              const clsId = e.target.value;
+                              const matchedClass = classrooms.find(c => c.id === clsId || c.code === clsId);
+                              const matchedPreset = presetOptions.find(p => p.id === clsId);
+                              updateAccount(user.id, {
+                                assignedClassId: clsId,
+                                assignedClassName: matchedClass ? matchedClass.name : (matchedPreset ? matchedPreset.name : (clsId || 'Unassigned')),
+                                ageGroup: matchedClass ? matchedClass.ageGroup : undefined,
+                              });
+                            }}
+                            className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600 max-w-[200px] truncate cursor-pointer shadow-2xs hover:border-emerald-300 transition-colors"
+                          >
+                            <option value="">-- Unassigned --</option>
+                            {campusClassrooms.length > 0 ? (
+                              campusClassrooms.map((cls) => (
+                                <option key={cls.id} value={cls.id}>
+                                  {cls.name} ({cls.code}) - {cls.ageGroup}
+                                </option>
+                              ))
+                            ) : (
+                              presetOptions.map((opt) => (
+                                <option key={opt.id} value={opt.id}>
+                                  {opt.name}
+                                </option>
+                              ))
+                            )}
+                          </select>
+                        );
+                      })() : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold">
                           <Layers className="w-3 h-3 text-slate-400" />
                           <span>All Classrooms (Supervisory)</span>
