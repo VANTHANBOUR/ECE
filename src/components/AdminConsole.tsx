@@ -725,10 +725,10 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                             <button
                               onClick={() => onSelectPlan(plan, true)}
                               className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs"
-                              title="Print Lesson Plan Official Format"
+                              title="Print Sheet Preview"
                             >
                               <Printer className="w-3 h-3" />
-                              <span>Print</span>
+                              <span>Print Sheet</span>
                             </button>
                           )}
                           <button

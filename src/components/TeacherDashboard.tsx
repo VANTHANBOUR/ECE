@@ -358,10 +358,10 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     <button
                       onClick={() => onSelectPlan(plan, true)}
                       className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
-                      title="Print Official Format"
+                      title="Print Sheet Preview"
                     >
                       <Printer className="w-3.5 h-3.5 text-emerald-200" />
-                      <span>Print Official Format</span>
+                      <span>Print Sheet Preview</span>
                     </button>
                   )}
 

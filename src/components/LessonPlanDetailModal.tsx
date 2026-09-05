@@ -363,7 +363,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
               }`}
             >
               <Table className="w-3.5 h-3.5" />
-              <span>Official Format Template</span>
+              <span>Print Sheet Preview</span>
             </button>
 
             <button
@@ -416,7 +416,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
               title="Print official letterhead lesson plan"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>{plan.status === 'approved' ? 'Print Official Format' : 'Print / PDF'}</span>
+              <span>Print Sheet Preview</span>
             </button>
 
             <button
@@ -464,7 +464,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
           {/* VIEW MODE 2: FULL DETAILED EYFS DOSSIER */}
           {viewMode === 'full_dossier' && (
             <>
-              <div className={`space-y-6 animate-in fade-in duration-150 ${plan.status === 'approved' ? 'print:hidden' : ''}`}>
+              <div className="space-y-6 animate-in fade-in duration-150 print:hidden">
                 {/* Brand Letterhead Header */}
                 <div className="border-b-2 border-[#007A43] pb-4">
                   <BrandLogo variant="full-letterhead" />
@@ -668,12 +668,10 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
               )}
             </div>
 
-            {/* When approved, print ONLY the Official Format even if user viewed dossier on screen */}
-            {plan.status === 'approved' && (
-              <div className="hidden print:block print:m-0 print:p-0">
-                <OfficialTemplateView plan={plan} />
-              </div>
-            )}
+            {/* When printing under dossier view, print ONLY the Print Sheet Preview */}
+            <div className="hidden print:block print:m-0 print:p-0">
+              <OfficialTemplateView plan={plan} />
+            </div>
           </>
           )}
 

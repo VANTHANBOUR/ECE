@@ -925,11 +925,11 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible">
+      <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 w-full max-w-5xl max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:shadow-none print:border-none print:max-h-none print:rounded-none print:w-full print:max-w-none print:overflow-visible print:p-0 print:m-0">
         
         {/* Modal Header: Custom Institutional Header (DK / DCH) */}
-        <div className="px-6 py-3.5 bg-gradient-to-r from-emerald-950 via-[#006838] to-emerald-900 text-white flex items-center justify-between shrink-0 border-b border-white/10 shadow-md">
+        <div className="px-6 py-3.5 bg-gradient-to-r from-emerald-950 via-[#006838] to-emerald-900 text-white flex items-center justify-between shrink-0 border-b border-white/10 shadow-md print:hidden">
           <div className="flex items-center gap-3.5">
             <div className="bg-white/95 rounded-xl p-1.5 shadow-sm border border-white/20 shrink-0 flex items-center justify-center">
               <SchoolLogoIcon size={44} />
@@ -961,7 +961,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
         </div>
 
         {/* Tab Navigation Toolbar */}
-        <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0">
+        <div className="px-6 py-3 bg-slate-50 border-b border-slate-200 flex flex-wrap items-center justify-between gap-3 shrink-0 print:hidden">
           <div className="flex items-center gap-1.5 bg-white p-1 rounded-xl border border-slate-200 shadow-xs">
             <button
               type="button"
@@ -1026,13 +1026,13 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
         </div>
 
         {/* Modal Body with Tab Contents */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-6 print:p-0 print:m-0 print:overflow-visible">
 
           {/* ============================================================ */}
           {/* TAB 1: OFFICIAL FORMAT TEMPLATE (MATCHING THE PAPER IMAGE) */}
           {/* ============================================================ */}
           {activeTab === 'official_format' && (
-            <div className="space-y-6 animate-in fade-in duration-150">
+            <div className="space-y-6 animate-in fade-in duration-150 print:hidden">
               
               {/* Header Box mimicking the official sheet */}
               <div className="bg-emerald-50/60 p-5 rounded-2xl border border-emerald-200/80 space-y-4">
@@ -1434,7 +1434,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
           {/* TAB 2: TRILINGUAL EYFS CURRICULUM MATRIX & LEARNING CENTERS */}
           {/* ============================================================ */}
           {activeTab === 'curriculum_matrix' && (
-            <div className="space-y-6 animate-in fade-in duration-150">
+            <div className="space-y-6 animate-in fade-in duration-150 print:hidden">
               {/* Thematic Unit Title & Description */}
               <div className="space-y-3">
                 <div>
@@ -1755,19 +1755,19 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
           {/* TAB 3: PRINT SHEET PREVIEW */}
           {/* ============================================================ */}
           {activeTab === 'print_preview' && (
-            <div className="p-2 sm:p-4 bg-slate-100 rounded-2xl animate-in fade-in duration-150">
-              <div className="max-w-3xl mx-auto space-y-4">
-                <div className="flex items-center justify-between bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-xs">
+            <div className="p-2 sm:p-4 bg-slate-100 rounded-2xl animate-in fade-in duration-150 print:bg-white print:p-0 print:m-0 print:rounded-none">
+              <div className="max-w-3xl mx-auto space-y-4 print:max-w-none print:m-0 print:p-0 print:space-y-0">
+                <div className="flex items-center justify-between bg-white px-4 py-2.5 rounded-xl border border-slate-200 shadow-xs print:hidden">
                   <span className="text-xs font-bold text-slate-700">
                     Live Printable Preview (A4 / Letter Institutional Standard)
                   </span>
                   <button
                     type="button"
                     onClick={() => window.print()}
-                    className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-bold hover:bg-emerald-800 transition-colors flex items-center gap-1"
+                    className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-bold hover:bg-emerald-800 transition-colors flex items-center gap-1 shadow-xs"
                   >
                     <Printer className="w-3.5 h-3.5" />
-                    <span>Print This Plan</span>
+                    <span>Print Sheet Preview</span>
                   </button>
                 </div>
 
@@ -1778,12 +1778,22 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
               </div>
             </div>
           )}
+
+          {/* When printing while on other tabs, print ONLY the Print Sheet Preview */}
+          {activeTab !== 'print_preview' && (
+            <div className="hidden print:block print:m-0 print:p-0">
+              <OfficialTemplateView 
+                plan={currentPreviewPlan}
+                showDottedLinesIfBlank={true}
+              />
+            </div>
+          )}
         </div>
 
         {/* Attachment Preview Lightbox */}
         {previewAttachment && (
           <div 
-            className="fixed inset-0 z-60 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4"
+            className="fixed inset-0 z-60 bg-slate-900/70 backdrop-blur-xs flex items-center justify-center p-4 print:hidden"
             onClick={() => setPreviewAttachment(null)}
           >
             <div 
@@ -1846,7 +1856,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
         )}
 
         {/* Modal Footer Actions */}
-        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0">
+        <div className="px-6 py-4 bg-slate-50 border-t border-slate-200 flex items-center justify-between gap-3 shrink-0 print:hidden">
           <button
             type="button"
             onClick={onClose}

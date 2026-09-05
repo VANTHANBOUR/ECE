@@ -1152,10 +1152,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                         <button
                           onClick={() => onSelectPlan(plan, true)}
                           className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-[#007A43] border border-emerald-300 text-xs font-bold rounded-xl transition-all shadow-2xs"
-                          title="Print Lesson Plan Official Format"
+                          title="Print Sheet Preview"
                         >
                           <Printer className="w-3.5 h-3.5" />
-                          <span>Print Official Format</span>
+                          <span>Print Sheet Preview</span>
                         </button>
                       )}
                       <button

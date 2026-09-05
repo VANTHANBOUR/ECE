@@ -17,6 +17,8 @@
 
   /* When printing an official lesson plan sheet, isolate it strictly */
   #official-dch-lesson-plan-sheet {
+    display: block !important;
+    visibility: visible !important;
     max-width: 100% !important;
     width: 100% !important;
     min-height: 0 !important;
