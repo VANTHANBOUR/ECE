@@ -62,19 +62,6 @@ export const AuthGate: React.FC = () => {
 
   const activeCampus = CAMPUS_LIST.find(c => c.id === selectedCampusId) || CAMPUS_LIST[0];
 
-  const demoTeacher = React.useMemo(() => {
-    if (selectedCampusId !== 'ALL') {
-      const exact = allAccounts.find(a => a.role === 'teacher' && a.campusId === selectedCampusId);
-      if (exact) return exact;
-      const isDK = selectedCampusId.startsWith('DK_') || activeCampus.brand === 'DK';
-      const brandMatch = allAccounts.find(a => a.role === 'teacher' && (
-        isDK ? a.campusId?.startsWith('DK_') : !a.campusId?.startsWith('DK_')
-      ));
-      if (brandMatch) return brandMatch;
-    }
-    return allAccounts.find(a => a.role === 'teacher');
-  }, [allAccounts, selectedCampusId, activeCampus]);
-
   useEffect(() => {
     const options = getCampusClassroomOptions(selectedCampusId);
     if (!options.some(o => o.id === assignedClassId)) {
@@ -136,12 +123,6 @@ export const AuthGate: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const handleQuickSelectStaff = (acc: typeof allAccounts[0]) => {
-    setSignInEmail(acc.email);
-    setSignInPassword('');
-    showToast(`Autofilled email for ${acc.name}. Please enter your registered account password to sign in.`, 'info');
   };
 
   return (
@@ -360,76 +341,6 @@ export const AuthGate: React.FC = () => {
                     <span className="bg-white px-3 text-[10px] uppercase tracking-wider text-slate-400 font-bold absolute">
                       Or with Institutional Email
                     </span>
-                  </div>
-                </div>
-
-                {/* Quick Staff Selection */}
-                <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-3.5 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                      <span>Quick Staff Email Autofill ({activeCampus.shortName}):</span>
-                    </span>
-                    <span className="text-[10px] text-emerald-700 font-semibold">Click to fill email</span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                    {/* Admin Profile */}
-                    {allAccounts.filter(a => a.role === 'admin').slice(0, 1).map(acc => (
-                      <button
-                        key={acc.id}
-                        type="button"
-                        onClick={() => handleQuickSelectStaff(acc)}
-                        disabled={isLoading}
-                        className="flex items-center gap-2 p-2 rounded-xl bg-white border border-amber-300 hover:border-amber-500 hover:bg-amber-50/60 transition-all text-left shadow-2xs group"
-                      >
-                        <img src={acc.avatar} alt={acc.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-amber-400" />
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold text-slate-900 truncate">{acc.name}</p>
-                          <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-amber-100 text-amber-900 rounded inline-block">
-                            👑 Admin / Principal
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-
-                    {/* Academic Officer Profile */}
-                    {allAccounts.filter(a => a.role === 'academic_officer').slice(0, 1).map(acc => (
-                      <button
-                        key={acc.id}
-                        type="button"
-                        onClick={() => handleQuickSelectStaff(acc)}
-                        disabled={isLoading}
-                        className="flex items-center gap-2 p-2 rounded-xl bg-white border border-blue-300 hover:border-blue-500 hover:bg-blue-50/60 transition-all text-left shadow-2xs group"
-                      >
-                        <img src={acc.avatar} alt={acc.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-blue-400" />
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold text-slate-900 truncate">{acc.name}</p>
-                          <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-blue-100 text-blue-900 rounded inline-block">
-                            🎓 Academic Officer
-                          </span>
-                        </div>
-                      </button>
-                    ))}
-
-                    {/* Lead Teacher Profile */}
-                    {demoTeacher && (
-                      <button
-                        key={demoTeacher.id}
-                        type="button"
-                        onClick={() => handleQuickSelectStaff(demoTeacher)}
-                        disabled={isLoading}
-                        className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50/60 transition-all text-left shadow-2xs group"
-                      >
-                        <img src={demoTeacher.avatar} alt={demoTeacher.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-emerald-400" />
-                        <div className="min-w-0">
-                          <p className="text-[11px] font-bold text-slate-900 truncate">{demoTeacher.name}</p>
-                          <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-emerald-100 text-emerald-900 rounded inline-block">
-                            👩‍🏫 Lead Teacher ({demoTeacher.campusName || activeCampus.shortName})
-                          </span>
-                        </div>
-                      </button>
-                    )}
                   </div>
                 </div>
 

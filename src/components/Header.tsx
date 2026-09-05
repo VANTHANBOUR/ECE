@@ -42,8 +42,6 @@ export const Header: React.FC<HeaderProps> = ({
 }) => {
   const { 
     currentUser, 
-    allAccounts, 
-    switchUser, 
     activeTab, 
     setActiveTab,
     lessonPlans,
@@ -248,9 +246,9 @@ export const Header: React.FC<HeaderProps> = ({
                     className="fixed inset-0 z-20"
                     onClick={() => setIsUserDropdownOpen(false)}
                   />
-                  <div className="absolute right-0 mt-2 w-84 bg-white rounded-3xl shadow-2xl border border-emerald-100/90 p-3 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
-                    <div className="px-3 py-2 border-b border-slate-100 mb-2">
-                      <div className="flex items-center justify-between">
+                  <div className="absolute right-0 mt-2 w-72 bg-white rounded-3xl shadow-2xl border border-emerald-100/90 p-3 z-30 animate-in fade-in slide-in-from-top-2 duration-150">
+                    <div className="px-3 py-2">
+                      <div className="flex items-center justify-between mb-2">
                         <p className="text-[11px] font-extrabold uppercase tracking-wider text-slate-500">
                           Active Account Session
                         </p>
@@ -259,75 +257,22 @@ export const Header: React.FC<HeaderProps> = ({
                             setIsUserDropdownOpen(false);
                             signOut();
                           }}
-                          className="text-[11px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1"
+                          className="text-[11px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1 bg-rose-50 px-2 py-1 rounded-lg hover:bg-rose-100 transition-colors"
                         >
-                          <LogOut className="w-3 h-3" />
+                          <LogOut className="w-3.5 h-3.5" />
                           <span>Sign Out</span>
                         </button>
                       </div>
-                      <p className="text-xs text-slate-700 font-semibold mt-1">
-                        Signed in as: <span className="text-[#007A43] font-bold">{currentUser.name}</span>
+                      <p className="text-xs text-slate-800 font-bold mt-1">
+                        Signed in as: <span className="text-[#007A43] font-black">{currentUser.name}</span>
                       </p>
-                      <p className="text-[11px] text-slate-400">{currentUser.email}</p>
-                    </div>
-
-                    <p className="px-3 text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">
-                      Quick Account Switcher (Demo):
-                    </p>
-
-                    <div className="max-h-64 overflow-y-auto space-y-1 pr-1">
-                      {allAccounts.map((account) => {
-                        const isSelected = account.id === currentUser.id;
-                        return (
-                          <button
-                            key={account.id}
-                            onClick={() => {
-                              switchUser(account.id);
-                              setIsUserDropdownOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-2.5 p-2 rounded-xl text-left transition-all ${
-                              isSelected
-                                ? 'bg-emerald-50 text-emerald-900 ring-1 ring-emerald-300 font-medium'
-                                : 'hover:bg-slate-50 text-slate-700'
-                            }`}
-                          >
-                            <img
-                              src={account.avatar}
-                              alt={account.name}
-                              className="w-8 h-8 rounded-lg object-cover"
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center justify-between gap-1">
-                                <p className="text-xs font-bold truncate">{account.name}</p>
-                                <div className="flex items-center gap-1 shrink-0">
-                                  {isCentralHQUser(account) && (
-                                    <span className="text-[8px] font-black uppercase px-1 py-0.2 rounded bg-purple-100 text-purple-900 border border-purple-200">
-                                      HQ
-                                    </span>
-                                  )}
-                                  <span 
-                                    className={`text-[8px] font-extrabold uppercase px-1.5 py-0.2 rounded ${
-                                      account.role === 'admin' 
-                                        ? 'bg-amber-100 text-amber-800' 
-                                        : account.role === 'academic_officer'
-                                        ? 'bg-blue-100 text-blue-800'
-                                        : 'bg-emerald-100 text-emerald-800'
-                                    }`}
-                                  >
-                                    {account.role}
-                                  </span>
-                                </div>
-                              </div>
-                              <p className="text-[10px] text-slate-500 truncate">
-                                {account.title}
-                              </p>
-                            </div>
-                            {isSelected && (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
-                            )}
-                          </button>
-                        );
-                      })}
+                      <p className="text-[11px] text-slate-500 font-medium">{currentUser.email}</p>
+                      <div className="mt-2.5 pt-2 border-t border-slate-100 flex items-center justify-between">
+                        <span className="text-[10px] font-bold text-slate-500 uppercase">Role:</span>
+                        <span className="text-[10px] font-extrabold uppercase px-2 py-0.5 rounded bg-emerald-100 text-emerald-900">
+                          {currentUser.role === 'admin' ? '👑 Principal / Admin' : currentUser.role === 'academic_officer' ? '🎓 Academic Officer' : '👩‍🏫 Teacher'}
+                        </span>
+                      </div>
                     </div>
 
                     <div className="mt-2 pt-2 border-t border-slate-100 space-y-1.5">
@@ -507,28 +452,6 @@ export const Header: React.FC<HeaderProps> = ({
                 👑 Master Admin Console
               </button>
             )}
-          </div>
-
-          {/* Account Switcher on Mobile */}
-          <div className="pt-2 border-t border-slate-100">
-            <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-1.5">
-              Switch User Account:
-            </label>
-            <select
-              value={currentUser.id}
-              onChange={(e) => {
-                switchUser(e.target.value);
-                setIsMobileMenuOpen(false);
-              }}
-              aria-label="Select User Account"
-              className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-500"
-            >
-              {allAccounts.map(a => (
-                <option key={a.id} value={a.id}>
-                  {a.role === 'admin' ? '👑 [ADMIN] ' : a.role === 'academic_officer' ? '🎓 [OFFICER] ' : '👩‍🏫 [TEACHER] '} {a.name} - {a.title}
-                </option>
-              ))}
-            </select>
           </div>
 
           <div className="grid grid-cols-2 gap-2">

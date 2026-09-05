@@ -63,20 +63,6 @@ export const AuthModal: React.FC = () => {
   const [assignedClassId, setAssignedClassId] = useState('Pre-Nursery AM');
   const [signUpCampusId, setSignUpCampusId] = useState<CampusId>('DCH_SYW');
 
-  const demoTeacher = React.useMemo(() => {
-    const activeCampusId = selectedCampusId || 'DCH_SYW';
-    if (activeCampusId !== 'ALL') {
-      const exact = allAccounts.find(a => a.role === 'teacher' && a.campusId === activeCampusId);
-      if (exact) return exact;
-      const isDK = activeCampusId.startsWith('DK_') || isDKCampus;
-      const brandMatch = allAccounts.find(a => a.role === 'teacher' && (
-        isDK ? a.campusId?.startsWith('DK_') : !a.campusId?.startsWith('DK_')
-      ));
-      if (brandMatch) return brandMatch;
-    }
-    return allAccounts.find(a => a.role === 'teacher');
-  }, [allAccounts, selectedCampusId, isDKCampus]);
-
   useEffect(() => {
     const options = getCampusClassroomOptions(signUpCampusId);
     if (!options.some(o => o.id === assignedClassId)) {
@@ -140,12 +126,6 @@ export const AuthModal: React.FC = () => {
     } finally {
       setIsLoading(false);
     }
-  };
-
-  const fillQuickAccount = (acc: typeof allAccounts[0]) => {
-    setSignInEmail(acc.email);
-    setSignInPassword('');
-    showToast(`Autofilled email for ${acc.name}. Please enter your registered account password.`, 'info');
   };
 
   return (
@@ -251,75 +231,6 @@ export const AuthModal: React.FC = () => {
               <span className="bg-white px-3 text-[10px] uppercase tracking-wider text-slate-400 font-bold absolute">
                 Or with Email Credentials
               </span>
-            </div>
-          </div>
-
-          {/* Quick Demo 1-Click Login Shortcuts */}
-          <div className="bg-emerald-50/70 border border-emerald-200/80 rounded-2xl p-3 space-y-2">
-            <div className="flex items-center justify-between">
-              <span className="text-[11px] font-black uppercase tracking-wider text-emerald-950 flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                <span>Quick Staff Email Autofill:</span>
-              </span>
-            </div>
-
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-              {/* Admin Button */}
-              {allAccounts.filter(a => a.role === 'admin').slice(0, 1).map(acc => (
-                <button
-                  key={acc.id}
-                  type="button"
-                  onClick={() => fillQuickAccount(acc)}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 p-2 rounded-xl bg-white border border-amber-300 hover:border-amber-500 hover:bg-amber-50/50 transition-all text-left shadow-2xs group"
-                >
-                  <img src={acc.avatar} alt={acc.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-amber-400" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-slate-900 truncate">{acc.name}</p>
-                    <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-amber-100 text-amber-900 rounded inline-block">
-                      👑 Admin
-                    </span>
-                  </div>
-                </button>
-              ))}
-
-              {/* Academic Officer Button */}
-              {allAccounts.filter(a => a.role === 'academic_officer').slice(0, 1).map(acc => (
-                <button
-                  key={acc.id}
-                  type="button"
-                  onClick={() => fillQuickAccount(acc)}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 p-2 rounded-xl bg-white border border-blue-300 hover:border-blue-500 hover:bg-blue-50/50 transition-all text-left shadow-2xs group"
-                >
-                  <img src={acc.avatar} alt={acc.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-blue-400" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-slate-900 truncate">{acc.name}</p>
-                    <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-blue-100 text-blue-900 rounded inline-block">
-                      🎓 Academic Officer
-                    </span>
-                  </div>
-                </button>
-              ))}
-
-              {/* Lead Teacher Button */}
-              {demoTeacher && (
-                <button
-                  key={demoTeacher.id}
-                  type="button"
-                  onClick={() => fillQuickAccount(demoTeacher)}
-                  disabled={isLoading}
-                  className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all text-left shadow-2xs group"
-                >
-                  <img src={demoTeacher.avatar} alt={demoTeacher.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-emerald-400" />
-                  <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-slate-900 truncate">{demoTeacher.name}</p>
-                    <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-emerald-100 text-emerald-900 rounded inline-block">
-                      👩‍🏫 Lead Teacher ({demoTeacher.campusName || activeCampus?.shortName || 'Local Campus'})
-                    </span>
-                  </div>
-                </button>
-              )}
             </div>
           </div>
 

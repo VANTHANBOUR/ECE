@@ -42,17 +42,29 @@ googleProvider.setCustomParameters({
   prompt: 'select_account'
 });
 
-// Initialize Firestore with ignoreUndefinedProperties & experimentalForceLongPolling to ensure resilient connection in iframe/proxy environments
+// Initialize Firestore with ignoreUndefinedProperties & experimentalAutoDetectLongPolling for resilient connection handling
 export const db: Firestore = (() => {
   try {
     return initializeFirestore(app, {
       ignoreUndefinedProperties: true,
-      experimentalForceLongPolling: true
+      experimentalAutoDetectLongPolling: true
     }, (firebaseConfig as any).firestoreDatabaseId);
   } catch {
     return getFirestore(app, (firebaseConfig as any).firestoreDatabaseId);
   }
 })();
+
+// Validate Firestore Connection
+async function testConnection() {
+  try {
+    await getDocFromServer(doc(db, 'system', 'connection'));
+  } catch (error) {
+    if (error instanceof Error && (error.message.includes('the client is offline') || error.message.includes('unavailable'))) {
+      console.warn("Firestore connection notice: operating with local cache / offline fallback.");
+    }
+  }
+}
+testConnection();
 
 /**
  * Deeply sanitizes any object for Firestore by removing `undefined` values,
