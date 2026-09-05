@@ -18,6 +18,7 @@ import {
   Loader2,
   Database,
   Globe,
+  Eye,
   EyeOff
 } from 'lucide-react';
 
@@ -50,6 +51,7 @@ export const AuthModal: React.FC = () => {
   // Sign In Form State
   const [signInEmail, setSignInEmail] = useState('');
   const [signInPassword, setSignInPassword] = useState('password123');
+  const [showSignInPassword, setShowSignInPassword] = useState(false);
 
   // Sign Up Form State
   const [name, setName] = useState('');
@@ -60,6 +62,20 @@ export const AuthModal: React.FC = () => {
   const [title, setTitle] = useState('');
   const [assignedClassId, setAssignedClassId] = useState('Pre-Nursery AM');
   const [signUpCampusId, setSignUpCampusId] = useState<CampusId>('DCH_SYW');
+
+  const demoTeacher = React.useMemo(() => {
+    const activeCampusId = selectedCampusId || 'DCH_SYW';
+    if (activeCampusId !== 'ALL') {
+      const exact = allAccounts.find(a => a.role === 'teacher' && a.campusId === activeCampusId);
+      if (exact) return exact;
+      const isDK = activeCampusId.startsWith('DK_') || isDKCampus;
+      const brandMatch = allAccounts.find(a => a.role === 'teacher' && (
+        isDK ? a.campusId?.startsWith('DK_') : !a.campusId?.startsWith('DK_')
+      ));
+      if (brandMatch) return brandMatch;
+    }
+    return allAccounts.find(a => a.role === 'teacher');
+  }, [allAccounts, selectedCampusId, isDKCampus]);
 
   useEffect(() => {
     const options = getCampusClassroomOptions(signUpCampusId);
@@ -288,23 +304,23 @@ export const AuthModal: React.FC = () => {
               ))}
 
               {/* Lead Teacher Button */}
-              {allAccounts.filter(a => a.role === 'teacher').slice(0, 1).map(acc => (
+              {demoTeacher && (
                 <button
-                  key={acc.id}
+                  key={demoTeacher.id}
                   type="button"
-                  onClick={() => fillQuickAccount(acc)}
+                  onClick={() => fillQuickAccount(demoTeacher)}
                   disabled={isLoading}
                   className="flex items-center gap-2 p-2 rounded-xl bg-white border border-emerald-300 hover:border-emerald-500 hover:bg-emerald-50/50 transition-all text-left shadow-2xs group"
                 >
-                  <img src={acc.avatar} alt={acc.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-emerald-400" />
+                  <img src={demoTeacher.avatar} alt={demoTeacher.name} className="w-8 h-8 rounded-lg object-cover ring-1 ring-emerald-400" />
                   <div className="min-w-0">
-                    <p className="text-[11px] font-bold text-slate-900 truncate">{acc.name}</p>
+                    <p className="text-[11px] font-bold text-slate-900 truncate">{demoTeacher.name}</p>
                     <span className="text-[8px] font-extrabold uppercase px-1.5 py-0.2 bg-emerald-100 text-emerald-900 rounded inline-block">
-                      👩‍🏫 Lead Teacher
+                      👩‍🏫 Lead Teacher ({demoTeacher.campusName || activeCampus?.shortName || 'Local Campus'})
                     </span>
                   </div>
                 </button>
-              ))}
+              )}
             </div>
           </div>
 
@@ -333,20 +349,32 @@ export const AuthModal: React.FC = () => {
                   <label className="text-xs font-bold text-slate-700">
                     Account Password
                   </label>
-                  <span className="text-[11px] text-emerald-700 font-semibold">
-                    Demo Password: password123
-                  </span>
+                  <button
+                    type="button"
+                    onClick={() => setShowSignInPassword(!showSignInPassword)}
+                    className="text-[11px] text-emerald-700 font-semibold hover:underline flex items-center gap-1"
+                  >
+                    {showSignInPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showSignInPassword ? 'Hide Password' : 'Show Password (Demo: password123)'}</span>
+                  </button>
                 </div>
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
                   <input
-                    type="password"
+                    type={showSignInPassword ? 'text' : 'password'}
                     required
                     value={signInPassword}
                     onChange={(e) => setSignInPassword(e.target.value)}
                     placeholder="••••••••"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-emerald-600"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-emerald-600"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowSignInPassword(!showSignInPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 transition-colors"
+                  >
+                    {showSignInPassword ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                  </button>
                 </div>
               </div>
 
