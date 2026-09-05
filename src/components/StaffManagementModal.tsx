@@ -19,7 +19,9 @@ import {
   Sparkles,
   Lock,
   Camera,
-  Upload
+  Upload,
+  Eye,
+  EyeOff
 } from 'lucide-react';
 
 interface StaffManagementModalProps {
@@ -73,6 +75,8 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
   const [name, setName] = useState(user.name);
   const [khmerName, setKhmerName] = useState(user.khmerName || '');
   const [email, setEmail] = useState(user.email);
+  const [password, setPassword] = useState(user.password || 'password123');
+  const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>(user.role);
   const [title, setTitle] = useState(user.title);
   const [assignedClassId, setAssignedClassId] = useState(user.assignedClassId || 'Pre-Nursery AM');
@@ -124,6 +128,8 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
     setName(user.name);
     setKhmerName(user.khmerName || '');
     setEmail(user.email);
+    setPassword(user.password || 'password123');
+    setShowPassword(false);
     setRole(user.role);
     setTitle(user.title);
     setAssignedClassId(user.assignedClassId || 'Toddlers');
@@ -164,6 +170,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
       name: name.trim(),
       khmerName: khmerName.trim(),
       email: email.trim(),
+      password: password.trim() || 'password123',
       role,
       title: title.trim(),
       campusId,
@@ -604,6 +611,39 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
               </div>
 
               <div className="space-y-1">
+                <div className="flex items-center justify-between">
+                  <label className="text-[11px] font-bold text-slate-600">Account Password</label>
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1"
+                  >
+                    {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                    <span>{showPassword ? 'Hide' : 'Show Password'}</span>
+                  </button>
+                </div>
+                <div className="relative">
+                  <input
+                    type={showPassword ? 'text' : 'password'}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Enter account password"
+                    className="w-full pl-3 pr-9 py-2 bg-white border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-emerald-600"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-2.5 top-1/2 -translate-y-1/2 p-1 text-slate-400 hover:text-slate-600 rounded-lg"
+                    title={showPassword ? "Hide Password" : "Show Password"}
+                  >
+                    {showPassword ? <EyeOff className="w-3.5 h-3.5 text-slate-600" /> : <Eye className="w-3.5 h-3.5 text-slate-400" />}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="space-y-1">
                 <label className="text-[11px] font-bold text-slate-600">Phone Number</label>
                 <input
                   type="text"
@@ -613,9 +653,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-emerald-600"
                 />
               </div>
-            </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label className="text-[11px] font-bold text-slate-600">Room / Office Location</label>
                 <input
@@ -626,17 +664,17 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                   className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-emerald-600"
                 />
               </div>
+            </div>
 
-              <div className="space-y-1">
-                <label className="text-[11px] font-bold text-slate-600">Professional Bio & Focus</label>
-                <input
-                  type="text"
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  placeholder="e.g. Sensory play & trilingual literacy specialist"
-                  className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-emerald-600"
-                />
-              </div>
+            <div className="space-y-1">
+              <label className="text-[11px] font-bold text-slate-600">Professional Bio & Focus</label>
+              <input
+                type="text"
+                value={bio}
+                onChange={(e) => setBio(e.target.value)}
+                placeholder="e.g. Sensory play & trilingual literacy specialist"
+                className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-semibold text-slate-900 focus:outline-emerald-600"
+              />
             </div>
           </div>
 

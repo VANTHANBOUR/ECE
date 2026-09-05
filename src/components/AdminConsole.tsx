@@ -35,7 +35,9 @@ import {
   Plus,
   Building2,
   Image as ImageIcon,
-  Printer
+  Printer,
+  Copy,
+  Check
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
@@ -73,6 +75,23 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
   const [userSearch, setUserSearch] = useState<string>('');
   const [editingStaffUser, setEditingStaffUser] = useState<UserAccount | null>(null);
+  const [showAllPasswords, setShowAllPasswords] = useState<boolean>(false);
+  const [visiblePasswordsMap, setVisiblePasswordsMap] = useState<Record<string, boolean>>({});
+  const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
+
+  const togglePasswordVisibility = (userId: string) => {
+    setVisiblePasswordsMap(prev => ({
+      ...prev,
+      [userId]: !prev[userId]
+    }));
+  };
+
+  const copyToClipboard = (text: string, userId: string) => {
+    navigator.clipboard.writeText(text);
+    setCopiedUserId(userId);
+    showToast('Password copied to clipboard', 'success');
+    setTimeout(() => setCopiedUserId(null), 2000);
+  };
   
   // Master Plans Filters & State
   const [planSearch, setPlanSearch] = useState<string>('');
@@ -399,6 +418,20 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                   <option value="teacher">Lead Teachers</option>
                 </select>
               </div>
+
+              <button
+                type="button"
+                onClick={() => setShowAllPasswords(!showAllPasswords)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-extrabold transition-all flex items-center gap-1.5 border shadow-2xs ${
+                  showAllPasswords 
+                    ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200' 
+                    : 'bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100'
+                }`}
+                title={showAllPasswords ? "Hide all passwords" : "Show all staff passwords"}
+              >
+                {showAllPasswords ? <EyeOff className="w-3.5 h-3.5 text-rose-700" /> : <Eye className="w-3.5 h-3.5 text-emerald-700" />}
+                <span>{showAllPasswords ? 'Hide Passwords' : 'Show Passwords'}</span>
+              </button>
             </div>
           </div>
 
@@ -411,6 +444,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                   <th className="py-3 px-4">Assigned Position</th>
                   <th className="py-3 px-4">Institutional Role (RBAC)</th>
                   <th className="py-3 px-4">Classroom Allocation</th>
+                  <th className="py-3 px-4">Password Credentials</th>
                   <th className="py-3 px-4">Account Status</th>
                   <th className="py-3 px-4 text-right">Administrative Actions</th>
                 </tr>
@@ -580,6 +614,45 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                           <span>All Classrooms (Supervisory)</span>
                         </span>
                       )}
+                    </td>
+
+                    {/* Password Credentials */}
+                    <td className="py-3.5 px-4">
+                      {(() => {
+                        const isVisible = showAllPasswords || !!visiblePasswordsMap[user.id];
+                        const pass = user.password || 'password123';
+                        return (
+                          <div className="flex items-center gap-1">
+                            <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-colors ${
+                              isVisible 
+                                ? 'bg-amber-50 text-amber-950 border-amber-300' 
+                                : 'bg-slate-100 text-slate-400 border-slate-200'
+                            }`}>
+                              {isVisible ? pass : '••••••••'}
+                            </span>
+                            <button
+                              type="button"
+                              onClick={() => togglePasswordVisibility(user.id)}
+                              className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                              title={isVisible ? "Hide Password" : "Show Password"}
+                            >
+                              {isVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-600" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => copyToClipboard(pass, user.id)}
+                              className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                              title="Copy Password"
+                            >
+                              {copiedUserId === user.id ? (
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                              ) : (
+                                <Copy className="w-3.5 h-3.5 text-slate-400" />
+                              )}
+                            </button>
+                          </div>
+                        );
+                      })()}
                     </td>
 
                     {/* Status */}
