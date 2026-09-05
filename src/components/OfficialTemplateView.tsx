@@ -23,8 +23,13 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
 }) => {
   const { classrooms, selectedCampusId, schoolProfile } = useApp();
 
-  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
-  const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
+  const effectiveCampusId = plan?.campusId || selectedCampusId;
+  const activeCampus = effectiveCampusId ? CAMPUS_LIST.find(c => c.id === effectiveCampusId) : null;
+  const isDKCampus = activeCampus?.brand === 'DK' || 
+    effectiveCampusId?.startsWith('DK_') || 
+    Boolean(plan?.className && (plan.className.startsWith('K1') || plan.className.startsWith('K2') || plan.className.startsWith('K3'))) ||
+    Boolean(plan?.firstSession?.className && (plan.firstSession.className.startsWith('K1') || plan.firstSession.className.startsWith('K2') || plan.firstSession.className.startsWith('K3')));
+  
   const khmerTitle = isDKCampus ? (activeCampus?.nameKhmer || 'សាលាមត្តេយ្យ ឌូវី') : (schoolProfile?.schoolNameKhmer || 'ឌូវី ឆាល់ឃែរ៍ ហោស៍');
   const engTitle = isDKCampus ? 'Dewey Kindergarten' : (schoolProfile?.schoolNameEnglish || 'Dewey Childcare House');
   const portalSub = isDKCampus ? 'Dewey Kindergarten Portal' : 'School Management & Lesson Plan Portal';
@@ -140,7 +145,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
       {/* 1. Header: School Logo & Title (Official DCH Letterhead Format) */}
       <div className="flex flex-col sm:flex-row items-center justify-between border-b-2 border-[#006838] pb-4 mb-6 gap-4">
         <div className="flex items-center gap-4">
-          <SchoolLogoIcon size={64} className="shrink-0" />
+          <SchoolLogoIcon size={64} className="shrink-0" brand={isDKCampus ? 'DK' : 'DCH'} />
           <div className="text-left">
             <h1 className="text-xs font-bold tracking-normal text-[#006838] font-['Battambang',sans-serif] leading-none mb-1">
               {khmerTitle}
@@ -229,7 +234,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
         </div>
 
         {plan && warmUpText ? (
-          <div className="pl-6 text-[14px] text-slate-900 leading-relaxed border-l-2 border-emerald-600/30 py-1 bg-emerald-50/20 rounded-r-md px-3">
+          <div className="pl-6 text-[14px] text-slate-900 leading-relaxed py-1">
             <p className="whitespace-pre-line">{warmUpText}</p>
           </div>
         ) : (
@@ -400,7 +405,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
         </div>
 
         {plan && closingText ? (
-          <div className="pl-6 text-[14px] text-slate-900 leading-relaxed border-l-2 border-emerald-600/30 py-1 bg-emerald-50/20 rounded-r-md px-3">
+          <div className="pl-6 text-[14px] text-slate-900 leading-relaxed py-1">
             <p className="whitespace-pre-line">{closingText}</p>
           </div>
         ) : (

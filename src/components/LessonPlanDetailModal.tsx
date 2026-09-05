@@ -4,6 +4,7 @@ import { LessonPlan, PlanAttachment } from '../types';
 import { BrandLogo, DCHShield } from './BrandLogo';
 import { OfficialTemplateView } from './OfficialTemplateView';
 import { formatDateDDMMYYYY, formatDateRange, formatDateTimeDDMMYYYY } from '../utils/dateUtils';
+import { exportLessonPlanToWord } from '../utils/exportWord';
 import { 
   X, 
   Printer, 
@@ -43,7 +44,15 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
   onEdit,
   initialAutoPrint = false,
 }) => {
-  const { currentUser, adminReviewPlan, deleteLessonPlan, showToast } = useApp();
+  const { 
+    currentUser, 
+    adminReviewPlan, 
+    deleteLessonPlan, 
+    showToast, 
+    classrooms, 
+    selectedCampusId, 
+    schoolProfile 
+  } = useApp();
 
   // Tab switcher: Official Template vs Full Modular Dossier
   // When approved, strictly default to the Official Template
@@ -193,121 +202,17 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
     return `${weekNum} - Q: ${termNum} - SY: ${syStr}`;
   };
 
-  const handleExportWord = () => {
-    const htmlContent = `
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <meta charset="utf-8">
-        <title>Dewey Kindergarten - ${plan.themeTitle}</title>
-        <style>
-          body { font-family: Calibri, Arial, sans-serif; margin: 40px; color: #000; }
-          .header { text-align: center; margin-bottom: 25px; }
-          .school-title { color: #006838; font-size: 24pt; font-weight: bold; text-transform: uppercase; margin: 0; font-family: Georgia, serif; }
-          .doc-title { font-size: 18pt; font-weight: bold; text-decoration: underline; margin-top: 6px; }
-          .meta-table { width: 100%; margin-bottom: 20px; font-size: 12pt; }
-          .meta-table td { padding: 6px 0; }
-          .section-title { font-weight: bold; font-size: 13pt; margin-top: 18px; margin-bottom: 8px; }
-          .section-content { margin-left: 25px; font-size: 11pt; }
-          table.session-table { width: 100%; border-collapse: collapse; border: 2px solid #000; margin-top: 8px; font-size: 10.5pt; }
-          table.session-table th, table.session-table td { border: 1.5px solid #000; padding: 8px; text-align: left; vertical-align: top; }
-          table.session-table th { background-color: #f2f2f2; font-weight: bold; }
-          .duration-col { width: 12%; text-align: center; }
-        </style>
-      </head>
-      <body>
-        <div class="header">
-          <div class="school-title">Dewey Kindergarten</div>
-          <div class="doc-title">Lesson Plan</div>
-        </div>
-
-        <table class="meta-table">
-          <tr>
-            <td width="50%"><strong>Date:</strong> ${plan.planDate ? formatDateDDMMYYYY(plan.planDate) : (plan.startDate ? formatDateRange(plan.startDate, plan.endDate, ' ~ ') : '')}</td>
-            <td width="50%"><strong>Week:</strong> ${formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate)}</td>
-          </tr>
-          <tr>
-            <td><strong>Class:</strong> ${plan.className.replace(/\s*\([^)]*\)/g, '').trim()}</td>
-            <td><strong>Time:</strong> ${plan.timeStart || '08:30 AM'} to ${plan.timeEnd || '11:30 AM'}</td>
-          </tr>
-        </table>
-
-        <div class="section-title">I. &nbsp;&nbsp; Warm up/ circle time:</div>
-        <div class="section-content">
-          <p>${plan.warmUpCircleTime || plan.circleTimeActivities}</p>
-        </div>
-
-        <div class="section-title">II. &nbsp;&nbsp; 1<sup>st</sup> Session:</div>
-        <div class="section-content">
-          <p><strong>Subject:</strong> ${plan.firstSession?.subject || 'Language & Trilingual Early Literacy'}</p>
-          <table class="session-table">
-            <thead>
-              <tr>
-                <th width="30%">Topic/Activity</th>
-                <th width="30%">Objective(s)</th>
-                <th width="28%">Materials/ sources</th>
-                <th class="duration-col">Duration (mns)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${plan.firstSession?.activities?.map(a => `
-              <tr>
-                <td><strong>${a.topicActivity}</strong></td>
-                <td>${a.objectives}</td>
-                <td>${a.materialsSources}</td>
-                <td class="duration-col"><strong>${a.durationMins} mns</strong></td>
-              </tr>
-              `).join('') || ''}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="section-title">III. &nbsp;&nbsp; 2<sup>nd</sup> Session:</div>
-        <div class="section-content">
-          <p><strong>Subject:</strong> ${plan.secondSession?.subject || 'Sensory Discovery Science & Creative Play'}</p>
-          <table class="session-table">
-            <thead>
-              <tr>
-                <th width="30%">Topic/Activity</th>
-                <th width="30%">Objective(s)</th>
-                <th width="28%">Materials/ sources</th>
-                <th class="duration-col">Duration (mns)</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${plan.secondSession?.activities?.map(a => `
-              <tr>
-                <td><strong>${a.topicActivity}</strong></td>
-                <td>${a.objectives}</td>
-                <td>${a.materialsSources}</td>
-                <td class="duration-col"><strong>${a.durationMins} mns</strong></td>
-              </tr>
-              `).join('') || ''}
-            </tbody>
-          </table>
-        </div>
-
-        <div class="section-title">IV. &nbsp;&nbsp; Closing:</div>
-        <div class="section-content">
-          <p>${plan.closing || 'Review session highlights, tidy up learning areas, sing departure songs, and organize belongings for dismissal.'}</p>
-        </div>
-      </body>
-      </html>
-    `;
-
-    const blob = new Blob(['\ufeff', htmlContent], {
-      type: 'application/msword;charset=utf-8'
-    });
-    const url = URL.createObjectURL(blob);
-    const downloadLink = document.createElement('a');
-    downloadLink.href = url;
-    downloadLink.download = `Dewey_Kindergarten_${plan.className.replace(/\s+/g, '_')}_Week_${plan.weekNumber}.doc`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-    URL.revokeObjectURL(url);
-
-    showToast(`Exported "${plan.themeTitle}" to Word (.doc)`, 'success');
+  const handleExportWord = async () => {
+    try {
+      await exportLessonPlanToWord(plan, {
+        classrooms,
+        selectedCampusId,
+        schoolProfile,
+      });
+      showToast(`Exported "${plan.themeTitle}" to Word (.doc)`, 'success');
+    } catch {
+      showToast('Failed to export to Word document', 'error');
+    }
   };
 
   const [previewAttachment, setPreviewAttachment] = useState<PlanAttachment | null>(null);

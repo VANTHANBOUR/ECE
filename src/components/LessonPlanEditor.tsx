@@ -13,6 +13,7 @@ import {
 import { OfficialTemplateView } from './OfficialTemplateView';
 import { SchoolLogoIcon } from './BrandLogo';
 import { formatDateDDMMYYYY, toHtmlDateValue } from '../utils/dateUtils';
+import { exportLessonPlanToWord } from '../utils/exportWord';
 import { 
   X, 
   UploadCloud, 
@@ -1761,14 +1762,36 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                   <span className="text-xs font-bold text-slate-700">
                     Live Printable Preview (A4 / Letter Institutional Standard)
                   </span>
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-bold hover:bg-emerald-800 transition-colors flex items-center gap-1 shadow-xs"
-                  >
-                    <Printer className="w-3.5 h-3.5" />
-                    <span>Print Sheet Preview</span>
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        try {
+                          await exportLessonPlanToWord(currentPreviewPlan, {
+                            classrooms,
+                            selectedCampusId,
+                            schoolProfile,
+                          });
+                          showToast(`Exported "${currentPreviewPlan.themeTitle}" to Word (.doc)`, 'success');
+                        } catch {
+                          showToast('Failed to export to Word document', 'error');
+                        }
+                      }}
+                      className="px-3 py-1.5 bg-slate-800 text-emerald-300 rounded-lg text-xs font-bold hover:bg-slate-700 transition-colors flex items-center gap-1.5 shadow-xs"
+                      title="Export to Word Document (.doc)"
+                    >
+                      <Download className="w-3.5 h-3.5" />
+                      <span>Export to Word</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => window.print()}
+                      className="px-3 py-1.5 bg-emerald-700 text-white rounded-lg text-xs font-bold hover:bg-emerald-800 transition-colors flex items-center gap-1.5 shadow-xs"
+                    >
+                      <Printer className="w-3.5 h-3.5" />
+                      <span>Print Sheet Preview</span>
+                    </button>
+                  </div>
                 </div>
 
                 <OfficialTemplateView 
