@@ -965,25 +965,58 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateAccount = (userId: string, updates: Partial<UserAccount>) => {
-    let updatedAccountsList: UserAccount[] = [];
+    const targetAccount = allAccounts.find(a => a.id === userId);
+    if (!targetAccount) return;
+
+    let nextTitle = updates.title !== undefined ? updates.title : targetAccount.title;
+    if (updates.role && updates.role !== targetAccount.role && updates.title === undefined) {
+      if (updates.role === 'admin') nextTitle = 'School Administrator / Principal';
+      else if (updates.role === 'academic_officer') nextTitle = 'Academic Quality & Review Officer';
+      else if (updates.role === 'teacher') nextTitle = 'Early Childhood Lead Educator';
+    }
+
+    const updatedAccount: UserAccount = {
+      ...targetAccount,
+      ...updates,
+      title: nextTitle,
+    };
+
+    if (updates.role && updates.role !== 'teacher') {
+      updatedAccount.assignedClassId = '';
+      updatedAccount.assignedClassName = 'All Classrooms (Supervisory)';
+      updatedAccount.ageGroup = undefined;
+    }
+
+    let updatedList: UserAccount[] = [];
     setAllAccounts(prev => {
-      const next = prev.map(acc => {
-        if (acc.id === userId) {
-          const updated = { ...acc, ...updates };
-          if (currentUser && currentUser.id === userId) {
-            setCurrentUser(updated);
-          }
-          try {
-            const cleanUser = sanitizeForFirestore(updated);
-            setDoc(doc(db, 'users', userId), cleanUser, { merge: true }).catch(() => {});
-          } catch {}
-          return updated;
-        }
-        return acc;
-      });
-      updatedAccountsList = next;
+      const next = prev.map(acc => acc.id === userId ? updatedAccount : acc);
+      updatedList = next;
       return next;
     });
+
+    if (currentUser && currentUser.id === userId) {
+      setCurrentUser(updatedAccount);
+    }
+
+    try {
+      const cleanUser = sanitizeForFirestore(updatedAccount);
+      setDoc(doc(db, 'users', userId), cleanUser, { merge: true }).catch((err) => {
+        handleFirestoreError(err, OperationType.UPDATE, `users/${userId}`);
+      });
+    } catch (e) {
+      console.warn('Firestore user update notice:', e);
+    }
+
+    // If teacher role with assigned classroom ID, sync classroom's lead teacher
+    if (updatedAccount.role === 'teacher' && updatedAccount.assignedClassId) {
+      const targetClassroom = classrooms.find(c => c.id === updatedAccount.assignedClassId);
+      if (targetClassroom) {
+        updateClassroom(targetClassroom.id, {
+          leadTeacherId: updatedAccount.id,
+          leadTeacherName: updatedAccount.name,
+        });
+      }
+    }
 
     // Automatically synchronize teacher name or avatar update to their submitted lesson plans
     if (updates.avatar || updates.name) {
@@ -1004,11 +1037,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       });
     }
 
-    if (updatedAccountsList.length > 0) {
-      broadcastLiveSync('ACCOUNTS_UPDATED', updatedAccountsList);
-    }
-    addAuditLog('ROLE_CHANGE', `Updated account information for user ID ${userId}`, userId);
-    showToast('Account details updated successfully', 'success');
+    broadcastLiveSync('ACCOUNTS_UPDATED', updatedList.length > 0 ? updatedList : [updatedAccount]);
+    addAuditLog('ROLE_CHANGE', `Updated account information & role for ${updatedAccount.name} (${updatedAccount.role})`, userId);
+    showToast(`Account details for ${updatedAccount.name} updated successfully`, 'success');
   };
 
   const deleteAccount = (userId: string) => {
@@ -1075,28 +1106,27 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateLessonPlan = (id: string, updates: Partial<LessonPlan>) => {
+    const target = lessonPlans.find(p => p.id === id);
+    if (!target) return;
+
     const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
-    let updatedPlanObj: LessonPlan | null = null;
-    setLessonPlans(prev =>
-      prev.map(p => {
-        if (p.id === id) {
-          const updated = { ...p, ...updates, updatedAt: now };
-          updatedPlanObj = updated;
-          if (selectedPlan && selectedPlan.id === id) {
-            setSelectedPlan(updated);
-          }
-          try {
-            const cleanPlan = sanitizeForFirestore(updated);
-            setDoc(doc(db, 'lessonPlans', id), cleanPlan, { merge: true }).catch(() => {});
-          } catch {}
-          return updated;
-        }
-        return p;
-      })
-    );
-    if (updatedPlanObj) {
-      broadcastLiveSync('PLAN_UPDATED', updatedPlanObj);
+    const updatedPlan: LessonPlan = {
+      ...target,
+      ...updates,
+      updatedAt: now,
+    };
+
+    setLessonPlans(prev => prev.map(p => p.id === id ? updatedPlan : p));
+    if (selectedPlan && selectedPlan.id === id) {
+      setSelectedPlan(updatedPlan);
     }
+
+    try {
+      const cleanPlan = sanitizeForFirestore(updatedPlan);
+      setDoc(doc(db, 'lessonPlans', id), cleanPlan, { merge: true }).catch(() => {});
+    } catch {}
+
+    broadcastLiveSync('PLAN_UPDATED', updatedPlan);
     addAuditLog('UPDATE_PLAN', `Updated details for lesson plan ID ${id}`, id);
     showToast('Lesson plan updated and synced', 'success');
   };
@@ -1131,6 +1161,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     comment: string,
     rubric?: { curriculumAlignment: number; trilingualIntegration: number; sensorySafety: number; differentiation: number }
   ) => {
+    const target = lessonPlans.find(p => p.id === planId);
+    if (!target) return;
+
     const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
     const feedbackItem = {
       id: `fb_${Date.now()}`,
@@ -1143,42 +1176,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       rubricScores: rubric,
     };
 
-    let updatedPlanToBroadcast: LessonPlan | null = null;
+    const nextStatus =
+      action === 'approved'
+        ? 'approved'
+        : action === 'revision_requested'
+        ? 'revision_requested'
+        : target.status;
 
-    setLessonPlans(prev =>
-      prev.map(p => {
-        if (p.id === planId) {
-          const nextStatus =
-            action === 'approved'
-              ? 'approved'
-              : action === 'revision_requested'
-              ? 'revision_requested'
-              : p.status;
+    const updatedPlan: LessonPlan = {
+      ...target,
+      status: nextStatus,
+      reviewedAt: now,
+      feedbackHistory: [feedbackItem, ...target.feedbackHistory],
+      updatedAt: now,
+    };
 
-          const updated = {
-            ...p,
-            status: nextStatus,
-            reviewedAt: now,
-            feedbackHistory: [feedbackItem, ...p.feedbackHistory],
-            updatedAt: now,
-          };
-          updatedPlanToBroadcast = updated;
-          if (selectedPlan?.id === planId) {
-            setSelectedPlan(updated);
-          }
-          try {
-            const cleanPlan = sanitizeForFirestore(updated);
-            setDoc(doc(db, 'lessonPlans', planId), cleanPlan, { merge: true }).catch(() => {});
-          } catch {}
-          return updated;
-        }
-        return p;
-      })
-    );
-
-    if (updatedPlanToBroadcast) {
-      broadcastLiveSync('PLAN_APPROVED', updatedPlanToBroadcast);
+    setLessonPlans(prev => prev.map(p => p.id === planId ? updatedPlan : p));
+    if (selectedPlan?.id === planId) {
+      setSelectedPlan(updatedPlan);
     }
+
+    try {
+      const cleanPlan = sanitizeForFirestore(updatedPlan);
+      setDoc(doc(db, 'lessonPlans', planId), cleanPlan, { merge: true }).catch(() => {});
+    } catch {}
+
+    broadcastLiveSync('PLAN_APPROVED', updatedPlan);
 
     const logAction = action === 'approved' ? 'APPROVE_PLAN' : action === 'revision_requested' ? 'REVISE_PLAN' : 'UPDATE_PLAN';
     addAuditLog(logAction, `${currentUser?.name || 'Staff'} took action "${action}" on plan ID ${planId}: "${comment}"`, planId);
@@ -1269,64 +1292,65 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateClassroom = (id: string, updates: Partial<Classroom>) => {
-    let updatedClassroomObj: Classroom | null = null;
-    let updatedClassroomName = '';
-    setClassrooms(prev => prev.map(c => {
-      if (c.id === id) {
-        const updated = { ...c, ...updates };
-        updatedClassroomObj = updated;
-        updatedClassroomName = updated.name;
-        return updated;
-      }
-      return c;
-    }));
+    const targetClassroom = classrooms.find(c => c.id === id);
+    if (!targetClassroom) return;
 
-    // If lead teacher or classroom name/ageGroup was updated, sync teacher user profile
+    const updatedClassroom: Classroom = {
+      ...targetClassroom,
+      ...updates,
+    };
+
+    // 1. Update classrooms state
+    setClassrooms(prev => prev.map(c => c.id === id ? updatedClassroom : c));
+
+    // 2. Persist to Firestore directly
+    try {
+      const cleanClass = sanitizeForFirestore(updatedClassroom);
+      setDoc(doc(db, 'classrooms', id), cleanClass, { merge: true }).catch((err) => {
+        handleFirestoreError(err, OperationType.UPDATE, `classrooms/${id}`);
+      });
+    } catch (e) {
+      console.warn('Firestore classroom update notice:', e);
+    }
+
+    // 3. If lead teacher or classroom name/ageGroup was updated, sync teacher user profile
     if (updates.leadTeacherId || updates.name || updates.ageGroup) {
       setAllAccounts(prev => prev.map(acc => {
         // If this teacher is the new lead teacher
         if (updates.leadTeacherId && acc.id === updates.leadTeacherId) {
-          const updated = {
+          const updatedUser = {
             ...acc,
             assignedClassId: id,
             assignedClassName: updates.name || acc.assignedClassName,
             ageGroup: updates.ageGroup || acc.ageGroup
           };
           try {
-            const cleanUser = sanitizeForFirestore(updated);
+            const cleanUser = sanitizeForFirestore(updatedUser);
             setDoc(doc(db, 'users', acc.id), cleanUser, { merge: true }).catch(() => {});
           } catch {}
-          return updated;
+          return updatedUser;
         }
         // If existing assigned classroom name/ageGroup updated
         if (acc.assignedClassId === id && (updates.name || updates.ageGroup)) {
-          const updated = {
+          const updatedUser = {
             ...acc,
             assignedClassName: updates.name || acc.assignedClassName,
             ageGroup: updates.ageGroup || acc.ageGroup
           };
           try {
-            const cleanUser = sanitizeForFirestore(updated);
+            const cleanUser = sanitizeForFirestore(updatedUser);
             setDoc(doc(db, 'users', acc.id), cleanUser, { merge: true }).catch(() => {});
           } catch {}
-          return updated;
+          return updatedUser;
         }
         return acc;
       }));
     }
 
-    try {
-      if (updatedClassroomObj) {
-        const cleanClass = sanitizeForFirestore(updatedClassroomObj);
-        setDoc(doc(db, 'classrooms', id), cleanClass, { merge: true }).catch(() => {});
-      }
-    } catch {}
-
-    if (updatedClassroomObj) {
-      broadcastLiveSync('CLASSROOM_UPDATED', updatedClassroomObj);
-    }
-    addAuditLog('UPDATE_CLASSROOM', `Updated classroom "${updatedClassroomName || id}" configuration & assignments`, id);
-    showToast(`Classroom "${updatedClassroomName || 'details'}" successfully updated`, 'success');
+    // 4. Broadcast live sync
+    broadcastLiveSync('CLASSROOM_UPDATED', updatedClassroom);
+    addAuditLog('UPDATE_CLASSROOM', `Updated classroom "${updatedClassroom.name}" (${updatedClassroom.code}) configuration & assignments`, id);
+    showToast(`Classroom "${updatedClassroom.name}" successfully updated`, 'success');
   };
 
   const deleteClassroom = (id: string) => {
@@ -1384,28 +1408,28 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const updateLevel = (id: string, updates: Partial<SchoolLevel>) => {
-    let updatedLevelObj: SchoolLevel | null = null;
-    setLevels(prev => prev.map(l => {
-      if (l.id === id) {
-        const updated = { ...l, ...updates };
-        updatedLevelObj = updated;
-        return updated;
-      }
-      return l;
-    }));
+    const targetLevel = levels.find(l => l.id === id);
+    if (!targetLevel) return;
+
+    const updatedLevel: SchoolLevel = {
+      ...targetLevel,
+      ...updates,
+    };
+
+    setLevels(prev => prev.map(l => l.id === id ? updatedLevel : l));
 
     try {
-      if (updatedLevelObj) {
-        const cleanLevel = sanitizeForFirestore(updatedLevelObj);
-        setDoc(doc(db, 'levels', id), cleanLevel, { merge: true }).catch(() => {});
-      }
-    } catch {}
-
-    if (updatedLevelObj) {
-      broadcastLiveSync('LEVEL_UPDATED', updatedLevelObj);
-      addAuditLog('UPDATE_SCHOOL_PROFILE', `Updated learning level "${(updatedLevelObj as SchoolLevel).displayName}"`, id);
-      showToast(`Level "${(updatedLevelObj as SchoolLevel).name}" updated successfully`, 'success');
+      const cleanLevel = sanitizeForFirestore(updatedLevel);
+      setDoc(doc(db, 'levels', id), cleanLevel, { merge: true }).catch((err) => {
+        handleFirestoreError(err, OperationType.UPDATE, `levels/${id}`);
+      });
+    } catch (e) {
+      console.warn('Firestore level update notice:', e);
     }
+
+    broadcastLiveSync('LEVEL_UPDATED', updatedLevel);
+    addAuditLog('UPDATE_SCHOOL_PROFILE', `Updated learning level "${updatedLevel.displayName}"`, id);
+    showToast(`Level "${updatedLevel.name}" updated successfully`, 'success');
   };
 
   const deleteLevel = (id: string) => {

@@ -158,7 +158,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
       return;
     }
 
-    const selectedClass = classrooms.find(c => c.id === assignedClassId);
+    const selectedClass = classrooms.find(c => c.id === assignedClassId || c.code === assignedClassId);
 
     updateAccount(user.id, {
       name: name.trim(),
@@ -168,9 +168,9 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
       title: title.trim(),
       campusId,
       registeredCampusIds: Array.from(new Set([...(user.registeredCampusIds || []), campusId])) as CampusId[],
-      assignedClassId: role === 'teacher' ? assignedClassId : undefined,
-      assignedClassName: role === 'teacher' ? assignedClassId : undefined,
-      ageGroup: role === 'teacher' ? assignedClassId : undefined,
+      assignedClassId: role === 'teacher' ? assignedClassId : '',
+      assignedClassName: role === 'teacher' ? (selectedClass ? selectedClass.name : (assignedClassId || 'Unassigned')) : 'All Classrooms (Supervisory)',
+      ageGroup: role === 'teacher' ? (selectedClass ? selectedClass.ageGroup : undefined) : undefined,
       phone: phone.trim(),
       roomNumber: role === 'teacher' ? roomNumber.trim() : '',
       status,

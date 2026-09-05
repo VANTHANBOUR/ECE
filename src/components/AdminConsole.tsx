@@ -502,18 +502,22 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                         <select
                           value={user.assignedClassId || ''}
                           onChange={(e) => {
+                            const clsId = e.target.value;
+                            const matchedClass = classrooms.find(c => c.id === clsId || c.code === clsId);
                             updateAccount(user.id, {
-                              assignedClassId: e.target.value,
-                              assignedClassName: e.target.value,
-                              ageGroup: e.target.value,
+                              assignedClassId: clsId,
+                              assignedClassName: matchedClass ? matchedClass.name : (clsId || 'Unassigned'),
+                              ageGroup: matchedClass ? matchedClass.ageGroup : undefined,
                             });
                           }}
-                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600"
+                          className="px-2.5 py-1 bg-white border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:outline-emerald-600 max-w-[200px] truncate"
                         >
-                          <option value="Toddlers">{formatAgeGroup('Toddlers', user.campusId)}</option>
-                          <option value="Nursery">Nursery</option>
-                          <option value="Pre-School">Pre-School</option>
-                          <option value="Kindergarten">Kindergarten</option>
+                          <option value="">-- Unassigned --</option>
+                          {classrooms.map((cls) => (
+                            <option key={cls.id} value={cls.id}>
+                              {cls.name} ({cls.code}) - {cls.ageGroup}
+                            </option>
+                          ))}
                         </select>
                       ) : (
                         <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-slate-100 text-slate-600 text-[11px] font-semibold">
