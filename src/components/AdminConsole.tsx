@@ -513,28 +513,36 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
                           const str = `${cls.name} ${cls.code} ${cls.ageGroup}`.toUpperCase();
                           if (isDK) {
+                            if (str.includes('PRE-NURSERY') || str.includes('NURSERY') || str.includes('PRE-SCHOOL') || str.includes('PREK') || str.includes('TOD')) {
+                              return false;
+                            }
                             return str.includes('K1') || str.includes('K2') || str.includes('K3');
+                          } else {
+                            if (str.includes('K1') || str.includes('K2') || str.includes('K3')) {
+                              return false;
+                            }
+                            return true;
                           }
-                          return true;
                         });
 
                         const presetOptions = getCampusClassroomOptions(user.campusId);
 
                         // Build clean unique options list
                         const optionsMap = new Map<string, string>();
-                        if (campusClassrooms.length > 0) {
-                          campusClassrooms.forEach(cls => {
-                            optionsMap.set(cls.id, `${cls.name} (${cls.code})`);
-                          });
-                        } else {
-                          presetOptions.forEach(opt => {
+                        campusClassrooms.forEach(cls => {
+                          const label = cls.code ? `${cls.name} (${cls.code})` : cls.name;
+                          optionsMap.set(cls.id, label);
+                        });
+
+                        presetOptions.forEach(opt => {
+                          if (!optionsMap.has(opt.id)) {
                             optionsMap.set(opt.id, opt.name);
-                          });
-                        }
+                          }
+                        });
 
                         // Ensure current value is in option map if set
                         if (user.assignedClassId && !optionsMap.has(user.assignedClassId)) {
-                          const displayVal = formatAgeGroup(user.assignedClassName || user.assignedClassId, user.campusId) || user.assignedClassId;
+                          const displayVal = user.assignedClassName || user.assignedClassId;
                           optionsMap.set(user.assignedClassId, displayVal);
                         }
 

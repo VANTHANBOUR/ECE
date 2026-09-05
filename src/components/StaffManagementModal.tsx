@@ -497,24 +497,39 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                             if (campusId && campusId !== 'ALL' && c.campusId !== campusId) return false;
                             const str = `${c.name} ${c.code} ${c.ageGroup}`.toUpperCase();
                             if (isDK) {
+                              if (str.includes('PRE-NURSERY') || str.includes('NURSERY') || str.includes('PRE-SCHOOL') || str.includes('PREK') || str.includes('TOD')) {
+                                return false;
+                              }
                               return str.includes('K1') || str.includes('K2') || str.includes('K3');
+                            } else {
+                              if (str.includes('K1') || str.includes('K2') || str.includes('K3')) {
+                                return false;
+                              }
+                              return true;
                             }
-                            return true;
                           });
 
                           const presetOpts = getCampusClassroomOptions(campusId);
+                          const optionsMap = new Map<string, string>();
 
-                          if (filteredCampusClassrooms.length > 0) {
-                            return filteredCampusClassrooms.map(cls => (
-                              <option key={cls.id} value={cls.id}>
-                                {cls.name} ({cls.code}) - {cls.ageGroup}
-                              </option>
-                            ));
+                          filteredCampusClassrooms.forEach(cls => {
+                            const label = cls.code ? `${cls.name} (${cls.code})` : cls.name;
+                            optionsMap.set(cls.id, label);
+                          });
+
+                          presetOpts.forEach(opt => {
+                            if (!optionsMap.has(opt.id)) {
+                              optionsMap.set(opt.id, opt.name);
+                            }
+                          });
+
+                          if (assignedClassId && !optionsMap.has(assignedClassId)) {
+                            optionsMap.set(assignedClassId, assignedClassId);
                           }
 
-                          return presetOpts.map(opt => (
-                            <option key={opt.id} value={opt.id}>
-                              {opt.name}
+                          return Array.from(optionsMap.entries()).map(([val, label]) => (
+                            <option key={val} value={val}>
+                              {label}
                             </option>
                           ));
                         })()}
