@@ -380,26 +380,11 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) =
               />
             </div>
 
-            {/* Khmer Name */}
-            <div className="space-y-1.5">
-              <label className="text-xs font-black text-gray-700 uppercase tracking-wide flex items-center gap-1.5 font-['Battambang']">
-                <Globe className="w-3.5 h-3.5 text-[#007A43]" />
-                <span>Khmer Name (ឈ្មោះជាភាសាខ្មែរ)</span>
-              </label>
-              <input
-                type="text"
-                value={khmerName}
-                onChange={(e) => setKhmerName(e.target.value)}
-                placeholder="ឈ្មោះបុគ្គលិក"
-                className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 focus:bg-white focus:outline-emerald-600 font-bold font-['Battambang']"
-              />
-            </div>
-
-            {/* Primary Registered Campus */}
+            {/* Campus Branch */}
             <div className="space-y-1.5">
               <label className="text-xs font-black text-gray-700 uppercase tracking-wide flex items-center gap-1.5">
                 <School className="w-3.5 h-3.5 text-[#007A43]" />
-                <span>Primary Campus Assignment</span>
+                <span>Campus Branch</span>
               </label>
               <select
                 value={campusId}

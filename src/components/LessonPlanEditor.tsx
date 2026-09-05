@@ -69,10 +69,10 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   // Direct Level options for DK and DCH
   const DK_LEVEL_OPTIONS = useMemo<Classroom[]>(() => [
     {
-      id: 'dk_opt_k1',
-      name: 'K1',
-      khmerName: 'មត្តេយ្យកម្រិត ១ (K1)',
-      code: 'K1',
+      id: 'dk_opt_k1_am',
+      name: 'K1 - AM',
+      khmerName: 'មត្តេយ្យកម្រិត ១ (ព្រឹក)',
+      code: 'K1-AM',
       campusId: 'DK_ROMCHEK_4',
       ageGroup: 'Kindergarten',
       leadTeacherId: '',
@@ -80,15 +80,15 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       assistantTeacherName: '',
       enrolledStudents: 20,
       capacity: 25,
-      room: 'K1 Room',
+      room: 'K1 Room AM',
       colorTheme: '#10B981',
-      currentTheme: 'K1 Curriculum',
+      currentTheme: 'K1 AM Curriculum',
     },
     {
-      id: 'dk_opt_k2',
-      name: 'K2',
-      khmerName: 'មត្តេយ្យកម្រិត ២ (K2)',
-      code: 'K2',
+      id: 'dk_opt_k1_pm',
+      name: 'K1 - PM',
+      khmerName: 'មត្តេយ្យកម្រិត ១ (រសៀល)',
+      code: 'K1-PM',
       campusId: 'DK_ROMCHEK_4',
       ageGroup: 'Kindergarten',
       leadTeacherId: '',
@@ -96,15 +96,31 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       assistantTeacherName: '',
       enrolledStudents: 20,
       capacity: 25,
-      room: 'K2 Room',
+      room: 'K1 Room PM',
+      colorTheme: '#059669',
+      currentTheme: 'K1 PM Curriculum',
+    },
+    {
+      id: 'dk_opt_k2_am',
+      name: 'K2 - AM',
+      khmerName: 'មត្តេយ្យកម្រិត ២ (ព្រឹក)',
+      code: 'K2-AM',
+      campusId: 'DK_ROMCHEK_4',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 25,
+      room: 'K2 Room AM',
       colorTheme: '#3B82F6',
-      currentTheme: 'K2 Curriculum',
+      currentTheme: 'K2 AM Curriculum',
     },
     {
-      id: 'dk_opt_k3',
-      name: 'K3',
-      khmerName: 'មត្តេយ្យកម្រិត ៣ (K3)',
-      code: 'K3',
+      id: 'dk_opt_k2_pm',
+      name: 'K2 - PM',
+      khmerName: 'មត្តេយ្យកម្រិត ២ (រសៀល)',
+      code: 'K2-PM',
       campusId: 'DK_ROMCHEK_4',
       ageGroup: 'Kindergarten',
       leadTeacherId: '',
@@ -112,16 +128,48 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       assistantTeacherName: '',
       enrolledStudents: 20,
       capacity: 25,
-      room: 'K3 Room',
+      room: 'K2 Room PM',
+      colorTheme: '#2563EB',
+      currentTheme: 'K2 PM Curriculum',
+    },
+    {
+      id: 'dk_opt_k3_am',
+      name: 'K3 - AM',
+      khmerName: 'មត្តេយ្យកម្រិត ៣ (ព្រឹក)',
+      code: 'K3-AM',
+      campusId: 'DK_ROMCHEK_4',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 25,
+      room: 'K3 Room AM',
       colorTheme: '#8B5CF6',
-      currentTheme: 'K3 Curriculum',
+      currentTheme: 'K3 AM Curriculum',
+    },
+    {
+      id: 'dk_opt_k3_pm',
+      name: 'K3 - PM',
+      khmerName: 'មត្តេយ្យកម្រិត ៣ (រសៀល)',
+      code: 'K3-PM',
+      campusId: 'DK_ROMCHEK_4',
+      ageGroup: 'Kindergarten',
+      leadTeacherId: '',
+      leadTeacherName: '',
+      assistantTeacherName: '',
+      enrolledStudents: 20,
+      capacity: 25,
+      room: 'K3 Room PM',
+      colorTheme: '#7C3AED',
+      currentTheme: 'K3 PM Curriculum',
     },
   ], []);
 
   const DCH_LEVEL_OPTIONS = useMemo<Classroom[]>(() => [
     {
       id: 'dch_opt_prenursery_am',
-      name: 'Pre-Nursery AM',
+      name: 'Pre-Nursery - AM',
       khmerName: 'ថ្នាក់មុនមត្តេយ្យ (ព្រឹក)',
       code: 'PNUR-AM',
       campusId: 'DCH_SYW',
@@ -137,7 +185,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_prenursery_pm',
-      name: 'Pre-Nursery PM',
+      name: 'Pre-Nursery - PM',
       khmerName: 'ថ្នាក់មុនមត្តេយ្យ (រសៀល)',
       code: 'PNUR-PM',
       campusId: 'DCH_SYW',
@@ -153,7 +201,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_nursery_am',
-      name: 'Nursery AM',
+      name: 'Nursery - AM',
       khmerName: 'ថ្នាក់មត្តេយ្យទាប (ព្រឹក)',
       code: 'NUR-AM',
       campusId: 'DCH_SYW',
@@ -169,7 +217,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_nursery_pm',
-      name: 'Nursery PM',
+      name: 'Nursery - PM',
       khmerName: 'ថ្នាក់មត្តេយ្យទាប (រសៀល)',
       code: 'NUR-PM',
       campusId: 'DCH_SYW',
@@ -185,7 +233,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_preschool_am',
-      name: 'Pre-School AM',
+      name: 'Pre-School - AM',
       khmerName: 'ថ្នាក់ត្រៀមមត្តេយ្យ (ព្រឹក)',
       code: 'PREK-AM',
       campusId: 'DCH_SYW',
@@ -201,7 +249,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_preschool_pm',
-      name: 'Pre-School PM',
+      name: 'Pre-School - PM',
       khmerName: 'ថ្នាក់ត្រៀមមត្តេយ្យ (រសៀល)',
       code: 'PREK-PM',
       campusId: 'DCH_SYW',
@@ -217,7 +265,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_kindergarten_am',
-      name: 'Kindergarten AM',
+      name: 'Kindergarten - AM',
       khmerName: 'ថ្នាក់មត្តេយ្យ (ព្រឹក)',
       code: 'KIND-AM',
       campusId: 'DCH_SYW',
@@ -233,7 +281,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     },
     {
       id: 'dch_opt_kindergarten_pm',
-      name: 'Kindergarten PM',
+      name: 'Kindergarten - PM',
       khmerName: 'ថ្នាក់មត្តេយ្យ (រសៀល)',
       code: 'KIND-PM',
       campusId: 'DCH_SYW',
@@ -255,7 +303,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       const dkClassrooms = classrooms.filter(c => 
         (selectedCampusId && selectedCampusId !== 'ALL' ? c.campusId === selectedCampusId : (c.campusId?.startsWith('DK_') || c.code?.includes('K') || ['cls_eagles', 'cls_sunflowers', 'cls_starfish', 'cls_dolphins'].includes(c.id)))
       );
-      const existing = dkClassrooms.filter(c => !['dk_opt_k1', 'dk_opt_k2', 'dk_opt_k3'].includes(c.id));
+      const existing = dkClassrooms.filter(c => !c.id.startsWith('dk_opt_'));
       return [...DK_LEVEL_OPTIONS, ...existing];
     } else {
       const dchClassrooms = classrooms.filter(c => 
@@ -266,11 +314,11 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     }
   }, [classrooms, selectedCampusId, isDKCampus, DK_LEVEL_OPTIONS, DCH_LEVEL_OPTIONS]);
 
-  // Format label for Classroom & Level options (DK: K1, K2, K3 | DCH: Pre-Nursery AM/PM, Nursery AM/PM, etc.)
+  // Format label for Classroom & Level options
   const getClassroomAndLevelLabel = useCallback((c: Classroom) => {
     if (isDKCampus) {
-      if (['dk_opt_k1', 'dk_opt_k2', 'dk_opt_k3'].includes(c.id)) {
-        return c.name; // Just K1, K2, K3
+      if (c.id.startsWith('dk_opt_')) {
+        return c.name; // K1 AM, K1 PM, K2 AM, etc.
       }
       let level = 'K1';
       if (c.code?.includes('K3') || c.name.includes('K3') || c.name.toLowerCase().includes('k3') || c.khmerName?.includes('៣')) {
@@ -1097,7 +1145,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                   </div>
                   <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 grow max-w-2xl justify-end">
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-xs font-bold text-slate-800 shrink-0">Classroom & Level:</span>
+                      <span className="text-xs font-bold text-slate-800 shrink-0">Assigned Classroom:</span>
                       <select
                         value={firstSessionClassId}
                         onChange={(e) => setFirstSessionClassId(e.target.value)}
@@ -1227,7 +1275,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                   </div>
                   <div className="flex flex-wrap sm:flex-nowrap items-center gap-3 grow max-w-2xl justify-end">
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <span className="text-xs font-bold text-slate-800 shrink-0">Classroom & Level:</span>
+                      <span className="text-xs font-bold text-slate-800 shrink-0">Assigned Classroom:</span>
                       <select
                         value={secondSessionClassId}
                         onChange={(e) => setSecondSessionClassId(e.target.value)}

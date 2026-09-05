@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BrandLogo, SchoolLogoIcon } from './BrandLogo';
-import { UserRole, EarlyChildhoodAgeGroup, CampusId, CAMPUS_LIST } from '../types';
+import { UserRole, EarlyChildhoodAgeGroup, CampusId, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
 import { 
   X, 
   Mail, 
@@ -17,7 +17,8 @@ import {
   Award,
   Loader2,
   Database,
-  Globe
+  Globe,
+  EyeOff
 } from 'lucide-react';
 
 export const AuthModal: React.FC = () => {
@@ -36,7 +37,8 @@ export const AuthModal: React.FC = () => {
     isFirebaseConnected,
     firebaseConfigInfo,
     selectedCampusId,
-    schoolProfile
+    schoolProfile,
+    isSignUpAllowedForCampus
   } = useApp();
 
   const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
@@ -56,8 +58,15 @@ export const AuthModal: React.FC = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('teacher');
   const [title, setTitle] = useState('');
-  const [assignedClassId, setAssignedClassId] = useState('Toddlers');
+  const [assignedClassId, setAssignedClassId] = useState('Pre-Nursery AM');
   const [signUpCampusId, setSignUpCampusId] = useState<CampusId>('DCH_SYW');
+
+  useEffect(() => {
+    const options = getCampusClassroomOptions(signUpCampusId);
+    if (!options.some(o => o.id === assignedClassId)) {
+      setAssignedClassId(options[0].id);
+    }
+  }, [signUpCampusId]);
 
   if (!isAuthModalOpen) return null;
 
@@ -439,14 +448,18 @@ export const AuthModal: React.FC = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <label className="text-xs font-bold text-slate-700 block">Khmer Name (Optional)</label>
-                  <input
-                    type="text"
-                    value={khmerName}
-                    onChange={(e) => setKhmerName(e.target.value)}
-                    placeholder="e.g. អ្នកគ្រូ លីម សុភា"
-                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-emerald-600 font-['Battambang']"
-                  />
+                  <label className="text-xs font-bold text-slate-700 block">Campus Branch</label>
+                  <select
+                    value={signUpCampusId}
+                    onChange={(e) => setSignUpCampusId(e.target.value as CampusId)}
+                    className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-emerald-600"
+                  >
+                    {CAMPUS_LIST.filter(c => c.id !== 'ALL').map((c) => (
+                      <option key={c.id} value={c.id}>
+                        {c.shortName} - {c.nameEnglish}
+                      </option>
+                    ))}
+                  </select>
                 </div>
               </div>
 
@@ -489,39 +502,62 @@ export const AuthModal: React.FC = () => {
                       onChange={(e) => setSignUpCampusId(e.target.value as CampusId)}
                       className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
                     >
-                      {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
-                        <option key={c.id} value={c.id}>{c.shortName} ({c.brand})</option>
-                      ))}
+                      {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => {
+                        const allowed = isSignUpAllowedForCampus(c.id);
+                        return (
+                          <option key={c.id} value={c.id}>
+                            {c.shortName} ({c.brand}) {!allowed ? ' (Hidden)' : ''}
+                          </option>
+                        );
+                      })}
                     </select>
                   </div>
 
                   <div className="space-y-1">
                     <label className="text-xs font-bold text-slate-700 block">
-                      Assigned Level / Classroom
+                      Assigned Classroom
                     </label>
                     <select
                       value={assignedClassId}
                       onChange={(e) => setAssignedClassId(e.target.value)}
                       className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
                     >
-                      <option value="Toddlers">{CAMPUS_LIST.find(c => c.id === signUpCampusId)?.brand === 'DK' ? 'Toddlers' : 'Pre-Nursery'}</option>
-                      <option value="Nursery">Nursery</option>
-                      <option value="Pre-School">Pre-School</option>
-                      <option value="Kindergarten">Kindergarten</option>
+                      {getCampusClassroomOptions(signUpCampusId).map(opt => (
+                        <option key={opt.id} value={opt.id}>
+                          {opt.name}
+                        </option>
+                      ))}
                     </select>
+                  </div>
+                </div>
+              )}
+
+              {!isSignUpAllowedForCampus(signUpCampusId) && (
+                <div className="p-3 bg-rose-50 border border-rose-200 rounded-xl flex items-start gap-2.5">
+                  <EyeOff className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+                  <div>
+                    <p className="text-xs font-bold text-rose-950">Sign-Up Disabled for Selected Campus</p>
+                    <p className="text-[11px] text-rose-800 mt-0.5">
+                      Self-service registration for this campus is currently hidden by administrators.
+                    </p>
                   </div>
                 </div>
               )}
 
               <button
                 type="submit"
-                disabled={isLoading}
+                disabled={isLoading || !isSignUpAllowedForCampus(signUpCampusId)}
                 className="w-full py-3 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-extrabold rounded-xl shadow-xs transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
               >
                 {isLoading ? (
                   <>
                     <Loader2 className="w-4 h-4 animate-spin" />
                     <span>Creating Firebase Account...</span>
+                  </>
+                ) : !isSignUpAllowedForCampus(signUpCampusId) ? (
+                  <>
+                    <EyeOff className="w-4 h-4" />
+                    <span>Sign-Up Hidden for Campus</span>
                   </>
                 ) : (
                   <>

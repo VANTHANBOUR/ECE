@@ -4,6 +4,7 @@ import { LessonPlan, UserAccount, UserRole, Classroom, CAMPUS_LIST } from '../ty
 import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { SchoolProfileSettings } from './SchoolProfileSettings';
+import { SignUpControlModal } from './SignUpControlModal';
 import { 
   ShieldCheck, 
   Users, 
@@ -25,6 +26,7 @@ import {
   GraduationCap,
   Sparkles,
   Eye,
+  EyeOff,
   Filter,
   Briefcase,
   Layers,
@@ -62,6 +64,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<'users' | 'plans' | 'classrooms' | 'logs' | 'profile'>('users');
+  const [isSignUpControlOpen, setIsSignUpControlOpen] = useState(false);
   
   // User Management Filters & State
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
@@ -182,6 +185,29 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-3">
+            <button
+              onClick={() => setIsSignUpControlOpen(true)}
+              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-800/90 hover:bg-emerald-800 text-white font-bold text-xs rounded-2xl shadow-sm border border-emerald-500/40 transition-all active:scale-95"
+            >
+              {schoolProfile?.globalSignUpDisabled ? (
+                <EyeOff className="w-4 h-4 text-rose-300" />
+              ) : (
+                <Eye className="w-4 h-4 text-emerald-300" />
+              )}
+              <span>Hide / Display Sign Up</span>
+              {schoolProfile?.globalSignUpDisabled ? (
+                <span className="px-2 py-0.5 text-[10px] bg-rose-500 text-white rounded-full font-black">
+                  Hidden All
+                </span>
+              ) : (
+                <span className="px-2 py-0.5 text-[10px] bg-amber-400 text-slate-950 rounded-full font-black">
+                  {Object.values(schoolProfile?.disabledSignUpCampuses || {}).filter(Boolean).length > 0 
+                    ? `${Object.values(schoolProfile?.disabledSignUpCampuses || {}).filter(Boolean).length} Hidden` 
+                    : 'Active All'}
+                </span>
+              )}
+            </button>
+
             <button
               onClick={openSignUpModal}
               className="flex items-center gap-2 px-4 py-2.5 bg-[#007A43] hover:bg-[#006338] text-white font-bold text-xs rounded-2xl shadow-sm transition-all active:scale-95"
@@ -932,6 +958,12 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
           }}
         />
       )}
+
+      {/* Sign-Up Access Controls Modal */}
+      <SignUpControlModal
+        isOpen={isSignUpControlOpen}
+        onClose={() => setIsSignUpControlOpen(false)}
+      />
     </div>
   );
 };

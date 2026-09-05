@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { UserAccount, UserRole, CampusId, CAMPUS_LIST } from '../types';
+import { UserAccount, UserRole, CampusId, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
 import { 
   X, 
   ShieldCheck, 
@@ -75,8 +75,15 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
   const [email, setEmail] = useState(user.email);
   const [role, setRole] = useState<UserRole>(user.role);
   const [title, setTitle] = useState(user.title);
-  const [assignedClassId, setAssignedClassId] = useState(user.assignedClassId || 'Toddlers');
+  const [assignedClassId, setAssignedClassId] = useState(user.assignedClassId || 'Pre-Nursery AM');
   const [campusId, setCampusId] = useState<CampusId>(user.campusId || 'DCH_SYW');
+
+  useEffect(() => {
+    const options = getCampusClassroomOptions(campusId);
+    if (!options.some(o => o.id === assignedClassId)) {
+      setAssignedClassId(options[0].id);
+    }
+  }, [campusId]);
   const [phone, setPhone] = useState(user.phone || '');
   const [roomNumber, setRoomNumber] = useState(user.roomNumber || '');
   const [status, setStatus] = useState<'active' | 'suspended'>(user.status || 'active');
@@ -470,17 +477,18 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                   <>
                     <div className="space-y-1">
                       <label className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-                        <School className="w-3 h-3 text-emerald-600" /> Assigned Kindergarten Classroom & Level
+                        <School className="w-3 h-3 text-emerald-600" /> Assigned Classroom
                       </label>
                       <select
                         value={assignedClassId}
                         onChange={(e) => setAssignedClassId(e.target.value)}
                         className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
                       >
-                        <option value="Toddlers">{formatAgeGroup('Toddlers', user.campusId)}</option>
-                        <option value="Nursery">Nursery</option>
-                        <option value="Pre-School">Pre-School</option>
-                        <option value="Kindergarten">Kindergarten</option>
+                        {getCampusClassroomOptions(campusId).map(opt => (
+                          <option key={opt.id} value={opt.id}>
+                            {opt.name}
+                          </option>
+                        ))}
                       </select>
                     </div>
                     <div className="space-y-1">

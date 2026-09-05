@@ -131,6 +131,33 @@ export const CAMPUS_LIST: CampusInfo[] = [
   }
 ];
 
+export const getCampusClassroomOptions = (campusId?: CampusId): { id: string; name: string }[] => {
+  const campus = CAMPUS_LIST.find(c => c.id === campusId);
+  const isDK = campus?.brand === 'DK' || (campusId && (campusId as string).startsWith('DK_'));
+
+  if (isDK) {
+    return [
+      { id: 'K1 - AM', name: 'K1 - AM' },
+      { id: 'K1 - PM', name: 'K1 - PM' },
+      { id: 'K2 - AM', name: 'K2 - AM' },
+      { id: 'K2 - PM', name: 'K2 - PM' },
+      { id: 'K3 - AM', name: 'K3 - AM' },
+      { id: 'K3 - PM', name: 'K3 - PM' },
+    ];
+  }
+
+  return [
+    { id: 'Pre-Nursery - AM', name: 'Pre-Nursery - AM' },
+    { id: 'Pre-Nursery - PM', name: 'Pre-Nursery - PM' },
+    { id: 'Nursery - AM', name: 'Nursery - AM' },
+    { id: 'Nursery - PM', name: 'Nursery - PM' },
+    { id: 'Pre-School - AM', name: 'Pre-School - AM' },
+    { id: 'Pre-School - PM', name: 'Pre-School - PM' },
+    { id: 'Kindergarten - AM', name: 'Kindergarten - AM' },
+    { id: 'Kindergarten - PM', name: 'Kindergarten - PM' },
+  ];
+};
+
 export interface UserAccount {
   id: string;
   firebaseUid?: string;
@@ -182,6 +209,8 @@ export interface SchoolProfile {
   websiteUrl?: string;
   updatedAt?: string;
   updatedBy?: string;
+  globalSignUpDisabled?: boolean;
+  disabledSignUpCampuses?: Record<string, boolean>;
 }
 
 export interface Classroom {

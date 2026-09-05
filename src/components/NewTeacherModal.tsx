@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
-import { EarlyChildhoodAgeGroup } from '../types';
+import { EarlyChildhoodAgeGroup, CampusId, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
 import { X, UserPlus, GraduationCap, Check } from 'lucide-react';
 
 interface NewTeacherModalProps {
@@ -8,16 +8,23 @@ interface NewTeacherModalProps {
 }
 
 export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => {
-  const { registerTeacher, classrooms, showToast, formatAgeGroup } = useApp();
+  const { registerTeacher, classrooms, showToast } = useApp();
 
   const [name, setName] = useState('');
-  const [khmerName, setKhmerName] = useState('');
+  const [campusId, setCampusId] = useState<CampusId>('DCH_SYW');
   const [email, setEmail] = useState('');
   const [title, setTitle] = useState('Early Childhood Lead Educator');
-  const [assignedLevel, setAssignedLevel] = useState<EarlyChildhoodAgeGroup>('Toddlers');
+  const [assignedLevel, setAssignedLevel] = useState<string>('Pre-Nursery AM');
   const [phone, setPhone] = useState('+855 (0) 12 ');
   const [roomNumber, setRoomNumber] = useState('');
   const [bio, setBio] = useState('Passionate about early childhood sensory development, inquiry-based play, and trilingual literacy.');
+
+  useEffect(() => {
+    const options = getCampusClassroomOptions(campusId);
+    if (!options.some(o => o.id === assignedLevel)) {
+      setAssignedLevel(options[0].id);
+    }
+  }, [campusId]);
 
   const AVATARS = [
     'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
@@ -37,9 +44,13 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
       return;
     }
 
+    const campusObj = CAMPUS_LIST.find(c => c.id === campusId);
+
     registerTeacher({
       name: name.trim(),
-      khmerName: khmerName.trim(),
+      campusId,
+      campusName: campusObj?.shortName || campusObj?.nameEnglish || 'DCH SYW',
+      registeredCampusIds: [campusId],
       email: email.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@deweychildcare.edu.kh`,
       avatar: selectedAvatar,
       title: title.trim(),
@@ -119,16 +130,20 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
             </div>
 
             <div>
-              <label className="text-xs font-bold text-slate-700 block mb-1 font-['Battambang']">
-                Khmer Name (ឈ្មោះជាភាសាខ្មែរ)
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                Campus Branch *
               </label>
-              <input
-                type="text"
-                value={khmerName}
-                onChange={(e) => setKhmerName(e.target.value)}
-                placeholder="ឧ. អ្នកគ្រូ សារ៉ា"
-                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-emerald-600 font-['Battambang']"
-              />
+              <select
+                value={campusId}
+                onChange={(e) => setCampusId(e.target.value as CampusId)}
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-emerald-600"
+              >
+                {CAMPUS_LIST.filter(c => c.id !== 'ALL').map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.shortName} - {c.nameEnglish}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
 
@@ -148,17 +163,18 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
 
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
-                Assigned Kindergarten Classroom & Level
+                Assigned Classroom
               </label>
               <select
                 value={assignedLevel}
-                onChange={(e) => setAssignedLevel(e.target.value as EarlyChildhoodAgeGroup)}
+                onChange={(e) => setAssignedLevel(e.target.value)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-800 focus:outline-emerald-600"
               >
-                <option value="Toddlers">{formatAgeGroup('Toddlers')}</option>
-                <option value="Nursery">Nursery</option>
-                <option value="Pre-School">Pre-School</option>
-                <option value="Kindergarten">Kindergarten</option>
+                {getCampusClassroomOptions(campusId).map((opt) => (
+                  <option key={opt.id} value={opt.id}>
+                    {opt.name}
+                  </option>
+                ))}
               </select>
             </div>
           </div>

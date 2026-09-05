@@ -133,6 +133,9 @@ interface AppContextType {
   setIsProfileModalOpen: (open: boolean) => void;
   openProfileModal: () => void;
   resetUserPassword: (email: string) => Promise<void>;
+  toggleGlobalSignUp: (disabled?: boolean) => Promise<void>;
+  toggleCampusSignUp: (campusId: CampusId, disabled?: boolean) => Promise<void>;
+  isSignUpAllowedForCampus: (campusId: CampusId) => boolean;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -1576,6 +1579,77 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  const isSignUpAllowedForCampus = useCallback((campusId: CampusId) => {
+    if (schoolProfile.globalSignUpDisabled) return false;
+    if (!campusId || campusId === 'ALL') return !schoolProfile.globalSignUpDisabled;
+    return !schoolProfile.disabledSignUpCampuses?.[campusId];
+  }, [schoolProfile.globalSignUpDisabled, schoolProfile.disabledSignUpCampuses]);
+
+  const toggleGlobalSignUp = async (disabled?: boolean) => {
+    const newValue = disabled !== undefined ? disabled : !schoolProfile.globalSignUpDisabled;
+    const updated: SchoolProfile = {
+      ...schoolProfile,
+      globalSignUpDisabled: newValue,
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentUser ? `${currentUser.name} (${currentUser.role})` : 'Authorized Admin'
+    };
+
+    setSchoolProfile(updated);
+    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+
+    try {
+      const cleanProfile = sanitizeForFirestore(updated);
+      await setDoc(doc(db, 'settings', 'schoolProfile'), cleanProfile, { merge: true });
+    } catch (e) {
+      console.warn('Firestore global signup status update warning:', e);
+    }
+
+    broadcastLiveSync('SCHOOL_PROFILE_UPDATED', updated);
+    addAuditLog('UPDATE_SCHOOL_PROFILE', newValue ? 'Hidden/disabled public sign-up for ALL campuses' : 'Displayed/enabled public sign-up for ALL campuses');
+    showToast(
+      newValue ? 'Sign-up has been hidden for ALL campuses.' : 'Sign-up is now displayed for ALL campuses.',
+      newValue ? 'warning' : 'success'
+    );
+  };
+
+  const toggleCampusSignUp = async (campusId: CampusId, disabled?: boolean) => {
+    const currentDisabledMap = schoolProfile.disabledSignUpCampuses || {};
+    const currentVal = !!currentDisabledMap[campusId];
+    const newVal = disabled !== undefined ? disabled : !currentVal;
+
+    const updatedMap = {
+      ...currentDisabledMap,
+      [campusId]: newVal,
+    };
+
+    const updated: SchoolProfile = {
+      ...schoolProfile,
+      disabledSignUpCampuses: updatedMap,
+      updatedAt: new Date().toISOString(),
+      updatedBy: currentUser ? `${currentUser.name} (${currentUser.role})` : 'Authorized Admin'
+    };
+
+    setSchoolProfile(updated);
+    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+
+    try {
+      const cleanProfile = sanitizeForFirestore(updated);
+      await setDoc(doc(db, 'settings', 'schoolProfile'), cleanProfile, { merge: true });
+    } catch (e) {
+      console.warn('Firestore campus signup status update warning:', e);
+    }
+
+    const campusObj = CAMPUS_LIST.find(c => c.id === campusId);
+    const cName = campusObj?.shortName || campusId;
+
+    broadcastLiveSync('SCHOOL_PROFILE_UPDATED', updated);
+    addAuditLog('UPDATE_SCHOOL_PROFILE', newVal ? `Hidden sign-up for ${cName}` : `Displayed sign-up for ${cName}`);
+    showToast(
+      newVal ? `Sign-up hidden for ${cName}` : `Sign-up displayed for ${cName}`,
+      newVal ? 'warning' : 'success'
+    );
+  };
+
   const openProfileModal = () => {
     setIsProfileModalOpen(true);
   };
@@ -1643,6 +1717,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setIsProfileModalOpen,
         openProfileModal,
         resetUserPassword,
+        toggleGlobalSignUp,
+        toggleCampusSignUp,
+        isSignUpAllowedForCampus,
       }}
     >
       {children}

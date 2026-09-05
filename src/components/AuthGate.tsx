@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { BrandLogo, DCHShield, DIShield, DKShield } from './BrandLogo';
-import { UserRole, CampusId, CAMPUS_LIST } from '../types';
+import { UserRole, CampusId, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
 import { CampusTabsBar } from './CampusTabsBar';
 import { 
   Mail, 
@@ -22,7 +22,8 @@ import {
   Calendar,
   Layers,
   KeyRound,
-  MapPin
+  MapPin,
+  EyeOff
 } from 'lucide-react';
 
 export const AuthGate: React.FC = () => {
@@ -36,7 +37,8 @@ export const AuthGate: React.FC = () => {
     firebaseConfigInfo,
     isFirebaseConnected,
     selectedCampusId,
-    setSelectedCampusId
+    setSelectedCampusId,
+    isSignUpAllowedForCampus
   } = useApp();
 
   const [mode, setMode] = useState<'signin' | 'signup'>('signin');
@@ -53,10 +55,17 @@ export const AuthGate: React.FC = () => {
   const [password, setPassword] = useState('');
   const [role, setRole] = useState<UserRole>('teacher');
   const [title, setTitle] = useState('');
-  const [assignedClassId, setAssignedClassId] = useState('Pre-Nursery');
+  const [assignedClassId, setAssignedClassId] = useState('Pre-Nursery AM');
   const [roomNumber, setRoomNumber] = useState('');
 
   const activeCampus = CAMPUS_LIST.find(c => c.id === selectedCampusId) || CAMPUS_LIST[0];
+
+  useEffect(() => {
+    const options = getCampusClassroomOptions(selectedCampusId);
+    if (!options.some(o => o.id === assignedClassId)) {
+      setAssignedClassId(options[0].id);
+    }
+  }, [selectedCampusId]);
 
   const handleSignInSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -549,16 +558,35 @@ export const AuthGate: React.FC = () => {
                       </div>
 
                       <div className="space-y-1">
-                        <label className="text-xs font-bold text-slate-700 block">Khmer Name (Optional)</label>
-                        <input
-                          type="text"
-                          value={khmerName}
-                          onChange={(e) => setKhmerName(e.target.value)}
-                          placeholder="e.g. អ្នកគ្រូ លីម សុភា"
-                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-900 focus:bg-white focus:outline-emerald-600 font-['Battambang']"
-                        />
+                        <label className="text-xs font-bold text-slate-700 block">Campus Branch</label>
+                        <select
+                          value={selectedCampusId}
+                          onChange={(e) => setSelectedCampusId(e.target.value as CampusId)}
+                          className="w-full px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-900 focus:bg-white focus:outline-emerald-600"
+                        >
+                          {CAMPUS_LIST.filter(c => c.id !== 'ALL').map((c) => {
+                            const allowed = isSignUpAllowedForCampus(c.id);
+                            return (
+                              <option key={c.id} value={c.id}>
+                                {c.shortName} - {c.nameEnglish} {!allowed ? ' (Sign-Up Hidden)' : ''}
+                              </option>
+                            );
+                          })}
+                        </select>
                       </div>
                     </div>
+
+                    {!isSignUpAllowedForCampus(selectedCampusId) ? (
+                      <div className="p-3.5 bg-rose-50 border border-rose-200 rounded-2xl flex items-start gap-3">
+                        <EyeOff className="w-5 h-5 text-rose-600 shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-extrabold text-rose-950">Sign-Up Restricted for {activeCampus.shortName}</p>
+                          <p className="text-[11px] text-rose-800 mt-0.5">
+                            Public self-service registration for <span className="font-bold">{activeCampus.shortName}</span> is currently hidden by the school administrator. Please select another campus or contact your administrator to receive an account.
+                          </p>
+                        </div>
+                      </div>
+                    ) : null}
 
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div className="space-y-1">
@@ -592,17 +620,18 @@ export const AuthGate: React.FC = () => {
                       <div className="space-y-3 p-3 bg-slate-50 rounded-xl border border-slate-200">
                         <div className="space-y-1">
                           <label className="text-xs font-bold text-slate-700 block">
-                            Assigned Kindergarten Classroom & Level
+                            Assigned Classroom
                           </label>
                           <select
                             value={assignedClassId}
                             onChange={(e) => setAssignedClassId(e.target.value)}
                             className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-800"
                           >
-                            <option value="Toddlers">{activeCampus.brand === 'DK' ? 'Toddlers' : 'Pre-Nursery'}</option>
-                            <option value="Nursery">Nursery</option>
-                            <option value="Pre-School">Pre-School</option>
-                            <option value="Kindergarten">Kindergarten</option>
+                            {getCampusClassroomOptions(selectedCampusId).map(opt => (
+                              <option key={opt.id} value={opt.id}>
+                                {opt.name}
+                              </option>
+                            ))}
                           </select>
                         </div>
                         
@@ -623,13 +652,18 @@ export const AuthGate: React.FC = () => {
 
                     <button
                       type="submit"
-                      disabled={isLoading}
+                      disabled={isLoading || !isSignUpAllowedForCampus(selectedCampusId)}
                       className="w-full py-3 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-extrabold rounded-xl shadow-md transition-all flex items-center justify-center gap-2 active:scale-98 disabled:opacity-50"
                     >
                       {isLoading ? (
                         <>
                           <Loader2 className="w-4 h-4 animate-spin" />
                           <span>Registering Account for {activeCampus.shortName}...</span>
+                        </>
+                      ) : !isSignUpAllowedForCampus(selectedCampusId) ? (
+                        <>
+                          <EyeOff className="w-4 h-4 text-white" />
+                          <span>Sign-Up Hidden for {activeCampus.shortName}</span>
                         </>
                       ) : (
                         <>
