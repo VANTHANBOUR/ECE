@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LessonPlan, UserAccount, UserRole, Classroom, SchoolLevel, CAMPUS_LIST } from '../types';
+import { LessonPlan, UserAccount, UserRole, Classroom, SchoolLevel, CAMPUS_LIST, isCentralHQUser } from '../types';
 import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { ClassroomsAndLevelsTab } from './ClassroomsAndLevelsTab';
+import { formatDateDDMMYYYY, formatDateRange, formatDateTimeDDMMYYYY } from '../utils/dateUtils';
 import { 
   ShieldCheck, 
   BookOpen, 
@@ -30,12 +31,13 @@ import {
   School,
   Plus,
   Building2,
-  Table
+  Table,
+  Printer
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface AdminDashboardProps {
-  onSelectPlan: (plan: LessonPlan) => void;
+  onSelectPlan: (plan: LessonPlan, autoPrint?: boolean) => void;
   onOpenNewTeacher: () => void;
 }
 
@@ -63,6 +65,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     updateLevel,
     deleteLevel,
     selectedCampusId,
+    setSelectedCampusId,
     formatAgeGroup
   } = useApp();
 
@@ -75,7 +78,8 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   
   // Batch selection
   const [selectedPlanIds, setSelectedPlanIds] = useState<string[]>([]);
-  const [activeAdminSubTab, setActiveAdminSubTab] = useState<'submissions' | 'compliance_matrix' | 'staff' | 'classrooms_levels'>('submissions');
+  const [selectedCampusFilter, setSelectedCampusFilter] = useState<string>('all');
+  const [activeAdminSubTab, setActiveAdminSubTab] = useState<'submissions' | 'compliance_matrix' | 'staff' | 'classrooms_levels' | 'network_monitor'>('submissions');
   const [editingStaffUser, setEditingStaffUser] = useState<UserAccount | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserAccount | null>(null);
   const [staffRoleFilter, setStaffRoleFilter] = useState<string>('all');
@@ -83,10 +87,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
   const [selectedClassroomToEdit, setSelectedClassroomToEdit] = useState<Classroom | null>(null);
 
+  const isCentralStaff = isCentralHQUser(currentUser);
+
   const teachers = allAccounts.filter(a => {
     if (a.role !== 'teacher') return false;
-    if (!selectedCampusId || selectedCampusId === 'ALL') return true;
-    return a.campusId === selectedCampusId;
+    if (selectedCampusId && selectedCampusId !== 'ALL') return a.campusId === selectedCampusId;
+    if (selectedCampusFilter !== 'all') return a.campusId === selectedCampusFilter;
+    return true;
   });
 
   const campusClassrooms = classrooms.filter(c => {
@@ -102,6 +109,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
       const cls = classrooms.find(c => c.id === plan.classId);
       if (plan.campusId && plan.campusId !== selectedCampusId) return false;
       if (!plan.campusId && cls && cls.campusId !== selectedCampusId) return false;
+    } else if (selectedCampusFilter !== 'all') {
+      const cls = classrooms.find(c => c.id === plan.classId);
+      if (plan.campusId && plan.campusId !== selectedCampusFilter) return false;
+      if (!plan.campusId && cls && cls.campusId !== selectedCampusFilter) return false;
     }
     if (selectedTeacherId !== 'all' && plan.teacherId !== selectedTeacherId) return false;
     if (selectedAgeGroup !== 'all' && plan.ageGroup !== selectedAgeGroup) return false;
@@ -115,6 +126,37 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     }
     return true;
   });
+
+  // Cross-campus metrics breakdown for Central HQ monitoring
+  const campusNetworkMetrics = React.useMemo(() => {
+    const branches = CAMPUS_LIST.filter(c => c.id !== 'ALL');
+    return branches.map(campus => {
+      const branchClassrooms = classrooms.filter(c => c.campusId === campus.id);
+      const branchTeachers = allAccounts.filter(a => a.role === 'teacher' && (a.campusId === campus.id || a.registeredCampusIds?.includes(campus.id)));
+      const branchPlans = lessonPlans.filter(p => {
+        if (p.campusId === campus.id) return true;
+        const cls = classrooms.find(c => c.id === p.classId);
+        return !p.campusId && cls && cls.campusId === campus.id;
+      });
+      const approved = branchPlans.filter(p => p.status === 'approved').length;
+      const pending = branchPlans.filter(p => p.status === 'submitted' || p.status === 'under_review').length;
+      const revisions = branchPlans.filter(p => p.status === 'revision_requested').length;
+      const drafts = branchPlans.filter(p => p.status === 'draft').length;
+      const compliance = branchPlans.length > 0 ? Math.round((approved / branchPlans.length) * 100) : 100;
+
+      return {
+        ...campus,
+        classroomsCount: branchClassrooms.length,
+        teachersCount: branchTeachers.length,
+        plansCount: branchPlans.length,
+        approvedCount: approved,
+        pendingCount: pending,
+        revisionsCount: revisions,
+        draftsCount: drafts,
+        complianceRate: compliance
+      };
+    });
+  }, [classrooms, allAccounts, lessonPlans]);
 
   // KPIs based on campus filtering
   const campusPlans = lessonPlans.filter(plan => {
@@ -278,7 +320,10 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
           </div>
           <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{totalSubmissions}</p>
-          <p className="text-[10px] text-slate-400 mt-0.5">Across 5 Classrooms</p>
+          <p className="text-[10px] text-slate-400 mt-0.5">
+            Across {campusClassrooms.length} Classroom{campusClassrooms.length === 1 ? '' : 's'}
+            {selectedCampusId === 'ALL' ? ' (All 7 Campuses)' : ''}
+          </p>
         </div>
 
         <div className="p-4 bg-white rounded-2xl border border-blue-200 shadow-2xs">
@@ -326,7 +371,20 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>All Teacher Submissions ({lessonPlans.length})</span>
+          <span>All Teacher Submissions ({filteredPlans.length})</span>
+        </button>
+
+        <button
+          onClick={() => setActiveAdminSubTab('network_monitor')}
+          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
+            activeAdminSubTab === 'network_monitor'
+              ? 'bg-purple-900 text-white shadow-2xs'
+              : 'text-purple-900 bg-purple-50 hover:bg-purple-100 border border-purple-200'
+          }`}
+        >
+          <Building2 className="w-4 h-4 text-purple-600" />
+          <span>Central HQ Campus Monitor (7 Campuses)</span>
+          <span className="px-1.5 py-0.2 rounded-full bg-purple-200 text-purple-950 text-[10px] font-black">7</span>
         </button>
 
         <button
@@ -637,7 +695,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       )}
                     </td>
                     <td className="py-3.5 px-3 text-slate-500">
-                      {rec.submissionDate || '—'}
+                      {rec.submissionDate ? formatDateTimeDDMMYYYY(rec.submissionDate) : '—'}
                     </td>
                     <td className="py-3.5 px-3 text-right">
                       {rec.lessonPlanId ? (
@@ -663,6 +721,205 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                 ))}
               </tbody>
             </table>
+          </div>
+        </div>
+      ) : activeAdminSubTab === 'network_monitor' ? (
+        /* Central HQ Multi-Campus Command Center */
+        <div className="space-y-5 animate-in fade-in duration-200">
+          {/* Header Card */}
+          <div className="bg-gradient-to-r from-purple-950 via-slate-900 to-emerald-950 rounded-3xl p-6 sm:p-7 text-white shadow-lg border border-purple-800/40">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1.5 max-w-2xl">
+                <div className="flex items-center gap-2">
+                  <span className="px-3 py-1 rounded-full bg-purple-400 text-purple-950 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                    <Building2 className="w-3.5 h-3.5" />
+                    Central HQ Oversight
+                  </span>
+                  <span className="text-purple-200 text-xs font-bold">
+                    All 7 Campuses Real-time Synchronized
+                  </span>
+                </div>
+                <h2 className="text-xl sm:text-2xl font-black font-['Outfit']">
+                  Network Campus Monitoring Dashboard
+                </h2>
+                <p className="text-xs sm:text-sm text-purple-100/80">
+                  Continuous institutional compliance and curriculum oversight across all Dewey Childcare House (Phnom Penh & Banteay Meanchey) and Dewey Kindergarten campuses.
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  onClick={exportSummaryReport}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-white/10 hover:bg-white/20 text-white font-bold text-xs rounded-2xl backdrop-blur-xs border border-white/20 transition-all active:scale-95"
+                >
+                  <FileSpreadsheet className="w-4 h-4 text-emerald-300" />
+                  <span>Export 7-Campus Report</span>
+                </button>
+                <button
+                  onClick={() => {
+                    setSelectedCampusId('ALL');
+                    setSelectedCampusFilter('all');
+                    showToast('Selected All Campuses for network-wide monitoring', 'info');
+                  }}
+                  className="flex items-center gap-2 px-4 py-2.5 bg-purple-500 hover:bg-purple-400 text-white font-bold text-xs rounded-2xl shadow-sm transition-all active:scale-95"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Monitor All Campuses</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Network Summary Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-6 pt-5 border-t border-purple-800/50">
+              <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-[11px] font-bold text-purple-200 uppercase">Campuses</p>
+                <p className="text-2xl font-black text-white mt-1">7 Campuses</p>
+                <p className="text-[10px] text-purple-300">3 DCH · 4 DK Branches</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-[11px] font-bold text-purple-200 uppercase">Total Classrooms</p>
+                <p className="text-2xl font-black text-white mt-1">{classrooms.length}</p>
+                <p className="text-[10px] text-purple-300">Across Network</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-[11px] font-bold text-purple-200 uppercase">Registered Teachers</p>
+                <p className="text-2xl font-black text-white mt-1">{allAccounts.filter(a => a.role === 'teacher').length}</p>
+                <p className="text-[10px] text-purple-300">Active Educators</p>
+              </div>
+              <div className="p-3 bg-white/5 rounded-2xl border border-white/10">
+                <p className="text-[11px] font-bold text-purple-200 uppercase">Avg Compliance</p>
+                <p className="text-2xl font-black text-emerald-300 mt-1">
+                  {Math.round(
+                    campusNetworkMetrics.reduce((acc, c) => acc + c.complianceRate, 0) / (campusNetworkMetrics.length || 1)
+                  )}%
+                </p>
+                <p className="text-[10px] text-emerald-400">On-track Submissions</p>
+              </div>
+            </div>
+          </div>
+
+          {/* 7 Campus Cards Grid */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+            {campusNetworkMetrics.map((campus) => {
+              const isSelectedCampus = selectedCampusId === campus.id;
+              return (
+                <div
+                  key={campus.id}
+                  className={`bg-white rounded-3xl border transition-all p-5 flex flex-col justify-between space-y-4 hover:shadow-md ${
+                    isSelectedCampus 
+                      ? 'border-purple-500 ring-2 ring-purple-500/20 shadow-md' 
+                      : 'border-slate-200/90'
+                  }`}
+                >
+                  <div className="space-y-3">
+                    {/* Header: Brand Pill & Campus Name */}
+                    <div className="flex items-start justify-between gap-2">
+                      <div>
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span className={`text-[10px] font-black uppercase px-2 py-0.5 rounded-md ${
+                            campus.brand === 'DK' 
+                              ? 'bg-amber-100 text-amber-900 border border-amber-300' 
+                              : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                          }`}>
+                            {campus.brand === 'DK' ? 'Dewey Kindergarten' : 'Dewey Childcare House'}
+                          </span>
+                          <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" title="Active" />
+                        </div>
+                        <h3 className="text-base font-black text-slate-900 leading-snug">
+                          {campus.nameEnglish}
+                        </h3>
+                        <p className="text-xs font-semibold text-slate-500">
+                          {campus.nameKhmer}
+                        </p>
+                      </div>
+                      <span className="text-xs font-extrabold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 shrink-0">
+                        {campus.shortName}
+                      </span>
+                    </div>
+
+                    <p className="text-[11px] text-slate-500 flex items-center gap-1">
+                      <Building2 className="w-3 h-3 text-slate-400 shrink-0" />
+                      <span className="truncate">{campus.location}</span>
+                    </p>
+
+                    {/* Micro Metrics Grid */}
+                    <div className="grid grid-cols-3 gap-2 p-2.5 bg-slate-50 rounded-2xl border border-slate-100 text-center">
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Classrooms</p>
+                        <p className="text-base font-black text-slate-800">{campus.classroomsCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Teachers</p>
+                        <p className="text-base font-black text-slate-800">{campus.teachersCount}</p>
+                      </div>
+                      <div>
+                        <p className="text-[10px] font-bold text-slate-400 uppercase">Plans</p>
+                        <p className="text-base font-black text-slate-800">{campus.plansCount}</p>
+                      </div>
+                    </div>
+
+                    {/* Compliance Progress */}
+                    <div className="space-y-1.5">
+                      <div className="flex items-center justify-between text-xs font-bold">
+                        <span className="text-slate-600">Compliance Rate</span>
+                        <span className={campus.complianceRate >= 80 ? 'text-emerald-700' : 'text-amber-700'}>
+                          {campus.complianceRate}%
+                        </span>
+                      </div>
+                      <div className="w-full h-2 bg-slate-100 rounded-full overflow-hidden flex">
+                        <div 
+                          className="bg-emerald-500 h-full transition-all" 
+                          style={{ width: `${campus.complianceRate}%` }} 
+                        />
+                        <div 
+                          className="bg-amber-400 h-full transition-all" 
+                          style={{ width: `${100 - campus.complianceRate}%` }} 
+                        />
+                      </div>
+                      <div className="flex items-center justify-between text-[10px] text-slate-500 pt-0.5">
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+                          {campus.approvedCount} Approved
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+                          {campus.pendingCount} Pending
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <span className="w-1.5 h-1.5 rounded-full bg-amber-500" />
+                          {campus.revisionsCount} Revisions
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Actions */}
+                  <div className="pt-2 border-t border-slate-100 grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => {
+                        setSelectedCampusId(campus.id);
+                        showToast(`Switched monitoring view to ${campus.shortName}`, 'success');
+                      }}
+                      className="px-3 py-2 bg-slate-100 hover:bg-purple-100 hover:text-purple-900 text-slate-700 font-extrabold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <Eye className="w-3.5 h-3.5" />
+                      <span>{isSelectedCampus ? 'Currently Active' : 'Monitor'}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setSelectedCampusFilter(campus.id);
+                        setActiveAdminSubTab('submissions');
+                      }}
+                      className="px-3 py-2 bg-purple-50 hover:bg-purple-100 text-purple-900 border border-purple-200 font-extrabold text-xs rounded-xl transition-all flex items-center justify-center gap-1.5"
+                    >
+                      <BookOpen className="w-3.5 h-3.5 text-purple-700" />
+                      <span>View Plans</span>
+                    </button>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       ) : activeAdminSubTab === 'classrooms_levels' ? (
@@ -726,7 +983,26 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             </div>
 
             {/* Filter Dropdowns Row */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
+            <div className={`grid grid-cols-1 ${selectedCampusId === 'ALL' ? 'sm:grid-cols-4' : 'sm:grid-cols-3'} gap-3 pt-2`}>
+              {selectedCampusId === 'ALL' && (
+                <div>
+                  <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1 flex items-center gap-1">
+                    <Building2 className="w-3 h-3 text-emerald-600" />
+                    Filter by Campus
+                  </label>
+                  <select
+                    value={selectedCampusFilter}
+                    onChange={(e) => setSelectedCampusFilter(e.target.value)}
+                    className="w-full px-3 py-1.5 bg-purple-50/60 border border-purple-200 rounded-xl text-xs font-bold text-purple-950 focus:outline-purple-600"
+                  >
+                    <option value="all">🏢 All 7 Campuses</option>
+                    {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
+                      <option key={c.id} value={c.id}>{c.shortName} ({c.brand})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
+
               <div>
                 <label className="text-[11px] font-bold text-slate-500 uppercase block mb-1">
                   Filter by Teacher
@@ -790,6 +1066,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
             <div className="divide-y divide-slate-100">
               {filteredPlans.map((plan) => {
                 const isSelected = selectedPlanIds.includes(plan.id);
+                const planCampus = CAMPUS_LIST.find(c => c.id === plan.campusId) || 
+                  CAMPUS_LIST.find(c => c.id === classrooms.find(cls => cls.id === plan.classId)?.campusId);
+
                 return (
                   <div
                     key={plan.id}
@@ -821,13 +1100,19 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
                       <div className="space-y-1 min-w-0 flex-1">
                         <div className="flex flex-wrap items-center gap-2">
                           <span className="font-bold text-xs text-slate-900">{plan.teacherName}</span>
+                          {planCampus && (
+                            <span className="text-[10px] font-bold text-purple-900 bg-purple-50 border border-purple-200 px-2 py-0.5 rounded-md flex items-center gap-1">
+                              <Building2 className="w-2.5 h-2.5 text-purple-600" />
+                              {planCampus.shortName}
+                            </span>
+                          )}
                           <span className="text-slate-300">·</span>
                           <span className="text-xs font-semibold text-emerald-800 bg-emerald-50 px-2 py-0.2 rounded">
                             {plan.className}
                           </span>
                           <span className="text-slate-300">·</span>
                           <span className="text-xs text-slate-500 font-medium">
-                            Week {plan.weekNumber} ({plan.startDate})
+                            Week {plan.weekNumber} ({plan.endDate ? formatDateRange(plan.startDate, plan.endDate, ' to ') : formatDateDDMMYYYY(plan.startDate)})
                           </span>
                           {getStatusBadge(plan.status)}
                         </div>
@@ -863,12 +1148,22 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
 
                     {/* Action Button */}
                     <div className="flex items-center gap-2 shrink-0 pl-8 md:pl-0">
+                      {plan.status === 'approved' && (
+                        <button
+                          onClick={() => onSelectPlan(plan, true)}
+                          className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 text-[#007A43] border border-emerald-300 text-xs font-bold rounded-xl transition-all shadow-2xs"
+                          title="Print Lesson Plan Official Format"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          <span>Print Official Format</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => onSelectPlan(plan)}
                         className="flex items-center gap-1.5 px-4 py-2 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95"
                       >
                         <ShieldCheck className="w-4 h-4 text-amber-300" />
-                        <span>Review & Evaluate</span>
+                        <span>{plan.status === 'approved' ? 'View & Evaluate' : 'Review & Evaluate'}</span>
                       </button>
                     </div>
                   </div>

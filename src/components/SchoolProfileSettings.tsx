@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { useApp } from '../context/AppContext';
 import { SchoolProfile } from '../types';
 import { BrandLogo, SchoolLogoIcon, DCHShield } from './BrandLogo';
+import { formatDateTimeDDMMYYYY } from '../utils/dateUtils';
 import { 
   Upload, 
   RotateCcw, 
@@ -594,7 +595,7 @@ export const SchoolProfileSettings: React.FC<SchoolProfileSettingsProps> = ({
             {/* Save Button Bar */}
             <div className="pt-4 border-t border-gray-100 flex items-center justify-between">
               <div className="text-[11px] text-gray-500">
-                Last updated: <span className="font-semibold text-gray-700">{formData.updatedAt ? new Date(formData.updatedAt).toLocaleDateString() : 'Initial system defaults'}</span>
+                Last updated: <span className="font-semibold text-gray-700">{formData.updatedAt ? formatDateTimeDDMMYYYY(formData.updatedAt) : 'Initial system defaults'}</span>
                 {formData.updatedBy && <span> by <span className="font-semibold text-emerald-800">{formData.updatedBy}</span></span>}
               </div>
 

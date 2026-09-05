@@ -2,6 +2,7 @@ import React from 'react';
 import { LessonPlan, CAMPUS_LIST } from '../types';
 import { useApp } from '../context/AppContext';
 import { SchoolLogoIcon } from './BrandLogo';
+import { formatDateDDMMYYYY, formatDateRange } from '../utils/dateUtils';
 
 interface OfficialTemplateViewProps {
   plan?: LessonPlan | null;
@@ -45,7 +46,9 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
 
   // Strip any parenthetical age ranges or duplicated age group text if rawClassName contains them
   const classNameDisplay = rawClassName.replace(/\s*\((Pre-Nursery|Nursery|Pre-School|Kindergarten|K1|K2|K3|Toddlers|2-3 Years|3-4 Years|4-5 Years|5-6 Years)\)/gi, '').trim();
-  const dateDisplay = plan?.planDate || (plan?.startDate ? `${plan.startDate} ~ ${plan.endDate}` : '.......................................');
+  const dateDisplay = plan?.planDate
+    ? formatDateDDMMYYYY(plan.planDate)
+    : (plan?.startDate ? formatDateRange(plan.startDate, plan.endDate, ' ~ ') : '.......................................');
   
   // Format week, term/quarter, and school year: e.g. "13 - Q: 1 - SY: 2026-2027"
   const formatWeekTermSY = (weekNumber?: number, termStr?: string, startDate?: string): string => {
@@ -131,7 +134,7 @@ export const OfficialTemplateView: React.FC<OfficialTemplateViewProps> = ({
   return (
     <div
       id="official-dch-lesson-plan-sheet"
-      className={`bg-white text-black font-sans max-w-[800px] mx-auto p-6 sm:p-10 border border-slate-300 shadow-sm print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none ${className}`}
+      className={`bg-white text-black font-sans max-w-[800px] mx-auto p-6 sm:p-10 border border-slate-300 shadow-sm print:shadow-none print:border-none print:p-0 print:m-0 print:max-w-none print:min-h-0 print:h-auto ${className}`}
       style={{ minHeight: '1050px' }}
     >
       {/* 1. Header: School Logo & Title (Official DCH Letterhead Format) */}

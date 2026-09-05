@@ -138,9 +138,9 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
                 onChange={(e) => setCampusId(e.target.value as CampusId)}
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:outline-emerald-600"
               >
-                {CAMPUS_LIST.filter(c => c.id !== 'ALL').map((c) => (
+                {CAMPUS_LIST.map((c) => (
                   <option key={c.id} value={c.id}>
-                    {c.shortName} - {c.nameEnglish}
+                    {c.id === 'ALL' ? '🏢 Central HQ - Monitors All Campuses' : `${c.shortName} - ${c.nameEnglish}`}
                   </option>
                 ))}
               </select>

@@ -1,1 +1,45 @@
 @import "tailwindcss";
+
+@media print {
+  @page {
+    size: A4 portrait;
+    margin: 8mm 10mm 8mm 10mm;
+  }
+
+  html, body {
+    background-color: #ffffff !important;
+    color: #000000 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  /* When printing an official lesson plan sheet, isolate it strictly */
+  #official-dch-lesson-plan-sheet {
+    max-width: 100% !important;
+    width: 100% !important;
+    min-height: 0 !important;
+    height: auto !important;
+    border: none !important;
+    box-shadow: none !important;
+    padding: 0 !important;
+    margin: 0 auto !important;
+    page-break-after: avoid;
+    break-after: avoid;
+  }
+
+  #official-dch-lesson-plan-sheet table {
+    page-break-inside: auto;
+    border-collapse: collapse !important;
+  }
+
+  #official-dch-lesson-plan-sheet tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+
+  #official-dch-lesson-plan-sheet thead {
+    display: table-header-group;
+  }
+}

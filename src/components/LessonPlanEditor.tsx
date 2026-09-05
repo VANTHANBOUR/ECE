@@ -12,6 +12,7 @@ import {
 } from '../types';
 import { OfficialTemplateView } from './OfficialTemplateView';
 import { SchoolLogoIcon } from './BrandLogo';
+import { formatDateDDMMYYYY, toHtmlDateValue } from '../utils/dateUtils';
 import { 
   X, 
   UploadCloud, 
@@ -1050,13 +1051,23 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
                 {/* Metadata Fields (Date, Week, Quarter, Time) */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 pt-1">
                   <div>
-                    <label className="text-xs font-bold text-slate-800 block mb-1">
-                      Date (or Range) *
-                    </label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-xs font-bold text-slate-800">
+                        Date (DD-MM-YYYY) *
+                      </label>
+                      {planDate && (
+                        <span className="text-[10px] font-extrabold text-emerald-800 bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded">
+                          {formatDateDDMMYYYY(planDate)}
+                        </span>
+                      )}
+                    </div>
                     <input
                       type="date"
-                      value={planDate}
-                      onChange={(e) => setPlanDate(e.target.value)}
+                      value={toHtmlDateValue(planDate)}
+                      onChange={(e) => {
+                        setPlanDate(e.target.value);
+                        setStartDate(e.target.value);
+                      }}
                       className="w-full px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-medium text-slate-900 focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
                     />
                   </div>

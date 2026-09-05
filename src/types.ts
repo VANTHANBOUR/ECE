@@ -336,3 +336,26 @@ export interface WeeklyComplianceRecord {
   lessonPlanId?: string;
   submissionDate?: string;
 }
+
+/**
+ * Checks if a user is authorized as Central HQ Staff with multi-campus oversight.
+ * Central HQ Staff can monitor, review, and navigate across all 7 Dewey campuses.
+ */
+export const isCentralHQUser = (user?: UserAccount | null): boolean => {
+  if (!user) return false;
+  const email = (user.email || '').trim().toLowerCase();
+  if (email === 'vanthanbour@diu.edu.kh') return true;
+  const userCampus = user.campusId as string | undefined;
+  if (userCampus === 'ALL') return true;
+  if ((user.role === 'admin' || user.role === 'academic_officer') && (!userCampus || userCampus === 'ALL')) {
+    return true;
+  }
+  const title = (user.title || '').toLowerCase();
+  const bio = (user.bio || '').toLowerCase();
+  const campusName = (user.campusName || '').toLowerCase();
+  if (title.includes('central') || title.includes('director') || title.includes('headquarters') ||
+      campusName.includes('central') || bio.includes('central')) {
+    return true;
+  }
+  return false;
+};

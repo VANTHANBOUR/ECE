@@ -5,6 +5,7 @@ import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { SchoolProfileSettings } from './SchoolProfileSettings';
 import { SignUpControlModal } from './SignUpControlModal';
+import { formatDateDDMMYYYY, formatDateTimeDDMMYYYY } from '../utils/dateUtils';
 import { 
   ShieldCheck, 
   Users, 
@@ -33,12 +34,13 @@ import {
   Settings,
   Plus,
   Building2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Printer
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 
 interface AdminConsoleProps {
-  onSelectPlan: (plan: LessonPlan) => void;
+  onSelectPlan: (plan: LessonPlan, autoPrint?: boolean) => void;
   onOpenNewTeacher: () => void;
 }
 
@@ -65,6 +67,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
   const [activeSubTab, setActiveSubTab] = useState<'users' | 'plans' | 'classrooms' | 'logs' | 'profile'>('users');
   const [isSignUpControlOpen, setIsSignUpControlOpen] = useState(false);
+  const [selectedConsoleCampus, setSelectedConsoleCampus] = useState<string>('all');
   
   // User Management Filters & State
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
@@ -86,6 +89,11 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
   // Filtered Users
   const filteredUsers = allAccounts.filter((u) => {
+    if (selectedConsoleCampus !== 'all') {
+      if (u.campusId !== selectedConsoleCampus && !u.registeredCampusIds?.includes(selectedConsoleCampus as any)) {
+        return false;
+      }
+    }
     if (userRoleFilter !== 'all' && u.role !== userRoleFilter) return false;
     if (userSearch.trim()) {
       const q = userSearch.toLowerCase();
@@ -100,6 +108,11 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
   // Filtered Plans
   const filteredPlans = lessonPlans.filter((p) => {
+    if (selectedConsoleCampus !== 'all') {
+      const cls = classrooms.find(c => c.id === p.classId);
+      if (p.campusId && p.campusId !== selectedConsoleCampus) return false;
+      if (!p.campusId && cls && cls.campusId !== selectedConsoleCampus) return false;
+    }
     if (planStatusFilter !== 'all' && p.status !== planStatusFilter) return false;
     if (planSearch.trim()) {
       const q = planSearch.toLowerCase();
@@ -358,18 +371,34 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <label className="text-xs font-bold text-slate-500 uppercase">Role:</label>
-              <select
-                value={userRoleFilter}
-                onChange={(e) => setUserRoleFilter(e.target.value)}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
-              >
-                <option value="all">All Roles ({allAccounts.length})</option>
-                <option value="admin">Administrators</option>
-                <option value="academic_officer">Academic Officers</option>
-                <option value="teacher">Lead Teachers</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase">Campus:</label>
+                <select
+                  value={selectedConsoleCampus}
+                  onChange={(e) => setSelectedConsoleCampus(e.target.value)}
+                  className="px-3 py-1.5 bg-purple-50/60 border border-purple-200 rounded-xl text-xs font-bold text-purple-950"
+                >
+                  <option value="all">🏢 All 7 Campuses</option>
+                  {CAMPUS_LIST.map(c => (
+                    <option key={c.id} value={c.id}>{c.shortName} {c.id === 'ALL' ? '(Central HQ)' : `(${c.brand})`}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <label className="text-xs font-bold text-slate-500 uppercase">Role:</label>
+                <select
+                  value={userRoleFilter}
+                  onChange={(e) => setUserRoleFilter(e.target.value)}
+                  className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
+                >
+                  <option value="all">All Roles ({allAccounts.length})</option>
+                  <option value="admin">Administrators</option>
+                  <option value="academic_officer">Academic Officers</option>
+                  <option value="teacher">Lead Teachers</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -589,19 +618,35 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <label className="text-[11px] font-bold text-slate-500 uppercase">Review Status:</label>
-              <select
-                value={planStatusFilter}
-                onChange={(e) => setPlanStatusFilter(e.target.value)}
-                className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
-              >
-                <option value="all">All Submissions ({lessonPlans.length})</option>
-                <option value="submitted">Pending Review</option>
-                <option value="approved">Approved</option>
-                <option value="revision_requested">Revision Requested</option>
-                <option value="draft">Drafts</option>
-              </select>
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] font-bold text-slate-500 uppercase">Campus:</label>
+                <select
+                  value={selectedConsoleCampus}
+                  onChange={(e) => setSelectedConsoleCampus(e.target.value)}
+                  className="px-3 py-1.5 bg-purple-50/60 border border-purple-200 rounded-xl text-xs font-bold text-purple-950"
+                >
+                  <option value="all">🏢 All 7 Campuses</option>
+                  {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
+                    <option key={c.id} value={c.id}>{c.shortName} ({c.brand})</option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="flex items-center gap-1.5">
+                <label className="text-[11px] font-bold text-slate-500 uppercase">Review Status:</label>
+                <select
+                  value={planStatusFilter}
+                  onChange={(e) => setPlanStatusFilter(e.target.value)}
+                  className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
+                >
+                  <option value="all">All Submissions ({lessonPlans.length})</option>
+                  <option value="submitted">Pending Review</option>
+                  <option value="approved">Approved</option>
+                  <option value="revision_requested">Revision Requested</option>
+                  <option value="draft">Drafts</option>
+                </select>
+              </div>
             </div>
           </div>
 
@@ -645,12 +690,19 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
                       <td className="py-3.5 px-3">
                         <p className="font-bold text-slate-900">{plan.teacherName}</p>
-                        <p className="text-[11px] text-emerald-800 font-semibold">{plan.className}</p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {CAMPUS_LIST.find(c => c.id === plan.campusId) && (
+                            <span className="text-[9px] font-bold text-purple-900 bg-purple-50 border border-purple-200 px-1.5 py-0.2 rounded">
+                              {CAMPUS_LIST.find(c => c.id === plan.campusId)?.shortName}
+                            </span>
+                          )}
+                          <span className="text-[11px] text-emerald-800 font-semibold">{plan.className}</span>
+                        </div>
                       </td>
 
                       <td className="py-3.5 px-3 text-slate-600">
                         <p className="font-bold">Week {plan.weekNumber}</p>
-                        <p className="text-[10px] text-slate-400">{plan.startDate}</p>
+                        <p className="text-[10px] text-slate-400">{formatDateDDMMYYYY(plan.startDate)}</p>
                       </td>
 
                       <td className="py-3.5 px-3">
@@ -669,6 +721,16 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
                       <td className="py-3.5 px-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          {plan.status === 'approved' && (
+                            <button
+                              onClick={() => onSelectPlan(plan, true)}
+                              className="px-2.5 py-1 bg-emerald-700 hover:bg-emerald-800 text-white font-bold rounded-lg transition-colors flex items-center gap-1 shadow-2xs"
+                              title="Print Lesson Plan Official Format"
+                            >
+                              <Printer className="w-3 h-3" />
+                              <span>Print</span>
+                            </button>
+                          )}
                           <button
                             onClick={() => onSelectPlan(plan)}
                             className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 transition-colors"
@@ -840,7 +902,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                       {log.actorRole}
                     </span>
                     <span className="text-slate-300">·</span>
-                    <span className="text-[10px] text-slate-400 font-medium">{log.timestamp}</span>
+                    <span className="text-[10px] text-slate-400 font-medium">{formatDateTimeDDMMYYYY(log.timestamp)}</span>
                   </div>
                   <p className="text-xs text-slate-700 font-medium leading-relaxed">{log.details}</p>
                 </div>

@@ -44,13 +44,14 @@ const MainContent: React.FC = () => {
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [editingPlan, setEditingPlan] = useState<LessonPlan | null>(null);
   const [viewingPlan, setViewingPlan] = useState<LessonPlan | null>(null);
+  const [autoPrintPlan, setAutoPrintPlan] = useState(false);
   const [isNewTeacherOpen, setIsNewTeacherOpen] = useState(false);
 
   // Toast Component Helper
   const renderToast = () => {
     if (!toastMessage) return null;
     return (
-      <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-200">
+      <div className="fixed bottom-6 right-6 z-50 animate-in slide-in-from-bottom-5 duration-200 print:hidden">
         <div 
           className={`flex items-center gap-3 px-4 py-3 rounded-2xl shadow-xl border text-xs font-bold ${
             toastMessage.type === 'success'
@@ -88,8 +89,9 @@ const MainContent: React.FC = () => {
     setIsEditorOpen(true);
   };
 
-  const handleSelectPlan = (plan: LessonPlan) => {
+  const handleSelectPlan = (plan: LessonPlan, autoPrint = false) => {
     setViewingPlan(plan);
+    setAutoPrintPlan(autoPrint);
   };
 
   const handleEditPlan = (plan: LessonPlan) => {
@@ -112,7 +114,7 @@ const MainContent: React.FC = () => {
       />
 
       {/* Main Page Body Container */}
-      <main className="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8">
+      <main className={`flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 ${viewingPlan ? 'print:hidden' : ''}`}>
         {/* Render Active View */}
         {activeTab === 'admin_console' && currentUser.role === 'admin' ? (
           <AdminConsole
@@ -141,7 +143,7 @@ const MainContent: React.FC = () => {
       </main>
 
       {/* Footer */}
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 space-y-2 mt-auto">
+      <footer className={`bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 space-y-2 mt-auto ${viewingPlan ? 'print:hidden' : ''}`}>
         <div className="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-3">
           <div className="flex items-center gap-2">
             <span className="font-bold text-[#007A43]">Dewey Kindergarten</span>
@@ -180,8 +182,12 @@ const MainContent: React.FC = () => {
       {viewingPlan && (
         <LessonPlanDetailModal
           plan={viewingPlan}
-          onClose={() => setViewingPlan(null)}
+          onClose={() => {
+            setViewingPlan(null);
+            setAutoPrintPlan(false);
+          }}
           onEdit={() => handleEditPlan(viewingPlan)}
+          initialAutoPrint={autoPrintPlan}
         />
       )}
 

@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { Classroom, LessonPlan, PlanAttachment, SchoolProfile, SystemAuditLog, UserAccount, UserRole, WeeklyComplianceRecord, SchoolLevel, CampusId, CAMPUS_LIST } from '../types';
+import { Classroom, LessonPlan, PlanAttachment, SchoolProfile, SystemAuditLog, UserAccount, UserRole, WeeklyComplianceRecord, SchoolLevel, CampusId, CAMPUS_LIST, isCentralHQUser } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_AUDIT_LOGS, INITIAL_CLASSROOMS, INITIAL_LESSON_PLANS, INITIAL_SCHOOL_PROFILE } from '../data/mockData';
 import { 
   auth, 
@@ -123,6 +123,7 @@ interface AppContextType {
   selectedCampusId: CampusId;
   setSelectedCampusId: (campusId: CampusId) => void;
   formatAgeGroup: (group: string, campusId?: CampusId) => string;
+  isCentralHQStaff: boolean;
 
   // School Profile & Branding
   schoolProfile: SchoolProfile;
@@ -790,9 +791,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAuthModalOpen(false);
     addAuditLog('USER_LOGIN', `User ${found.name} signed in successfully`, found.id);
 
-    // Campus Security Enforcement: Check if user is restricted to a specific campus
-    const isCentralUser = found.email === 'vanthanbour@diu.edu.kh' || (found.campusId === 'ALL' && (found.role === 'admin' || found.role === 'academic_officer'));
-    if (!isCentralUser && found.campusId && found.campusId !== 'ALL' && found.campusId !== selectedCampusId) {
+    // Campus Security Enforcement: Central HQ Staff can monitor all campuses
+    const isCentral = isCentralHQUser(found);
+    if (isCentral) {
+      showToast(`Welcome back, ${found.name}! Central HQ Staff monitoring active across all campuses.`, 'success');
+    } else if (found.campusId && found.campusId !== 'ALL' && found.campusId !== selectedCampusId) {
       setSelectedCampusId(found.campusId);
       const userCampus = CAMPUS_LIST.find(c => c.id === found.campusId);
       showToast(`Welcome back, ${found.name}! Redirected to your authorized campus portal (${userCampus?.shortName || found.campusId}).`, 'info');
@@ -1654,10 +1657,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsProfileModalOpen(true);
   };
 
+  const isCentralHQStaff = useMemo(() => isCentralHQUser(currentUser), [currentUser]);
+
   return (
     <AppContext.Provider
       value={{
         currentUser,
+        isCentralHQStaff,
         isAuthenticated,
         allAccounts,
         switchUser,

@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { LessonPlan, PlanAttachment } from '../types';
 import { BrandLogo, DCHShield } from './BrandLogo';
 import { OfficialTemplateView } from './OfficialTemplateView';
+import { formatDateDDMMYYYY, formatDateRange, formatDateTimeDDMMYYYY } from '../utils/dateUtils';
 import { 
   X, 
   Printer, 
@@ -33,17 +34,36 @@ interface LessonPlanDetailModalProps {
   plan: LessonPlan;
   onClose: () => void;
   onEdit: () => void;
+  initialAutoPrint?: boolean;
 }
 
 export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
   plan,
   onClose,
   onEdit,
+  initialAutoPrint = false,
 }) => {
   const { currentUser, adminReviewPlan, deleteLessonPlan, showToast } = useApp();
 
   // Tab switcher: Official Template vs Full Modular Dossier
+  // When approved, strictly default to the Official Template
   const [viewMode, setViewMode] = useState<'official_template' | 'full_dossier'>('official_template');
+
+  useEffect(() => {
+    if (plan.status === 'approved') {
+      setViewMode('official_template');
+    }
+  }, [plan.status]);
+
+  useEffect(() => {
+    if (initialAutoPrint) {
+      setViewMode('official_template');
+      const timer = setTimeout(() => {
+        window.print();
+      }, 300);
+      return () => clearTimeout(timer);
+    }
+  }, [initialAutoPrint]);
 
   // Review Form State
   const [adminComment, setAdminComment] = useState('');
@@ -111,12 +131,14 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
     adminReviewPlan(plan.id, action, adminComment.trim() || defaultComment, rubricScores);
 
     if (action === 'approved') {
+      setViewMode('official_template');
       confetti({
         particleCount: 50,
         spread: 60,
         origin: { y: 0.6 },
         colors: ['#007A43', '#F59E0B', '#10B981'],
       });
+      showToast('Lesson plan approved! Formatted for official printout.', 'success');
     }
 
     setAdminComment('');
@@ -129,7 +151,15 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
   };
 
   const handlePrint = () => {
-    window.print();
+    if (plan.status === 'approved') {
+      // Guarantee the official template is active before print
+      setViewMode('official_template');
+      setTimeout(() => {
+        window.print();
+      }, 60);
+    } else {
+      window.print();
+    }
   };
 
   const formatWeekTermSY = (weekNumber?: number, termStr?: string, startDate?: string): string => {
@@ -193,7 +223,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
 
         <table class="meta-table">
           <tr>
-            <td width="50%"><strong>Date:</strong> ${plan.planDate || plan.startDate}</td>
+            <td width="50%"><strong>Date:</strong> ${plan.planDate ? formatDateDDMMYYYY(plan.planDate) : (plan.startDate ? formatDateRange(plan.startDate, plan.endDate, ' ~ ') : '')}</td>
             <td width="50%"><strong>Week:</strong> ${formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate)}</td>
           </tr>
           <tr>
@@ -307,8 +337,8 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static">
-      <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:shadow-none print:border-none print:max-h-none print:rounded-none">
+    <div className="fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-2 sm:p-4 overflow-y-auto print:p-0 print:bg-white print:static print:overflow-visible">
+      <div className="bg-white rounded-3xl shadow-2xl border border-emerald-100 w-full max-w-4xl max-h-[94vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-200 print:shadow-none print:border-none print:max-h-none print:rounded-none print:w-full print:max-w-none print:overflow-visible">
         
         {/* Top Control Bar (Hidden on print) */}
         <div className="px-6 py-3.5 bg-slate-900 text-white flex flex-wrap items-center justify-between gap-3 print:hidden">
@@ -386,7 +416,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
               title="Print official letterhead lesson plan"
             >
               <Printer className="w-3.5 h-3.5" />
-              <span>Print / PDF</span>
+              <span>{plan.status === 'approved' ? 'Print Official Format' : 'Print / PDF'}</span>
             </button>
 
             <button
@@ -399,11 +429,11 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
         </div>
 
         {/* Scrollable Printable Document Canvas */}
-        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 print:p-6 print:overflow-visible">
+        <div className="flex-1 overflow-y-auto p-4 sm:p-8 space-y-6 print:p-0 print:m-0 print:overflow-visible">
           
           {/* VIEW MODE 1: OFFICIAL DCH TEMPLATE VIEW (MATCHING THE PAPER FORMAT) */}
           {viewMode === 'official_template' && (
-            <div className="space-y-6 animate-in fade-in duration-150">
+            <div className="space-y-6 animate-in fade-in duration-150 print:m-0 print:p-0">
               <OfficialTemplateView plan={plan} />
 
               {/* Administrative Review Section if present */}
@@ -420,7 +450,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
                       <div key={fb.id} className="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
                         <div className="flex items-center justify-between">
                           <span className="font-bold text-slate-900">{fb.authorName} ({fb.authorRole})</span>
-                          <span className="text-[10px] text-slate-500">{fb.createdAt}</span>
+                          <span className="text-[10px] text-slate-500">{formatDateTimeDDMMYYYY(fb.createdAt)}</span>
                         </div>
                         <p className="text-slate-700">{fb.comment}</p>
                       </div>
@@ -433,11 +463,12 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
 
           {/* VIEW MODE 2: FULL DETAILED EYFS DOSSIER */}
           {viewMode === 'full_dossier' && (
-            <div className="space-y-6 animate-in fade-in duration-150">
-              {/* Brand Letterhead Header */}
-              <div className="border-b-2 border-[#007A43] pb-4">
-                <BrandLogo variant="full-letterhead" />
-              </div>
+            <>
+              <div className={`space-y-6 animate-in fade-in duration-150 ${plan.status === 'approved' ? 'print:hidden' : ''}`}>
+                {/* Brand Letterhead Header */}
+                <div className="border-b-2 border-[#007A43] pb-4">
+                  <BrandLogo variant="full-letterhead" />
+                </div>
 
               {/* Document Meta Row */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 bg-emerald-50/60 rounded-2xl border border-emerald-200/80">
@@ -461,7 +492,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
                 <div className="flex flex-row sm:flex-col items-start sm:items-end justify-between sm:justify-center gap-1">
                   {getStatusBadge(plan.status)}
                   <span className="text-[11px] text-slate-500 font-medium">
-                    Week: {formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate)} ({plan.startDate} to {plan.endDate})
+                    Week: {formatWeekTermSY(plan.weekNumber, plan.term, plan.startDate)} ({formatDateRange(plan.startDate, plan.endDate, ' to ')})
                   </span>
                 </div>
               </div>
@@ -636,6 +667,14 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
                 </div>
               )}
             </div>
+
+            {/* When approved, print ONLY the Official Format even if user viewed dossier on screen */}
+            {plan.status === 'approved' && (
+              <div className="hidden print:block print:m-0 print:p-0">
+                <OfficialTemplateView plan={plan} />
+              </div>
+            )}
+          </>
           )}
 
           {/* ACADEMIC OFFICER & ADMIN ONLY: Evaluation & Approval Panel */}
@@ -771,7 +810,7 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
           )}
 
           {/* Letterhead Footer */}
-          <div className="pt-4 border-t border-slate-200 text-center space-y-1">
+          <div className="pt-4 border-t border-slate-200 text-center space-y-1 print:hidden">
             <p className="text-[11px] text-slate-500 font-semibold">
               Dewey Kindergarten · Early Childhood Trilingual Academic Excellence · Phnom Penh, Cambodia
             </p>

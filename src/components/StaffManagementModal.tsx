@@ -467,8 +467,10 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                     onChange={(e) => setCampusId(e.target.value as CampusId)}
                     className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
                   >
-                    {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
-                      <option key={c.id} value={c.id}>{c.shortName} - {c.location}</option>
+                    {CAMPUS_LIST.map(c => (
+                      <option key={c.id} value={c.id}>
+                        {c.id === 'ALL' ? '🏢 Central HQ (Monitors All Campuses)' : `${c.shortName} - ${c.location}`}
+                      </option>
                     ))}
                   </select>
                 </div>

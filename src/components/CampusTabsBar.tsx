@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { CampusId, CAMPUS_LIST, CampusInfo } from '../types';
-import { Building2, School, Check, Lock, ShieldAlert, UserCheck, X } from 'lucide-react';
+import { CampusId, CAMPUS_LIST, CampusInfo, isCentralHQUser } from '../types';
+import { Building2, School, Check, Lock, ShieldAlert, UserCheck, X, Eye } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 
 interface CampusTabsBarProps {
@@ -23,14 +23,10 @@ export const CampusTabsBar: React.FC<CampusTabsBarProps> = ({
 
   const isTeacher = currentUser?.role === 'teacher';
   
-  // Central Admin & Central Academic Officer cross-campus override authorization
+  // Central HQ Staff cross-campus monitor authorization
   const isCentralRole = React.useMemo(() => {
     if (!currentUser) return true; // Before login: users can select target campus gate freely
-    if (currentUser.email === 'vanthanbour@diu.edu.kh') return true;
-    if ((currentUser.role === 'admin' || currentUser.role === 'academic_officer') && (!currentUser.campusId || currentUser.campusId === 'ALL')) {
-      return true;
-    }
-    return false;
+    return isCentralHQUser(currentUser);
   }, [currentUser]);
 
   // Teacher's registered campuses list
@@ -41,13 +37,20 @@ export const CampusTabsBar: React.FC<CampusTabsBarProps> = ({
   }, [currentUser, isTeacher]);
 
   const checkIsRegistered = (campusId: CampusId): boolean => {
+    if (isCentralRole) return true; // Central HQ Staff can monitor all campuses without restriction
     if (!isTeacher) return true; // Admins, officers, guests are allowed
     if (campusId === 'ALL') return false; // Teachers need specific campus registration
     return teacherRegisteredIds.includes(campusId);
   };
 
   const handleCampusClick = (campus: CampusInfo) => {
-    // Campus Security Enforcement: Restrict non-central users from switching to unauthorized campuses
+    // Central HQ Staff has full authority to monitor any campus branch or Central HQ
+    if (isCentralRole) {
+      onSelectCampus(campus.id);
+      return;
+    }
+
+    // Campus Security Enforcement: Restrict branch-specific users from switching to unauthorized campuses
     if (currentUser && !isCentralRole) {
       const userCampusId = currentUser.campusId;
       if (userCampusId && userCampusId !== 'ALL' && campus.id !== userCampusId) {
@@ -59,7 +62,7 @@ export const CampusTabsBar: React.FC<CampusTabsBarProps> = ({
 
         const assignedCampus = CAMPUS_LIST.find(c => c.id === userCampusId);
         showToast(
-          `Access Restricted: Your account (${currentUser.role === 'teacher' ? 'Lead Teacher' : 'Campus Staff'}) is assigned to ${assignedCampus?.shortName || 'your local campus'}. Only Central Admin & Central Academic Officers can switch across all campuses.`,
+          `Access Restricted: Your account (${currentUser.role === 'teacher' ? 'Lead Teacher' : 'Campus Staff'}) is assigned to ${assignedCampus?.shortName || 'your local campus'}. Central HQ Staff can monitor all campuses.`,
           'warning'
         );
         return;

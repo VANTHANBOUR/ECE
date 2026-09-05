@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
 import { LessonPlan } from '../types';
 import { UserProfileModal } from './UserProfileModal';
+import { formatDateRange } from '../utils/dateUtils';
 import { 
   BookOpen, 
   Plus, 
@@ -21,13 +22,14 @@ import {
   School,
   Table,
   Camera,
-  User
+  User,
+  Printer
 } from 'lucide-react';
 
 interface TeacherDashboardProps {
   activeTab: string;
   onOpenNewPlan: () => void;
-  onSelectPlan: (plan: LessonPlan) => void;
+  onSelectPlan: (plan: LessonPlan, autoPrint?: boolean) => void;
   onEditPlan: (plan: LessonPlan) => void;
 }
 
@@ -314,7 +316,7 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
                     </span>
                     <span className="text-xs text-slate-400">·</span>
                     <span className="text-xs font-semibold text-slate-600">
-                      {plan.startDate} to {plan.endDate}
+                      {formatDateRange(plan.startDate, plan.endDate, ' to ')}
                     </span>
                     {getStatusBadge(plan.status)}
                   </div>
@@ -352,6 +354,17 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
 
                 {/* Actions */}
                 <div className="flex items-center gap-2 shrink-0 pt-2 md:pt-0 border-t md:border-t-0 border-slate-100">
+                  {plan.status === 'approved' && (
+                    <button
+                      onClick={() => onSelectPlan(plan, true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-700 hover:bg-emerald-800 text-white text-xs font-bold rounded-xl transition-colors shadow-2xs"
+                      title="Print Official Format"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-emerald-200" />
+                      <span>Print Official Format</span>
+                    </button>
+                  )}
+
                   <button
                     onClick={() => onSelectPlan(plan)}
                     className="flex items-center gap-1 px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-800 text-xs font-bold rounded-xl transition-colors"

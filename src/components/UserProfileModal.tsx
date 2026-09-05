@@ -391,8 +391,10 @@ export const UserProfileModal: React.FC<UserProfileModalProps> = ({ onClose }) =
                 onChange={(e) => setCampusId(e.target.value as CampusId)}
                 className="w-full px-3.5 py-2.5 bg-gray-50 border border-gray-300 rounded-xl text-xs text-gray-900 focus:bg-white focus:outline-emerald-600 font-bold"
               >
-                {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
-                  <option key={c.id} value={c.id}>{c.shortName} - {c.location}</option>
+                {CAMPUS_LIST.map(c => (
+                  <option key={c.id} value={c.id}>
+                    {c.id === 'ALL' ? '🏢 Central HQ (Monitors All Campuses)' : `${c.shortName} - ${c.location}`}
+                  </option>
                 ))}
               </select>
             </div>
