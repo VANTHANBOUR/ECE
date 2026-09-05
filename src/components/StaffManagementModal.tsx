@@ -487,19 +487,37 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
                         className="w-full px-3 py-2 bg-white border border-emerald-300 rounded-xl text-xs font-bold text-slate-900 focus:outline-emerald-600 focus:ring-2 focus:ring-emerald-500/20"
                       >
                         <option value="">-- Unassigned --</option>
-                        {classrooms.filter(c => !campusId || campusId === 'ALL' || c.campusId === campusId).length > 0 ? (
-                          classrooms.filter(c => !campusId || campusId === 'ALL' || c.campusId === campusId).map(cls => (
-                            <option key={cls.id} value={cls.id}>
-                              {cls.name} ({cls.code}) - {cls.ageGroup}
-                            </option>
-                          ))
-                        ) : (
-                          getCampusClassroomOptions(campusId).map(opt => (
+                        {(() => {
+                          const isDK = (() => {
+                            const c = CAMPUS_LIST.find(cp => cp.id === campusId);
+                            return c?.brand === 'DK' || (campusId && (campusId as string).startsWith('DK_'));
+                          })();
+
+                          const filteredCampusClassrooms = classrooms.filter(c => {
+                            if (campusId && campusId !== 'ALL' && c.campusId !== campusId) return false;
+                            const str = `${c.name} ${c.code} ${c.ageGroup}`.toUpperCase();
+                            if (isDK) {
+                              return str.includes('K1') || str.includes('K2') || str.includes('K3');
+                            }
+                            return true;
+                          });
+
+                          const presetOpts = getCampusClassroomOptions(campusId);
+
+                          if (filteredCampusClassrooms.length > 0) {
+                            return filteredCampusClassrooms.map(cls => (
+                              <option key={cls.id} value={cls.id}>
+                                {cls.name} ({cls.code}) - {cls.ageGroup}
+                              </option>
+                            ));
+                          }
+
+                          return presetOpts.map(opt => (
                             <option key={opt.id} value={opt.id}>
                               {opt.name}
                             </option>
-                          ))
-                        )}
+                          ));
+                        })()}
                       </select>
                     </div>
                     <div className="space-y-1">

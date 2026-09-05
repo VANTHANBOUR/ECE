@@ -137,22 +137,29 @@ export const getCampusClassroomOptions = (campusId?: CampusId): { id: string; na
 
   if (isDK) {
     return [
+      { id: 'K1', name: 'K1' },
       { id: 'K1 - AM', name: 'K1 - AM' },
       { id: 'K1 - PM', name: 'K1 - PM' },
+      { id: 'K2', name: 'K2' },
       { id: 'K2 - AM', name: 'K2 - AM' },
       { id: 'K2 - PM', name: 'K2 - PM' },
+      { id: 'K3', name: 'K3' },
       { id: 'K3 - AM', name: 'K3 - AM' },
       { id: 'K3 - PM', name: 'K3 - PM' },
     ];
   }
 
   return [
+    { id: 'Pre-Nursery', name: 'Pre-Nursery' },
     { id: 'Pre-Nursery - AM', name: 'Pre-Nursery - AM' },
     { id: 'Pre-Nursery - PM', name: 'Pre-Nursery - PM' },
+    { id: 'Nursery', name: 'Nursery' },
     { id: 'Nursery - AM', name: 'Nursery - AM' },
     { id: 'Nursery - PM', name: 'Nursery - PM' },
+    { id: 'Pre-School', name: 'Pre-School' },
     { id: 'Pre-School - AM', name: 'Pre-School - AM' },
     { id: 'Pre-School - PM', name: 'Pre-School - PM' },
+    { id: 'Kindergarten', name: 'Kindergarten' },
     { id: 'Kindergarten - AM', name: 'Kindergarten - AM' },
     { id: 'Kindergarten - PM', name: 'Kindergarten - PM' },
   ];
