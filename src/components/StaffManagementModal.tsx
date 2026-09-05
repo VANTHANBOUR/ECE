@@ -75,7 +75,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
   const [name, setName] = useState(user.name);
   const [khmerName, setKhmerName] = useState(user.khmerName || '');
   const [email, setEmail] = useState(user.email);
-  const [password, setPassword] = useState(user.password || 'password123');
+  const [password, setPassword] = useState(user.password || '');
   const [showPassword, setShowPassword] = useState(false);
   const [role, setRole] = useState<UserRole>(user.role);
   const [title, setTitle] = useState(user.title);
@@ -128,7 +128,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
     setName(user.name);
     setKhmerName(user.khmerName || '');
     setEmail(user.email);
-    setPassword(user.password || 'password123');
+    setPassword(user.password || '');
     setShowPassword(false);
     setRole(user.role);
     setTitle(user.title);
@@ -170,7 +170,7 @@ export const StaffManagementModal: React.FC<StaffManagementModalProps> = ({ user
       name: name.trim(),
       khmerName: khmerName.trim(),
       email: email.trim(),
-      password: password.trim() || 'password123',
+      password: password.trim(),
       role,
       title: title.trim(),
       campusId,

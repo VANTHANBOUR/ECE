@@ -620,7 +620,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                     <td className="py-3.5 px-4">
                       {(() => {
                         const isVisible = showAllPasswords || !!visiblePasswordsMap[user.id];
-                        const pass = user.password || 'password123';
+                        const pass = user.password || 'No Password Set';
                         return (
                           <div className="flex items-center gap-1">
                             <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-colors ${

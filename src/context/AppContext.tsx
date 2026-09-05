@@ -721,12 +721,19 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const signIn = async (email: string, password?: string): Promise<boolean> => {
     const normalizedEmail = email.trim().toLowerCase();
+    const cleanPassword = password?.trim();
+
+    if (!cleanPassword) {
+      showToast('Please enter your registered account password.', 'warning');
+      return false;
+    }
+
     const found = allAccounts.find(a => a.email.toLowerCase() === normalizedEmail);
 
     // Try Firebase Authentication first
-    if (password) {
+    if (cleanPassword) {
       try {
-        const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, password);
+        const userCredential = await signInWithEmailAndPassword(auth, normalizedEmail, cleanPassword);
         const fbUser = userCredential.user;
         
         let accountToUse = found;
@@ -778,8 +785,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return false;
     }
 
-    if (password && found.password && found.password !== password && password !== 'password123' && password !== 'dch2026') {
-      showToast('Incorrect password. (Tip: Demo password is password123)', 'error');
+    if (found.password && found.password !== cleanPassword) {
+      showToast('Incorrect password. Please enter your registered account password.', 'error');
       return false;
     }
 
@@ -808,7 +815,12 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const signUp = async (userData: Partial<UserAccount> & { password?: string }): Promise<UserAccount | null> => {
     const role: UserRole = userData.role || 'teacher';
     const email = userData.email?.trim().toLowerCase() || `staff.${Date.now()}@deweychildcare.edu.kh`;
-    const password = userData.password || 'password123';
+    const password = userData.password?.trim();
+
+    if (!password) {
+      showToast('Please specify a password for your account registration.', 'warning');
+      return null;
+    }
 
     const defaultAvatar = role === 'admin' 
       ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
