@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useApp } from '../context/AppContext';
 import { EarlyChildhoodAgeGroup, CampusId, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
-import { X, UserPlus, GraduationCap, Check } from 'lucide-react';
+import { X, UserPlus, GraduationCap, Check, Eye, EyeOff } from 'lucide-react';
 
 interface NewTeacherModalProps {
   onClose: () => void;
@@ -13,6 +13,8 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
   const [name, setName] = useState('');
   const [campusId, setCampusId] = useState<CampusId>('DCH_SYW');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [title, setTitle] = useState('Early Childhood Lead Educator');
   const [assignedLevel, setAssignedLevel] = useState<string>('Pre-Nursery AM');
   const [phone, setPhone] = useState('+855 (0) 12 ');
@@ -52,6 +54,7 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
       campusName: campusObj?.shortName || campusObj?.nameEnglish || 'DCH SYW',
       registeredCampusIds: [campusId],
       email: email.trim() || `${name.toLowerCase().replace(/\s+/g, '.')}@deweychildcare.edu.kh`,
+      password: password.trim() || undefined,
       avatar: selectedAvatar,
       title: title.trim(),
       assignedClassId: assignedLevel,
@@ -162,6 +165,33 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
             </div>
 
             <div>
+              <div className="flex items-center justify-between mb-1">
+                <label className="text-xs font-bold text-slate-700">
+                  Account Password (Original)
+                </label>
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="text-[10px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1"
+                >
+                  {showPassword ? <EyeOff className="w-3 h-3" /> : <Eye className="w-3 h-3" />}
+                  <span>{showPassword ? 'Hide' : 'Show'}</span>
+                </button>
+              </div>
+              <div className="relative">
+                <input
+                  type={showPassword ? 'text' : 'password'}
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Set initial password"
+                  className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs font-mono font-bold text-slate-900 focus:outline-emerald-600"
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
                 Assigned Classroom
               </label>
@@ -177,9 +207,7 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
                 ))}
               </select>
             </div>
-          </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="text-xs font-bold text-slate-700 block mb-1">
                 Faculty Title / Specialization
@@ -189,6 +217,21 @@ export const NewTeacherModal: React.FC<NewTeacherModalProps> = ({ onClose }) => 
                 value={title}
                 onChange={(e) => setTitle(e.target.value)}
                 placeholder="e.g. Lead Teacher"
+                className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-emerald-600"
+              />
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">
+                Phone Number
+              </label>
+              <input
+                type="text"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                placeholder="+855 (0) 12 ..."
                 className="w-full px-3 py-2 bg-slate-50 border border-slate-300 rounded-xl text-xs text-slate-900 focus:outline-emerald-600"
               />
             </div>

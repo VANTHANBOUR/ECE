@@ -384,7 +384,7 @@ export const ClassroomModal: React.FC<ClassroomModalProps> = ({ classroomToEdit,
                   <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                   <span>Quick Presets:</span>
                 </span>
-                <span className="text-[10px] text-slate-400">Click to autofill room details</span>
+                <span className="text-[10px] text-slate-400">Click to apply preset details</span>
               </div>
               <div className="flex flex-wrap gap-1.5">
                 {NAME_PRESETS.map((p) => (

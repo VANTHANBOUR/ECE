@@ -354,8 +354,8 @@ export const LessonPlanDetailModal: React.FC<LessonPlanDetailModalProps> = ({
                     {plan.feedbackHistory.map((fb) => (
                       <div key={fb.id} className="p-3 bg-white border border-slate-200 rounded-xl text-xs space-y-1">
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-slate-900">{fb.authorName} ({fb.authorRole})</span>
-                          <span className="text-[10px] text-slate-500">{formatDateTimeDDMMYYYY(fb.createdAt)}</span>
+                          <span className="font-bold text-slate-900">{fb.authorName || fb.reviewerName} ({fb.authorRole || fb.reviewerRole})</span>
+                          <span className="text-[10px] text-slate-500">{formatDateTimeDDMMYYYY(fb.createdAt || fb.date)}</span>
                         </div>
                         <p className="text-slate-700">{fb.comment}</p>
                       </div>

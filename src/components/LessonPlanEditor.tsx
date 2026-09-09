@@ -19,7 +19,6 @@ import {
   UploadCloud, 
   FileText, 
   Trash2, 
-  Sparkles, 
   Plus, 
   Check, 
   BookOpen, 
@@ -309,7 +308,7 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
       return [...DK_LEVEL_OPTIONS, ...existing];
     } else {
       const dchClassrooms = classrooms.filter(c => 
-        (selectedCampusId && selectedCampusId !== 'ALL' ? c.campusId === selectedCampusId : (c.campusId?.startsWith('DCH_') || c.campusId === 'CENTRAL' || ['cls_explorers', 'cls_pandas', 'cls_butterflies', 'cls_lotus'].includes(c.id)))
+        (selectedCampusId && selectedCampusId !== 'ALL' ? c.campusId === selectedCampusId : (c.campusId?.startsWith('DCH_') || c.campusId === 'ALL' || (c.campusId as string) === 'CENTRAL' || ['cls_explorers', 'cls_pandas', 'cls_butterflies', 'cls_lotus'].includes(c.id)))
       );
       const existing = dchClassrooms.filter(c => !c.id.startsWith('dch_opt_'));
       return [...DCH_LEVEL_OPTIONS, ...existing];
@@ -516,7 +515,6 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
   );
   const [isDragging, setIsDragging] = useState(false);
   const [isUploadingFile, setIsUploadingFile] = useState(false);
-  const [isAiGenerating, setIsAiGenerating] = useState(false);
   const [previewAttachment, setPreviewAttachment] = useState<PlanAttachment | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -715,83 +713,6 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
     ]);
     setClosing('');
     showToast('Loaded blank official template layout', 'info');
-  };
-
-  // AI Early Childhood Curriculum Assistant Generator
-  const handleGenerateAiSuggestions = () => {
-    setIsAiGenerating(true);
-    setTimeout(() => {
-      const themes = [
-        {
-          title: 'Garden Wonders: Flowers, Little Bugs & Soil Discovery',
-          description: 'A tactile week of soil textures, observing live earthworms in terrariums, petal symmetry, and trilingual garden songs.',
-          eng: 'Flower, Butterfly, Soil, Leaf, Green',
-          khm: 'ផ្កា (Pka), មេអំបៅ (Me-Ambau), ដី (Dei), ស្លឹកឈើ (Sloek-Chheu)',
-          chi: '花 (Huā), 蝴蝶 (Húdié), 泥土 (Nítǔ), 树叶 (Shùyè)',
-          song: '"The Caterpillar Crawls" / របាំមេអំបៅ / 《蝴蝶飞飞》',
-          book: '"The Very Hungry Caterpillar" & "Garden Friends"',
-          warmUp: 'Garden greetings song with fluttering butterfly silk scarves; morning weather and flower planter check; mystery garden sound box.',
-          s1Sub: 'Language & Trilingual Garden Vocabulary',
-          s1Acts: [
-            {
-              id: 'ai_s1_1',
-              topicActivity: 'Flower & Bug Flashcard Matching in 3 Languages',
-              objectives: 'Name flower, leaf, bug in English, Khmer, and Mandarin.',
-              materialsSources: 'Trilingual botany cards, preserved leaf samples',
-              durationMins: 25,
-            },
-            {
-              id: 'ai_s1_2',
-              topicActivity: 'Letter "L" for Leaf Sand-Tray Tracing',
-              objectives: 'Pincer grip letter formation in sensory green sand trays.',
-              materialsSources: 'Kinetic green sand, bamboo stylus sticks',
-              durationMins: 20,
-            },
-          ],
-          s2Sub: 'Sensory Science & Seed Planting',
-          s2Acts: [
-            {
-              id: 'ai_s2_1',
-              topicActivity: 'Biodegradable Pot Seed Planting & Soil Touch',
-              objectives: 'Differentiate dry vs moist soil; plant mung beans using small spades.',
-              materialsSources: 'Organic potting soil, seed packets, child watering cans',
-              durationMins: 30,
-            },
-            {
-              id: 'ai_s2_2',
-              topicActivity: 'Petal Printmaking Craft with Washable Inks',
-              objectives: 'Stamp natural fresh petals on cardstock paper.',
-              materialsSources: 'Fresh fallen petals, washable ink pads, cardstock',
-              durationMins: 20,
-            },
-          ],
-          closing: 'Review garden vocabulary; water our newly planted seedling cups; sing goodbye garden song and pack bags.',
-          objectives: [
-            'Observe soil moisture and plant seeds in biodegradable pots.',
-            'Identify 4 garden creatures in English, Khmer, and Mandarin.',
-            'Develop sensory regulation through gentle tactile dirt and seed sorting.',
-          ],
-        },
-      ];
-
-      const picked = themes[0];
-      setThemeTitle(picked.title);
-      setThemeDescription(picked.description);
-      setEnglishVocab(picked.eng);
-      setKhmerVocab(picked.khm);
-      setChineseVocab(picked.chi);
-      setSongOrRhyme(picked.song);
-      setStoryBook(picked.book);
-      setLearningObjectives(picked.objectives);
-      setWarmUpCircleTime(picked.warmUp);
-      setFirstSessionSubject(picked.s1Sub);
-      setFirstSessionActivities(picked.s1Acts);
-      setSecondSessionSubject(picked.s2Sub);
-      setSecondSessionActivities(picked.s2Acts);
-      setClosing(picked.closing);
-      setIsAiGenerating(false);
-      showToast('AI Early Childhood suggestions loaded into official template!', 'success');
-    }, 700);
   };
 
   const handleSave = (status: 'draft' | 'submitted') => {
@@ -1006,16 +927,6 @@ export const LessonPlanEditor: React.FC<LessonPlanEditorProps> = ({
 
           {/* Quick Helper Tools */}
           <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleGenerateAiSuggestions}
-              disabled={isAiGenerating}
-              className="px-3 py-1.5 bg-amber-50 text-amber-900 hover:bg-amber-100 border border-amber-300 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shadow-xs disabled:opacity-50"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-              <span>{isAiGenerating ? 'Generating...' : 'AI Auto-Fill'}</span>
-            </button>
-
             <button
               type="button"
               onClick={handleLoadBlankTemplate}

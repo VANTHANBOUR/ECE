@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LessonPlan, UserAccount, UserRole, Classroom, CAMPUS_LIST, getCampusClassroomOptions } from '../types';
+import { LessonPlan, UserAccount, UserRole, Classroom, CAMPUS_LIST, getCampusClassroomOptions, isAdminOrSuperAdmin } from '../types';
 import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { SchoolProfileSettings } from './SchoolProfileSettings';
@@ -102,12 +102,18 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
   const [planToDelete, setPlanToDelete] = useState<LessonPlan | null>(null);
   const [userToDelete, setUserToDelete] = useState<UserAccount | null>(null);
 
+  const isSuperOrAdmin = isAdminOrSuperAdmin(currentUser);
+
   // Classroom edit state
   const [editingClass, setEditingClass] = useState<Classroom | null>(null);
   const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
 
-  // Filtered Users
-  const filteredUsers = allAccounts.filter((u) => {
+  // Filtered Users: Admins/Super Admins see all staff accounts; regular users see only their own account
+  const userBase = isSuperOrAdmin 
+    ? allAccounts 
+    : allAccounts.filter(u => u.id === currentUser?.id || (u.email && u.email.toLowerCase() === currentUser?.email.toLowerCase()));
+
+  const filteredUsers = userBase.filter((u) => {
     if (selectedConsoleCampus !== 'all') {
       if (u.campusId !== selectedConsoleCampus && !u.registeredCampusIds?.includes(selectedConsoleCampus as any)) {
         return false;
@@ -125,8 +131,16 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
     return true;
   });
 
-  // Filtered Plans
-  const filteredPlans = lessonPlans.filter((p) => {
+  // Filtered Plans: Admins/Super Admins see all; regular staff see only their own plans
+  const planBase = isSuperOrAdmin 
+    ? lessonPlans 
+    : lessonPlans.filter(p => 
+        p.teacherId === currentUser?.id || 
+        (p.teacherEmail && p.teacherEmail.toLowerCase() === currentUser?.email.toLowerCase()) ||
+        (p.teacherName && currentUser?.name && p.teacherName.toLowerCase() === currentUser?.name.toLowerCase())
+      );
+
+  const filteredPlans = planBase.filter((p) => {
     if (selectedConsoleCampus !== 'all') {
       const cls = classrooms.find(c => c.id === p.classId);
       if (p.campusId && p.campusId !== selectedConsoleCampus) return false;
@@ -143,6 +157,15 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
     }
     return true;
   });
+
+  // Filtered Audit Logs
+  const visibleAuditLogs = isSuperOrAdmin
+    ? auditLogs
+    : auditLogs.filter(l => 
+        l.actorId === currentUser?.id || 
+        l.targetId === currentUser?.id || 
+        (l.details && currentUser?.name && l.details.includes(currentUser.name))
+      );
 
   const toggleSelectPlan = (id: string) => {
     setSelectedPlanIds(prev =>
@@ -202,105 +225,127 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
             <div className="flex items-center gap-2">
               <span className="text-xs font-black uppercase tracking-widest px-3 py-1 rounded-full bg-amber-400 text-amber-950 flex items-center gap-1.5">
                 <ShieldCheck className="w-3.5 h-3.5" />
-                Master Admin Console
+                {isSuperOrAdmin ? 'Master Admin Console' : 'Faculty & Staff Portal'}
               </span>
               <span className="text-xs text-emerald-300 font-semibold">
-                Centralized Governance & Security
+                {isSuperOrAdmin ? 'Centralized Governance & Security' : 'Secure Account Record & Work History'}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black text-white font-['Outfit']">
-              School Administrator Control Center
+              {isSuperOrAdmin ? 'School Administrator Control Center' : `${currentUser.name} - Faculty Information Console`}
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100/90 max-w-2xl">
-              Confidential institutional management. Manage faculty credentials, RBAC permissions, school-wide lesson plan submissions, classroom enrollments, and live system audit trails.
+              {isSuperOrAdmin 
+                ? 'Confidential institutional management. Manage faculty credentials, RBAC permissions, school-wide lesson plan submissions, classroom enrollments, and live system audit trails.'
+                : 'Personal faculty records, original Firebase account credentials, assigned classroom specifications, submitted lesson plans, and personal activity log.'}
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
-            <button
-              onClick={() => setIsSignUpControlOpen(true)}
-              className="flex items-center gap-2 px-4 py-2.5 bg-emerald-800/90 hover:bg-emerald-800 text-white font-bold text-xs rounded-2xl shadow-sm border border-emerald-500/40 transition-all active:scale-95"
-            >
-              {schoolProfile?.globalSignUpDisabled ? (
-                <EyeOff className="w-4 h-4 text-rose-300" />
-              ) : (
-                <Eye className="w-4 h-4 text-emerald-300" />
-              )}
-              <span>Hide / Display Sign Up</span>
-              {schoolProfile?.globalSignUpDisabled ? (
-                <span className="px-2 py-0.5 text-[10px] bg-rose-500 text-white rounded-full font-black">
-                  Hidden All
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 text-[10px] bg-amber-400 text-slate-950 rounded-full font-black">
-                  {Object.values(schoolProfile?.disabledSignUpCampuses || {}).filter(Boolean).length > 0 
-                    ? `${Object.values(schoolProfile?.disabledSignUpCampuses || {}).filter(Boolean).length} Hidden` 
-                    : 'Active All'}
-                </span>
-              )}
-            </button>
+          {isSuperOrAdmin && (
+            <div className="flex flex-wrap items-center gap-3">
+              <button
+                onClick={() => setIsSignUpControlOpen(true)}
+                className="flex items-center gap-2 px-4 py-2.5 bg-emerald-800/90 hover:bg-emerald-800 text-white font-bold text-xs rounded-2xl shadow-sm border border-emerald-500/40 transition-all active:scale-95"
+              >
+                {schoolProfile?.globalSignUpDisabled ? (
+                  <EyeOff className="w-4 h-4 text-rose-300" />
+                ) : (
+                  <Eye className="w-4 h-4 text-emerald-300" />
+                )}
+                <span>Hide / Display Sign Up</span>
+                {schoolProfile?.globalSignUpDisabled ? (
+                  <span className="px-2 py-0.5 text-[10px] bg-rose-500 text-white rounded-full font-black">
+                    Hidden All
+                  </span>
+                ) : (
+                  <span className="px-2 py-0.5 text-[10px] bg-amber-400 text-slate-950 rounded-full font-black">
+                    {Object.values(schoolProfile?.disabledSignUpCampuses || {}).filter(Boolean).length > 0 
+                      ? `${Object.values(schoolProfile?.disabledSignUpCampuses || {}).filter(Boolean).length} Hidden` 
+                      : 'Active All'}
+                  </span>
+                )}
+              </button>
 
-            <button
-              onClick={openSignUpModal}
-              className="flex items-center gap-2 px-4 py-2.5 bg-[#007A43] hover:bg-[#006338] text-white font-bold text-xs rounded-2xl shadow-sm transition-all active:scale-95"
-            >
-              <UserPlus className="w-4 h-4 text-amber-300" />
-              <span>Create New Staff Account</span>
-            </button>
-          </div>
+              <button
+                onClick={openSignUpModal}
+                className="flex items-center gap-2 px-4 py-2.5 bg-[#007A43] hover:bg-[#006338] text-white font-bold text-xs rounded-2xl shadow-sm transition-all active:scale-95"
+              >
+                <UserPlus className="w-4 h-4 text-amber-300" />
+                <span>Create New Staff Account</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Admin KPI Ribbon */}
+      {/* KPI Ribbon */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
         <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Registered Accounts</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isSuperOrAdmin ? 'Registered Accounts' : 'Your Profile Status'}
+            </span>
             <div className="p-2 bg-emerald-50 text-[#007A43] rounded-xl">
               <Users className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">{allAccounts.length}</p>
+          <p className="text-2xl sm:text-3xl font-black text-slate-900 mt-2">
+            {isSuperOrAdmin ? allAccounts.length : '1 Profile'}
+          </p>
           <p className="text-[10px] text-slate-400 mt-0.5">
-            {allAccounts.filter(a => a.role === 'admin').length} Admins · {allAccounts.filter(a => a.role === 'academic_officer').length} Academic Officers · {allAccounts.filter(a => a.role === 'teacher').length} Teachers
+            {isSuperOrAdmin 
+              ? `${allAccounts.filter(a => a.role === 'admin').length} Admins · ${allAccounts.filter(a => a.role === 'academic_officer').length} Academic Officers · ${allAccounts.filter(a => a.role === 'teacher').length} Teachers`
+              : `${currentUser.title || 'Educator'} · ${currentUser.role.toUpperCase()}`}
           </p>
         </div>
 
         <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">All Uploaded Plans</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isSuperOrAdmin ? 'All Uploaded Plans' : 'My Uploaded Plans'}
+            </span>
             <div className="p-2 bg-blue-50 text-blue-700 rounded-xl">
               <BookOpen className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-blue-700 mt-2">{lessonPlans.length}</p>
+          <p className="text-2xl sm:text-3xl font-black text-blue-700 mt-2">{planBase.length}</p>
           <p className="text-[10px] text-blue-600 font-medium mt-0.5">
-            {lessonPlans.filter(p => p.status === 'approved').length} Approved · {lessonPlans.filter(p => p.status === 'submitted').length} Pending
+            {planBase.filter(p => p.status === 'approved').length} Approved · {planBase.filter(p => p.status === 'submitted').length} Pending
           </p>
         </div>
 
         <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">Classroom Levels</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isSuperOrAdmin ? 'Classroom Levels' : 'Assigned Classroom'}
+            </span>
             <div className="p-2 bg-purple-50 text-purple-700 rounded-xl">
               <School className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-purple-700 mt-2">{classrooms.length}</p>
-          <p className="text-[10px] text-purple-600 font-medium mt-0.5">
-            {classrooms.reduce((acc, c) => acc + c.enrolledStudents, 0)} Total Enrolled Students
+          <p className="text-xl sm:text-2xl font-black text-purple-700 mt-2 truncate">
+            {isSuperOrAdmin ? classrooms.length : (currentUser.assignedClassName || 'Assigned Class')}
+          </p>
+          <p className="text-[10px] text-purple-600 font-medium mt-0.5 truncate">
+            {isSuperOrAdmin 
+              ? `${classrooms.reduce((acc, c) => acc + c.enrolledStudents, 0)} Total Enrolled Students`
+              : (currentUser.roomNumber ? `Room: ${currentUser.roomNumber}` : 'Campus Active')}
           </p>
         </div>
 
         <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-2xs">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-bold text-slate-500">System Audit Events</span>
+            <span className="text-xs font-bold text-slate-500">
+              {isSuperOrAdmin ? 'System Audit Events' : 'My Audit History'}
+            </span>
             <div className="p-2 bg-amber-50 text-amber-700 rounded-xl">
               <Activity className="w-4 h-4" />
             </div>
           </div>
-          <p className="text-2xl sm:text-3xl font-black text-amber-700 mt-2">{auditLogs.length}</p>
-          <p className="text-[10px] text-amber-600 font-medium mt-0.5">Recorded Security Logs</p>
+          <p className="text-2xl sm:text-3xl font-black text-amber-700 mt-2">{visibleAuditLogs.length}</p>
+          <p className="text-[10px] text-amber-600 font-medium mt-0.5">
+            {isSuperOrAdmin ? 'Recorded Security Logs' : 'Personal Activity Logs'}
+          </p>
         </div>
       </div>
 
@@ -315,7 +360,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
           }`}
         >
           <Users className="w-4 h-4" />
-          <span>Faculty & Staff Accounts ({allAccounts.length})</span>
+          <span>{isSuperOrAdmin ? `Faculty & Staff Accounts (${allAccounts.length})` : 'My Staff Account & Credentials'}</span>
         </button>
 
         <button
@@ -327,7 +372,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
           }`}
         >
           <BookOpen className="w-4 h-4" />
-          <span>Master Lesson Plan Registry ({lessonPlans.length})</span>
+          <span>{isSuperOrAdmin ? `Master Lesson Plan Registry (${lessonPlans.length})` : `My Plan Registry (${planBase.length})`}</span>
         </button>
 
         <button
@@ -339,7 +384,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
           }`}
         >
           <School className="w-4 h-4" />
-          <span>Classroom Capacities</span>
+          <span>{isSuperOrAdmin ? 'Classroom Capacities' : 'Classroom Information'}</span>
         </button>
 
         <button
@@ -351,23 +396,25 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
           }`}
         >
           <Activity className="w-4 h-4" />
-          <span>System Audit Trails ({auditLogs.length})</span>
+          <span>{isSuperOrAdmin ? `System Audit Trails (${auditLogs.length})` : `My Activity Trails (${visibleAuditLogs.length})`}</span>
         </button>
 
-        <button
-          onClick={() => setActiveSubTab('profile')}
-          className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
-            activeSubTab === 'profile'
-              ? 'bg-[#007A43] text-white shadow-2xs'
-              : 'text-slate-600 hover:bg-slate-100'
-          }`}
-        >
-          <Building2 className="w-4 h-4" />
-          <span>School Profile & Logo</span>
-          {schoolProfile?.customLogoUrl && (
-            <span className="w-2 h-2 rounded-full bg-amber-400" />
-          )}
-        </button>
+        {isSuperOrAdmin && (
+          <button
+            onClick={() => setActiveSubTab('profile')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-extrabold transition-all whitespace-nowrap ${
+              activeSubTab === 'profile'
+                ? 'bg-[#007A43] text-white shadow-2xs'
+                : 'text-slate-600 hover:bg-slate-100'
+            }`}
+          >
+            <Building2 className="w-4 h-4" />
+            <span>School Profile & Logo</span>
+            {schoolProfile?.customLogoUrl && (
+              <span className="w-2 h-2 rounded-full bg-amber-400" />
+            )}
+          </button>
+        )}
       </div>
 
       {/* 0. SCHOOL PROFILE & LOGO MANAGEMENT */}
@@ -427,10 +474,10 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                     ? 'bg-amber-100 text-amber-950 border-amber-300 hover:bg-amber-200' 
                     : 'bg-emerald-50 text-emerald-950 border-emerald-300 hover:bg-emerald-100'
                 }`}
-                title={showAllPasswords ? "Hide all passwords" : "Show all staff passwords"}
+                title={showAllPasswords ? "Hide all original passwords" : "Show original Firebase passwords for all staff"}
               >
                 {showAllPasswords ? <EyeOff className="w-3.5 h-3.5 text-rose-700" /> : <Eye className="w-3.5 h-3.5 text-emerald-700" />}
-                <span>{showAllPasswords ? 'Hide Passwords' : 'Show Passwords'}</span>
+                <span>{showAllPasswords ? 'Hide Original Passwords' : 'Show Original Passwords'}</span>
               </button>
             </div>
           </div>
@@ -444,7 +491,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                   <th className="py-3 px-4">Assigned Position</th>
                   <th className="py-3 px-4">Institutional Role (RBAC)</th>
                   <th className="py-3 px-4">Classroom Allocation</th>
-                  <th className="py-3 px-4">Password Credentials</th>
+                  <th className="py-3 px-4">Original Password (Firebase)</th>
                   <th className="py-3 px-4">Account Status</th>
                   <th className="py-3 px-4 text-right">Administrative Actions</th>
                 </tr>
@@ -513,21 +560,33 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
                     {/* Institutional Role (RBAC) */}
                     <td className="py-3.5 px-4">
-                      <select
-                        value={user.role}
-                        onChange={(e) => updateAccount(user.id, { role: e.target.value as UserRole })}
-                        className={`px-2.5 py-1 rounded-xl text-xs font-black border transition-colors cursor-pointer ${
+                      {isSuperOrAdmin ? (
+                        <select
+                          value={user.role}
+                          onChange={(e) => updateAccount(user.id, { role: e.target.value as UserRole })}
+                          className={`px-2.5 py-1 rounded-xl text-xs font-black border transition-colors cursor-pointer ${
+                            user.role === 'admin'
+                              ? 'bg-amber-50 text-amber-950 border-amber-300'
+                              : user.role === 'academic_officer'
+                              ? 'bg-blue-50 text-blue-950 border-blue-300'
+                              : 'bg-emerald-50 text-emerald-950 border-emerald-300'
+                          }`}
+                        >
+                          <option value="teacher">👩‍🏫 Lead Teacher</option>
+                          <option value="academic_officer">🎓 Academic Officer</option>
+                          <option value="admin">👑 Administrator</option>
+                        </select>
+                      ) : (
+                        <span className={`inline-block px-2.5 py-1 rounded-xl text-xs font-black border ${
                           user.role === 'admin'
                             ? 'bg-amber-50 text-amber-950 border-amber-300'
                             : user.role === 'academic_officer'
                             ? 'bg-blue-50 text-blue-950 border-blue-300'
                             : 'bg-emerald-50 text-emerald-950 border-emerald-300'
-                        }`}
-                      >
-                        <option value="teacher">👩‍🏫 Lead Teacher</option>
-                        <option value="academic_officer">🎓 Academic Officer</option>
-                        <option value="admin">👑 Administrator</option>
-                      </select>
+                        }`}>
+                          {user.role === 'admin' ? '👑 Administrator' : user.role === 'academic_officer' ? '🎓 Academic Officer' : '👩‍🏫 Lead Teacher'}
+                        </span>
+                      )}
                     </td>
 
                     {/* Assigned Classroom */}
@@ -580,6 +639,15 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                           optionsMap.set(user.assignedClassId, displayVal);
                         }
 
+                        if (!isSuperOrAdmin) {
+                          return (
+                            <span className="inline-flex items-center gap-1.5 px-2.5 py-1 bg-emerald-50 border border-emerald-200 text-emerald-900 rounded-xl text-xs font-bold">
+                              <School className="w-3.5 h-3.5 text-emerald-700 shrink-0" />
+                              <span>{user.assignedClassName || 'Unassigned'}</span>
+                            </span>
+                          );
+                        }
+
                         return (
                           <select
                             value={user.assignedClassId || ''}
@@ -620,36 +688,47 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                     <td className="py-3.5 px-4">
                       {(() => {
                         const isVisible = showAllPasswords || !!visiblePasswordsMap[user.id];
-                        const pass = user.password || 'password123';
+                        const pass = user.password;
+                        const hasPassword = Boolean(pass && pass.trim().length > 0);
                         return (
-                          <div className="flex items-center gap-1">
-                            <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-colors ${
-                              isVisible 
-                                ? 'bg-amber-50 text-amber-950 border-amber-300' 
-                                : 'bg-slate-100 text-slate-400 border-slate-200'
-                            }`}>
-                              {isVisible ? pass : '••••••••'}
-                            </span>
-                            <button
-                              type="button"
-                              onClick={() => togglePasswordVisibility(user.id)}
-                              className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
-                              title={isVisible ? "Hide Password" : "Show Password"}
-                            >
-                              {isVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-600" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => copyToClipboard(pass, user.id)}
-                              className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
-                              title="Copy Password"
-                            >
-                              {copiedUserId === user.id ? (
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                              ) : (
-                                <Copy className="w-3.5 h-3.5 text-slate-400" />
-                              )}
-                            </button>
+                          <div className="flex items-center gap-1.5">
+                            {hasPassword ? (
+                              <span className={`px-2.5 py-1 rounded-lg text-xs font-mono font-bold border transition-colors ${
+                                isVisible 
+                                   ? 'bg-amber-50 text-amber-950 border-amber-300' 
+                                   : 'bg-slate-100 text-slate-400 border-slate-200'
+                              }`}>
+                                {isVisible ? pass : '••••••••'}
+                              </span>
+                            ) : (
+                              <span className="px-2 py-0.5 rounded-md bg-slate-100 text-slate-400 text-[10px] italic border border-slate-200">
+                                Not set in record
+                              </span>
+                            )}
+                            {hasPassword && (
+                              <>
+                                <button
+                                  type="button"
+                                  onClick={() => togglePasswordVisibility(user.id)}
+                                  className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                                  title={isVisible ? "Hide Password" : "Show Original Password"}
+                                >
+                                  {isVisible ? <EyeOff className="w-3.5 h-3.5 text-slate-600" /> : <Eye className="w-3.5 h-3.5 text-slate-500" />}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => copyToClipboard(pass!, user.id)}
+                                  className="p-1 text-slate-400 hover:text-emerald-700 hover:bg-emerald-50 rounded-md transition-colors"
+                                  title="Copy Original Password"
+                                >
+                                  {copiedUserId === user.id ? (
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  ) : (
+                                    <Copy className="w-3.5 h-3.5 text-slate-400" />
+                                  )}
+                                </button>
+                              </>
+                            )}
                           </div>
                         );
                       })()}
@@ -657,16 +736,26 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
                     {/* Status */}
                     <td className="py-3.5 px-4">
-                      <button
-                        onClick={() => updateAccount(user.id, { status: user.status === 'suspended' ? 'active' : 'suspended' })}
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase transition-colors ${
+                      {isSuperOrAdmin ? (
+                        <button
+                          onClick={() => updateAccount(user.id, { status: user.status === 'suspended' ? 'active' : 'suspended' })}
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase transition-colors ${
+                            user.status === 'suspended'
+                              ? 'bg-rose-100 text-rose-800 hover:bg-rose-200'
+                              : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
+                          }`}
+                        >
+                          {user.status === 'suspended' ? '🔴 Suspended' : '🟢 Active'}
+                        </button>
+                      ) : (
+                        <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold uppercase ${
                           user.status === 'suspended'
-                            ? 'bg-rose-100 text-rose-800 hover:bg-rose-200'
-                            : 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200'
-                        }`}
-                      >
-                        {user.status === 'suspended' ? '🔴 Suspended' : '🟢 Active'}
-                      </button>
+                            ? 'bg-rose-100 text-rose-800'
+                            : 'bg-emerald-100 text-emerald-800'
+                        }`}>
+                          {user.status === 'suspended' ? '🔴 Suspended' : '🟢 Active'}
+                        </span>
+                      )}
                     </td>
 
                     {/* Actions */}
@@ -675,25 +764,27 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                         <button
                           onClick={() => setEditingStaffUser(user)}
                           className="px-2.5 py-1 text-slate-700 hover:text-emerald-800 bg-slate-100 hover:bg-emerald-50 border border-slate-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1"
-                          title="Assign Position & Role"
+                          title="Edit Profile Details"
                         >
                           <Edit3 className="w-3.5 h-3.5 text-emerald-700" />
-                          <span>Manage</span>
+                          <span>{isSuperOrAdmin ? 'Manage' : 'Edit Details'}</span>
                         </button>
 
-                        <button
-                          onClick={() => setUserToDelete(user)}
-                          disabled={user.id === currentUser.id}
-                          className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 border ${
-                            user.id === currentUser.id
-                              ? 'text-slate-300 border-slate-100 cursor-not-allowed bg-slate-50'
-                              : 'text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border-rose-200'
-                          }`}
-                          title={user.id === currentUser.id ? 'Cannot remove current active admin' : 'Remove Staff Member'}
-                        >
-                          <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                          <span>Remove</span>
-                        </button>
+                        {isSuperOrAdmin && (
+                          <button
+                            onClick={() => setUserToDelete(user)}
+                            disabled={user.id === currentUser.id}
+                            className={`px-2.5 py-1 rounded-xl text-xs font-bold transition-colors flex items-center gap-1 border ${
+                              user.id === currentUser.id
+                                ? 'text-slate-300 border-slate-100 cursor-not-allowed bg-slate-50'
+                                : 'text-rose-700 hover:text-rose-900 bg-rose-50 hover:bg-rose-100 border-rose-200'
+                            }`}
+                            title={user.id === currentUser.id ? 'Cannot remove current active admin' : 'Remove Staff Member'}
+                          >
+                            <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                            <span>Remove</span>
+                          </button>
+                        )}
                       </div>
                     </td>
                   </tr>
@@ -715,55 +806,59 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                   type="text"
                   value={planSearch}
                   onChange={(e) => setPlanSearch(e.target.value)}
-                  placeholder="Search plan by theme, teacher, or class..."
+                  placeholder={isSuperOrAdmin ? "Search plan by theme, teacher, or class..." : "Search your lesson plans..."}
                   className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white focus:outline-emerald-600"
                 />
               </div>
 
-              <div className="flex items-center gap-2">
-                <button
-                  onClick={selectAllPending}
-                  className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
-                >
-                  <CheckSquare className="w-3.5 h-3.5" />
-                  <span>Select Pending ({filteredPlans.filter(p => p.status === 'submitted').length})</span>
-                </button>
+              {isSuperOrAdmin && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={selectAllPending}
+                    className="flex items-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl transition-colors"
+                  >
+                    <CheckSquare className="w-3.5 h-3.5" />
+                    <span>Select Pending ({filteredPlans.filter(p => p.status === 'submitted').length})</span>
+                  </button>
 
-                {selectedPlanIds.length > 0 && (
-                  <>
-                    <button
-                      onClick={handleBatchApprove}
-                      className="flex items-center gap-1.5 px-3.5 py-2 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-bold rounded-xl shadow-xs"
-                    >
-                      <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
-                      <span>Approve ({selectedPlanIds.length})</span>
-                    </button>
-                    <button
-                      onClick={handleBatchDelete}
-                      className="flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Delete ({selectedPlanIds.length})</span>
-                    </button>
-                  </>
-                )}
-              </div>
+                  {selectedPlanIds.length > 0 && (
+                    <>
+                      <button
+                        onClick={handleBatchApprove}
+                        className="flex items-center gap-1.5 px-3.5 py-2 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-bold rounded-xl shadow-xs"
+                      >
+                        <CheckCircle2 className="w-3.5 h-3.5 text-amber-300" />
+                        <span>Approve ({selectedPlanIds.length})</span>
+                      </button>
+                      <button
+                        onClick={handleBatchDelete}
+                        className="flex items-center gap-1.5 px-3.5 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span>Delete ({selectedPlanIds.length})</span>
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
             </div>
 
             <div className="flex flex-wrap items-center gap-3">
-              <div className="flex items-center gap-1.5">
-                <label className="text-[11px] font-bold text-slate-500 uppercase">Campus:</label>
-                <select
-                  value={selectedConsoleCampus}
-                  onChange={(e) => setSelectedConsoleCampus(e.target.value)}
-                  className="px-3 py-1.5 bg-purple-50/60 border border-purple-200 rounded-xl text-xs font-bold text-purple-950"
-                >
-                  <option value="all">🏢 All 7 Campuses</option>
-                  {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
-                    <option key={c.id} value={c.id}>{c.shortName} ({c.brand})</option>
-                  ))}
-                </select>
-              </div>
+              {isSuperOrAdmin && (
+                <div className="flex items-center gap-1.5">
+                  <label className="text-[11px] font-bold text-slate-500 uppercase">Campus:</label>
+                  <select
+                    value={selectedConsoleCampus}
+                    onChange={(e) => setSelectedConsoleCampus(e.target.value)}
+                    className="px-3 py-1.5 bg-purple-50/60 border border-purple-200 rounded-xl text-xs font-bold text-purple-950"
+                  >
+                    <option value="all">🏢 All 7 Campuses</option>
+                    {CAMPUS_LIST.filter(c => c.id !== 'ALL').map(c => (
+                      <option key={c.id} value={c.id}>{c.shortName} ({c.brand})</option>
+                    ))}
+                  </select>
+                </div>
+              )}
 
               <div className="flex items-center gap-1.5">
                 <label className="text-[11px] font-bold text-slate-500 uppercase">Review Status:</label>
@@ -772,7 +867,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                   onChange={(e) => setPlanStatusFilter(e.target.value)}
                   className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
                 >
-                  <option value="all">All Submissions ({lessonPlans.length})</option>
+                  <option value="all">All Submissions ({planBase.length})</option>
                   <option value="submitted">Pending Review</option>
                   <option value="approved">Approved</option>
                   <option value="revision_requested">Revision Requested</option>
@@ -786,27 +881,30 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
             <table className="w-full text-left text-xs">
               <thead>
                 <tr className="border-b border-slate-200 bg-slate-50/50 text-slate-400 font-bold uppercase tracking-wider text-[10px]">
-                  <th className="py-3 px-3 w-10"></th>
+                  {isSuperOrAdmin && <th className="py-3 px-3 w-10"></th>}
                   <th className="py-3 px-3">Curriculum Theme & Objectives</th>
                   <th className="py-3 px-3">Educator & Classroom</th>
                   <th className="py-3 px-3">Week / Term</th>
                   <th className="py-3 px-3">Status</th>
-                  <th className="py-3 px-3 text-right">Master Actions</th>
+                  <th className="py-3 px-3 text-right">Actions</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
                 {filteredPlans.map((plan) => {
                   const isSelected = selectedPlanIds.includes(plan.id);
+                  const canDeletePlan = isSuperOrAdmin || (plan.teacherId === currentUser.id && plan.status !== 'approved');
                   return (
                     <tr key={plan.id} className={`hover:bg-slate-50/70 ${isSelected ? 'bg-emerald-50/30' : ''}`}>
-                      <td className="py-3.5 px-3">
-                        <button
-                          onClick={() => toggleSelectPlan(plan.id)}
-                          className="text-slate-400 hover:text-emerald-700"
-                        >
-                          {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-700" /> : <Square className="w-4 h-4 text-slate-300" />}
-                        </button>
-                      </td>
+                      {isSuperOrAdmin && (
+                        <td className="py-3.5 px-3">
+                          <button
+                            onClick={() => toggleSelectPlan(plan.id)}
+                            className="text-slate-400 hover:text-emerald-700"
+                          >
+                            {isSelected ? <CheckSquare className="w-4 h-4 text-emerald-700" /> : <Square className="w-4 h-4 text-slate-300" />}
+                          </button>
+                        </td>
+                      )}
 
                       <td className="py-3.5 px-3 max-w-xs">
                         <p 
@@ -867,15 +965,17 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                             onClick={() => onSelectPlan(plan)}
                             className="px-2.5 py-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold rounded-lg border border-emerald-200 transition-colors"
                           >
-                            Review / Dossier
+                            {isSuperOrAdmin ? 'Review / Dossier' : 'View Details'}
                           </button>
-                          <button
-                            onClick={() => setPlanToDelete(plan)}
-                            className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
-                            title="Delete Lesson Plan"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
+                          {canDeletePlan && (
+                            <button
+                              onClick={() => setPlanToDelete(plan)}
+                              className="p-1.5 text-slate-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors"
+                              title="Delete Lesson Plan"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </td>
                     </tr>
@@ -896,89 +996,109 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                 Kindergarten Levels & Classroom Allocation
               </h2>
               <p className="text-xs text-slate-500">
-                Configure student capacities, current weekly theme, and assigned faculty.
+                {isSuperOrAdmin 
+                  ? 'Configure student capacities, current weekly theme, and assigned faculty.'
+                  : 'Classroom levels, student enrollments, and pedagogical learning space assignments.'}
               </p>
             </div>
 
-            <button
-              onClick={() => {
-                setEditingClass(null);
-                setIsClassroomModalOpen(true);
-              }}
-              className="flex items-center gap-1.5 px-4 py-2 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 self-start sm:self-auto"
-            >
-              <Plus className="w-4 h-4 text-amber-300" />
-              <span>Add Classroom</span>
-            </button>
+            {isSuperOrAdmin && (
+              <button
+                onClick={() => {
+                  setEditingClass(null);
+                  setIsClassroomModalOpen(true);
+                }}
+                className="flex items-center gap-1.5 px-4 py-2 bg-[#007A43] hover:bg-[#006338] text-white text-xs font-bold rounded-xl shadow-xs transition-all active:scale-95 self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4 text-amber-300" />
+                <span>Add Classroom</span>
+              </button>
+            )}
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {classrooms.map((cls) => (
-              <div key={cls.id} className="p-4 rounded-2xl border border-slate-200/90 shadow-2xs bg-slate-50/50 space-y-3 relative group">
-                <div className="flex items-center justify-between">
-                  <span 
-                    className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded text-white shadow-2xs"
-                    style={{ backgroundColor: cls.colorTheme || '#007A43' }}
-                  >
-                    {cls.code}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="text-xs font-bold text-slate-500">{cls.room}</span>
-                    <button
-                      onClick={() => {
-                        setEditingClass(cls);
-                        setIsClassroomModalOpen(true);
-                      }}
-                      className="p-1 text-slate-400 hover:text-emerald-800 hover:bg-emerald-50 bg-white border border-slate-200 rounded-md transition-colors shadow-2xs"
-                      title="Edit Classroom Details"
-                    >
-                      <Edit3 className="w-3.5 h-3.5" />
-                    </button>
+            {classrooms.map((cls) => {
+              const isUserClass = cls.leadTeacherId === currentUser.id || cls.id === currentUser.assignedClassId;
+              return (
+                <div key={cls.id} className={`p-4 rounded-2xl border shadow-2xs space-y-3 relative group transition-all ${
+                  isUserClass ? 'bg-emerald-50/40 border-emerald-300' : 'bg-slate-50/50 border-slate-200/90'
+                }`}>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span 
+                        className="text-xs font-black uppercase tracking-wider px-2.5 py-0.5 rounded text-white shadow-2xs"
+                        style={{ backgroundColor: cls.colorTheme || '#007A43' }}
+                      >
+                        {cls.code}
+                      </span>
+                      {isUserClass && (
+                        <span className="text-[10px] font-black uppercase px-2 py-0.5 rounded-md bg-[#007A43] text-white">
+                          My Class
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-bold text-slate-500">{cls.room}</span>
+                      {isSuperOrAdmin && (
+                        <button
+                          onClick={() => {
+                            setEditingClass(cls);
+                            setIsClassroomModalOpen(true);
+                          }}
+                          className="p-1 text-slate-400 hover:text-emerald-800 hover:bg-emerald-50 bg-white border border-slate-200 rounded-md transition-colors shadow-2xs"
+                          title="Edit Classroom Details"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
                   </div>
-                </div>
 
-                <div>
-                  <h3 className="text-base font-extrabold text-slate-900">{cls.name}</h3>
-                  {cls.khmerName && (
-                    <p className="text-xs font-bold text-emerald-800 font-['Battambang'] mt-0.5">{cls.khmerName}</p>
-                  )}
-                  <p className="text-xs text-slate-500 font-medium mt-0.5">{cls.ageGroup}</p>
-                </div>
+                  <div>
+                    <h3 className="text-base font-extrabold text-slate-900">{cls.name}</h3>
+                    {cls.khmerName && (
+                      <p className="text-xs font-bold text-emerald-800 font-['Battambang'] mt-0.5">{cls.khmerName}</p>
+                    )}
+                    <p className="text-xs text-slate-500 font-medium mt-0.5">{cls.ageGroup}</p>
+                  </div>
 
-                <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">Lead Teacher:</span>
-                    <span className="font-bold text-slate-900">{cls.leadTeacherName}</span>
+                  <div className="p-2.5 bg-white rounded-xl border border-slate-200 text-xs space-y-1">
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">Lead Teacher:</span>
+                      <span className="font-bold text-slate-900">{cls.leadTeacherName}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-slate-500 font-medium">Assistant Teacher:</span>
+                      <span className="font-bold text-slate-800">{cls.assistantTeacherName}</span>
+                    </div>
+                    <div className="flex justify-between pt-1 border-t border-slate-100">
+                      <span className="text-slate-500 font-medium">Enrollment:</span>
+                      <span className="font-extrabold text-[#007A43]">
+                        {cls.enrolledStudents} / {cls.capacity} Students ({Math.round((cls.enrolledStudents / cls.capacity) * 100)}%)
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-slate-500 font-medium">Assistant Teacher:</span>
-                    <span className="font-bold text-slate-800">{cls.assistantTeacherName}</span>
-                  </div>
-                  <div className="flex justify-between pt-1 border-t border-slate-100">
-                    <span className="text-slate-500 font-medium">Enrollment:</span>
-                    <span className="font-extrabold text-[#007A43]">
-                      {cls.enrolledStudents} / {cls.capacity} Students ({Math.round((cls.enrolledStudents / cls.capacity) * 100)}%)
-                    </span>
-                  </div>
-                </div>
 
-                <div className="pt-1 flex items-center justify-between">
-                  <div className="min-w-0 flex-1 mr-2">
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">Current Theme:</span>
-                    <p className="text-xs text-slate-700 italic truncate">"{cls.currentTheme}"</p>
+                  <div className="pt-1 flex items-center justify-between">
+                    <div className="min-w-0 flex-1 mr-2">
+                      <span className="text-[10px] font-bold uppercase text-slate-400 block mb-0.5">Current Theme:</span>
+                      <p className="text-xs text-slate-700 italic truncate">"{cls.currentTheme}"</p>
+                    </div>
+                    {isSuperOrAdmin && (
+                      <button
+                        onClick={() => {
+                          setEditingClass(cls);
+                          setIsClassroomModalOpen(true);
+                        }}
+                        className="px-2.5 py-1 text-slate-700 hover:text-emerald-800 bg-slate-100 hover:bg-emerald-50 border border-slate-200 rounded-lg text-xs font-bold transition-colors shrink-0"
+                      >
+                        Manage
+                      </button>
+                    )}
                   </div>
-                  <button
-                    onClick={() => {
-                      setEditingClass(cls);
-                      setIsClassroomModalOpen(true);
-                    }}
-                    className="px-2.5 py-1 text-slate-700 hover:text-emerald-800 bg-slate-100 hover:bg-emerald-50 border border-slate-200 rounded-lg text-xs font-bold transition-colors shrink-0"
-                  >
-                    Manage
-                  </button>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

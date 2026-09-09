@@ -45,7 +45,7 @@ export const SchoolProfileSettings: React.FC<SchoolProfileSettingsProps> = ({
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
-  const [activePreviewTab, setActivePreviewTab] = useState<'header' | 'letterhead' | 'compact'>('header');
+  const [activePreviewTab, setActivePreviewTab] = useState<'header' | 'full-letterhead' | 'compact'>('header');
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const [urlInput, setUrlInput] = useState('');
@@ -368,9 +368,9 @@ export const SchoolProfileSettings: React.FC<SchoolProfileSettingsProps> = ({
                 </button>
                 <button
                   type="button"
-                  onClick={() => setActivePreviewTab('letterhead')}
+                  onClick={() => setActivePreviewTab('full-letterhead')}
                   className={`px-2 py-1 rounded-md transition-colors cursor-pointer ${
-                    activePreviewTab === 'letterhead' ? 'bg-white text-emerald-800 font-bold shadow-xs' : 'text-gray-600 hover:text-gray-900'
+                    activePreviewTab === 'full-letterhead' ? 'bg-white text-emerald-800 font-bold shadow-xs' : 'text-gray-600 hover:text-gray-900'
                   }`}
                 >
                   Document

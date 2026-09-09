@@ -3,7 +3,7 @@ import { useApp } from '../context/AppContext';
 import { BrandLogo } from './BrandLogo';
 import { UserProfileModal } from './UserProfileModal';
 import { CampusTabsBar } from './CampusTabsBar';
-import { isCentralHQUser } from '../types';
+import { isCentralHQUser, isAdminOrSuperAdmin } from '../types';
 import { 
   Users, 
   ShieldCheck, 
@@ -123,7 +123,7 @@ export const Header: React.FC<HeaderProps> = ({
                   : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
               }`}
             >
-              {currentUser.role === 'admin' || currentUser.role === 'academic_officer'
+              {isAdminOrSuperAdmin(currentUser)
                 ? `All Lesson Plans (${lessonPlans.length})`
                 : `My Lesson Plans (${userLessonPlans.length})`}
             </button>
@@ -150,19 +150,22 @@ export const Header: React.FC<HeaderProps> = ({
               Daily Routine
             </button>
 
-            {currentUser.role === 'admin' && (
-              <button
-                onClick={() => setActiveTab('admin_console')}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                  activeTab === 'admin_console'
+            {/* Console Tab - Unrestricted access for all accounts */}
+            <button
+              onClick={() => setActiveTab('admin_console')}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                activeTab === 'admin_console'
+                  ? isAdminOrSuperAdmin(currentUser)
                     ? 'bg-amber-400 text-amber-950 shadow-xs font-black'
-                    : 'text-amber-800 hover:bg-amber-100/50'
-                }`}
-              >
-                <ShieldCheck className="w-3.5 h-3.5" />
-                <span>Admin Console</span>
-              </button>
-            )}
+                    : 'bg-[#007A43] text-white shadow-xs font-bold'
+                  : isAdminOrSuperAdmin(currentUser)
+                    ? 'text-amber-800 hover:bg-amber-100/50'
+                    : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+              }`}
+            >
+              <ShieldCheck className="w-3.5 h-3.5" />
+              <span>{isAdminOrSuperAdmin(currentUser) ? 'Admin Console' : 'Staff Console'}</span>
+            </button>
           </div>
 
           {/* Desktop Right Actions */}
@@ -469,7 +472,7 @@ export const Header: React.FC<HeaderProps> = ({
                 activeTab === 'lesson_plans' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-700'
               }`}
             >
-              📚 {currentUser.role === 'admin' || currentUser.role === 'academic_officer' ? `All Plans (${lessonPlans.length})` : `My Plans (${userLessonPlans.length})`}
+              📚 {isAdminOrSuperAdmin(currentUser) ? `All Plans (${lessonPlans.length})` : `My Plans (${userLessonPlans.length})`}
             </button>
             <button
               onClick={() => {
@@ -494,19 +497,23 @@ export const Header: React.FC<HeaderProps> = ({
               ⏰ Daily Routine
             </button>
 
-            {currentUser.role === 'admin' && (
-              <button
-                onClick={() => {
-                  setActiveTab('admin_console');
-                  setIsMobileMenuOpen(false);
-                }}
-                className={`p-3 rounded-xl text-left border col-span-2 transition-all ${
-                  activeTab === 'admin_console' ? 'bg-amber-400 text-amber-950 border-amber-400 font-black' : 'bg-amber-50 border-amber-200 text-amber-900'
-                }`}
-              >
-                👑 Master Admin Console
-              </button>
-            )}
+            <button
+              onClick={() => {
+                setActiveTab('admin_console');
+                setIsMobileMenuOpen(false);
+              }}
+              className={`p-3 rounded-xl text-left border col-span-2 transition-all ${
+                activeTab === 'admin_console'
+                  ? isAdminOrSuperAdmin(currentUser)
+                    ? 'bg-amber-400 text-amber-950 border-amber-400 font-black'
+                    : 'bg-[#007A43] text-white border-[#007A43] font-bold'
+                  : isAdminOrSuperAdmin(currentUser)
+                    ? 'bg-amber-50 border-amber-200 text-amber-900'
+                    : 'bg-emerald-50 border-emerald-200 text-emerald-900'
+              }`}
+            >
+              {isAdminOrSuperAdmin(currentUser) ? '👑 Master Admin Console' : '🛡️ Staff Console & Records'}
+            </button>
           </div>
 
           {/* Account Switcher on Mobile */}

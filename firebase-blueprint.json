@@ -9,6 +9,7 @@
         "name": { "type": "string", "maxLength": 150 },
         "khmerName": { "type": "string", "maxLength": 150 },
         "email": { "type": "string", "maxLength": 150 },
+        "password": { "type": "string", "maxLength": 150 },
         "role": { "type": "string", "enum": ["admin", "academic_officer", "teacher"] },
         "title": { "type": "string", "maxLength": 150 },
         "avatar": { "type": "string", "maxLength": 500 },

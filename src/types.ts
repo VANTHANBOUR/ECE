@@ -1,6 +1,14 @@
 export type UserRole = 'admin' | 'academic_officer' | 'teacher';
 
-export type EarlyChildhoodAgeGroup = 'Pre-Nursery' | 'Nursery' | 'Pre-School' | 'Kindergarten';
+export type EarlyChildhoodAgeGroup = 
+  | 'Pre-Nursery' 
+  | 'Nursery' 
+  | 'Pre-School' 
+  | 'Kindergarten'
+  | 'K1'
+  | 'K2'
+  | 'K3'
+  | string;
 
 export interface SchoolLevel {
   id: string;
@@ -266,7 +274,10 @@ export interface AdminReviewFeedback {
   reviewerId: string;
   reviewerName: string;
   reviewerRole: string;
+  authorName?: string;
+  authorRole?: string;
   date: string;
+  createdAt?: string;
   comment: string;
   actionTaken: 'approved' | 'revision_requested' | 'comment_only';
   rubricScores?: {
@@ -339,7 +350,7 @@ export interface WeeklyComplianceRecord {
   teacherName: string;
   className: string;
   avatar: string;
-  status: 'submitted' | 'approved' | 'revision_requested' | 'missing' | 'draft';
+  status: 'submitted' | 'under_review' | 'approved' | 'revision_requested' | 'missing' | 'draft' | LessonPlanStatus;
   lessonPlanId?: string;
   submissionDate?: string;
 }
@@ -362,6 +373,24 @@ export const isCentralHQUser = (user?: UserAccount | null): boolean => {
   const campusName = (user.campusName || '').toLowerCase();
   if (title.includes('central') || title.includes('director') || title.includes('headquarters') ||
       campusName.includes('central') || bio.includes('central')) {
+    return true;
+  }
+  return false;
+};
+
+/**
+ * Checks if a user has Admin or Super Admin administrative privileges.
+ * Admin and Super Admin users can view all work, all staff records, submissions, and metrics across the institution.
+ * All other accounts will only see work belonging strictly to their own account.
+ */
+export const isAdminOrSuperAdmin = (user?: UserAccount | null): boolean => {
+  if (!user) return false;
+  if (user.role === 'admin' || (user.role as string) === 'super_admin') return true;
+  const email = (user.email || '').trim().toLowerCase();
+  if (email === 'vanthanbour@diu.edu.kh') return true;
+  if (email.includes('admin') || email.includes('principal') || email.includes('superadmin')) return true;
+  const title = (user.title || '').toLowerCase();
+  if (title.includes('admin') || title.includes('principal') || title.includes('super admin') || title.includes('superintendent') || title.includes('founder')) {
     return true;
   }
   return false;

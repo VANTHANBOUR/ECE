@@ -12,7 +12,7 @@ import { NewTeacherModal } from './components/NewTeacherModal';
 import { AuthModal } from './components/AuthModal';
 import { AuthGate } from './components/AuthGate';
 import { SchoolProfileModal } from './components/SchoolProfileModal';
-import { LessonPlan } from './types';
+import { LessonPlan, isAdminOrSuperAdmin } from './types';
 import { 
   LayoutDashboard, 
   BookOpen, 
@@ -100,7 +100,7 @@ const MainContent: React.FC = () => {
     setIsEditorOpen(true);
   };
 
-  const isAcademicAuthority = currentUser.role === 'admin' || currentUser.role === 'academic_officer';
+  const isSuperOrAdmin = isAdminOrSuperAdmin(currentUser);
 
   return (
     <div className="min-h-screen bg-slate-100/60 text-slate-900 flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
@@ -115,14 +115,14 @@ const MainContent: React.FC = () => {
 
       {/* Main Page Body Container */}
       <main className={`flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 lg:px-8 py-6 sm:py-8 ${(viewingPlan || isEditorOpen) ? 'print:hidden' : ''}`}>
-        {/* Render Active View */}
-        {activeTab === 'admin_console' && currentUser.role === 'admin' ? (
+        {/* Render Active View - Unrestricted tab access across all roles */}
+        {activeTab === 'admin_console' ? (
           <AdminConsole
             onSelectPlan={handleSelectPlan}
             onOpenNewTeacher={() => setIsNewTeacherOpen(true)}
           />
         ) : activeTab === 'dashboard' || activeTab === 'lesson_plans' ? (
-          isAcademicAuthority ? (
+          isSuperOrAdmin ? (
             <AdminDashboard
               onSelectPlan={handleSelectPlan}
               onOpenNewTeacher={() => setIsNewTeacherOpen(true)}

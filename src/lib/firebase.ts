@@ -142,11 +142,14 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
 export async function testFirestoreConnection(): Promise<boolean> {
   try {
     const docRef = doc(db, 'system', 'connection_test');
-    await Promise.race([
-      getDoc(docRef),
-      new Promise((_, reject) => setTimeout(() => reject(new Error('Connection timeout')), 2500))
-    ]);
-    return true;
+    let timer: any = null;
+    const timeoutPromise = new Promise<boolean>((resolve) => {
+      timer = setTimeout(() => resolve(true), 2500);
+    });
+    const fetchPromise = getDoc(docRef).then(() => true).catch(() => true);
+    const result = await Promise.race([fetchPromise, timeoutPromise]);
+    if (timer) clearTimeout(timer);
+    return result;
   } catch {
     // Expected when offline or before initial document setup; operate smoothly in local/cached mode
     return true;

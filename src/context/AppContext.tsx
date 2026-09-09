@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
-import { Classroom, LessonPlan, PlanAttachment, SchoolProfile, SystemAuditLog, UserAccount, UserRole, WeeklyComplianceRecord, SchoolLevel, CampusId, CAMPUS_LIST, isCentralHQUser } from '../types';
+import { Classroom, LessonPlan, PlanAttachment, SchoolProfile, SystemAuditLog, UserAccount, UserRole, WeeklyComplianceRecord, SchoolLevel, CampusId, CAMPUS_LIST, isCentralHQUser, isAdminOrSuperAdmin } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_AUDIT_LOGS, INITIAL_CLASSROOMS, INITIAL_LESSON_PLANS, INITIAL_SCHOOL_PROFILE } from '../data/mockData';
 import { 
   auth, 
@@ -154,6 +154,86 @@ const STORAGE_KEYS = {
   SELECTED_CAMPUS: 'dch_selected_campus_v5',
 };
 
+// Safe localStorage helper to prevent QuotaExceededError crashes
+const safeLocalStorageSet = (key: string, value: string): boolean => {
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (err) {
+    console.warn(`[Storage] Failed to set localStorage key "${key}":`, err);
+    try {
+      // 1. Evict any old legacy keys from previous app versions
+      const keysToRemove: string[] = [];
+      for (let i = 0; i < localStorage.length; i++) {
+        const k = localStorage.key(i);
+        if (k && (k.startsWith('dch_') || k.startsWith('dewey_')) && !k.includes('_v5')) {
+          keysToRemove.push(k);
+        }
+      }
+      keysToRemove.forEach(k => localStorage.removeItem(k));
+
+      // 2. Retry original write
+      localStorage.setItem(key, value);
+      return true;
+    } catch {
+      // 3. If it's a bulky collection like LESSON_PLANS, store a compact version without crashing
+      if (key === STORAGE_KEYS.LESSON_PLANS) {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            // Store only the 10 most recent plans with essential metadata for offline caching
+            const compact = parsed.slice(0, 10).map((p: any) => ({
+              id: p.id,
+              themeTitle: p.themeTitle,
+              weekNumber: p.weekNumber,
+              term: p.term,
+              academicYear: p.academicYear,
+              classId: p.classId,
+              className: p.className,
+              teacherId: p.teacherId,
+              teacherName: p.teacherName,
+              campusId: p.campusId,
+              status: p.status,
+              createdAt: p.createdAt,
+              updatedAt: p.updatedAt,
+              submittedAt: p.submittedAt,
+              approvedAt: p.approvedAt,
+              days: p.days || {},
+            }));
+            localStorage.setItem(key, JSON.stringify(compact));
+            return true;
+          }
+        } catch {}
+      } else if (key === STORAGE_KEYS.AUDIT_LOGS) {
+        try {
+          const parsed = JSON.parse(value);
+          if (Array.isArray(parsed)) {
+            localStorage.setItem(key, JSON.stringify(parsed.slice(0, 20)));
+            return true;
+          }
+        } catch {}
+      }
+      // Fail gracefully without throwing errors in React lifecycle
+      return false;
+    }
+  }
+};
+
+const safeLocalStorageGet = (key: string): string | null => {
+  try {
+    return localStorage.getItem(key);
+  } catch (err) {
+    console.warn(`[Storage] Failed to read localStorage key "${key}":`, err);
+    return null;
+  }
+};
+
+const safeLocalStorageRemove = (key: string): void => {
+  try {
+    localStorage.removeItem(key);
+  } catch {}
+};
+
 const DEFAULT_LEVELS: SchoolLevel[] = [
   { id: 'lvl_toddlers', name: 'Pre-Nursery', displayName: 'Pre-Nursery', khmerName: 'ថ្នាក់កូនក្មេង' },
   { id: 'lvl_nursery', name: 'Nursery', displayName: 'Nursery', khmerName: 'ថ្នាក់មត្តេយ្យទាប' },
@@ -242,7 +322,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Accounts
   const [allAccounts, setAllAccounts] = useState<UserAccount[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.ACCOUNTS);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.ACCOUNTS);
       return saved ? JSON.parse(saved) : INITIAL_ACCOUNTS;
     } catch {
       return INITIAL_ACCOUNTS;
@@ -262,7 +342,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Classrooms
   const [classrooms, setClassrooms] = useState<Classroom[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.CLASSROOMS);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.CLASSROOMS);
       return saved ? JSON.parse(saved) : INITIAL_CLASSROOMS;
     } catch {
       return INITIAL_CLASSROOMS;
@@ -272,7 +352,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Lesson Plans
   const [lessonPlans, setLessonPlans] = useState<LessonPlan[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.LESSON_PLANS);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.LESSON_PLANS);
       return saved ? JSON.parse(saved) : INITIAL_LESSON_PLANS;
     } catch {
       return INITIAL_LESSON_PLANS;
@@ -282,7 +362,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // Audit Logs
   const [auditLogs, setAuditLogs] = useState<SystemAuditLog[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.AUDIT_LOGS);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.AUDIT_LOGS);
       return saved ? JSON.parse(saved) : INITIAL_AUDIT_LOGS;
     } catch {
       return INITIAL_AUDIT_LOGS;
@@ -292,7 +372,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // School Profile & Branding
   const [schoolProfile, setSchoolProfile] = useState<SchoolProfile>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SCHOOL_PROFILE);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.SCHOOL_PROFILE);
       return saved ? { ...INITIAL_SCHOOL_PROFILE, ...JSON.parse(saved) } : INITIAL_SCHOOL_PROFILE;
     } catch {
       return INITIAL_SCHOOL_PROFILE;
@@ -302,7 +382,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [isProfileModalOpen, setIsProfileModalOpen] = useState<boolean>(false);
   const [levels, setLevels] = useState<SchoolLevel[]>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.LEVELS);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.LEVELS);
       return saved ? JSON.parse(saved) : DEFAULT_LEVELS;
     } catch {
       return DEFAULT_LEVELS;
@@ -312,7 +392,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [activeTab, setActiveTab] = useState<NavigationTab>('dashboard');
   const [selectedCampusId, setSelectedCampusIdState] = useState<CampusId>(() => {
     try {
-      const saved = localStorage.getItem(STORAGE_KEYS.SELECTED_CAMPUS);
+      const saved = safeLocalStorageGet(STORAGE_KEYS.SELECTED_CAMPUS);
       return (saved as CampusId) || 'ALL';
     } catch {
       return 'ALL';
@@ -321,9 +401,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const setSelectedCampusId = (campusId: CampusId) => {
     setSelectedCampusIdState(campusId);
-    try {
-      localStorage.setItem(STORAGE_KEYS.SELECTED_CAMPUS, campusId);
-    } catch {}
+    safeLocalStorageSet(STORAGE_KEYS.SELECTED_CAMPUS, campusId);
   };
 
   const formatAgeGroup = useCallback((group: string) => {
@@ -379,8 +457,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setCurrentUser(existing);
           setIsAuthenticated(true);
           sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-          localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-          localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, existing.id);
+          safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+          safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, existing.id);
         } else {
           const role: UserRole = email.includes('admin') 
             ? 'admin' 
@@ -410,8 +488,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           setCurrentUser(newAccount);
           setIsAuthenticated(true);
           sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-          localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-          localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, newAccount.id);
+          safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+          safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, newAccount.id);
         }
       }
     });
@@ -536,12 +614,21 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (!snapshot.empty) {
         const remoteUsers: UserAccount[] = [];
         snapshot.forEach(docSnap => {
-          remoteUsers.push({ ...(docSnap.data() as UserAccount), id: docSnap.id });
+          const docData = docSnap.data() as UserAccount;
+          remoteUsers.push({ ...docData, id: docSnap.id });
         });
         setAllAccounts(prev => {
           const map = new Map<string, UserAccount>();
           prev.forEach(u => map.set(u.id, u));
-          remoteUsers.forEach(u => map.set(u.id, u));
+          remoteUsers.forEach(u => {
+            const existing = map.get(u.id);
+            const originalPassword = u.password || existing?.password || (INITIAL_ACCOUNTS.find(a => a.id === u.id || a.email.toLowerCase() === u.email.toLowerCase())?.password);
+            map.set(u.id, {
+              ...existing,
+              ...u,
+              ...(originalPassword ? { password: originalPassword } : {})
+            });
+          });
           const merged = Array.from(map.values());
           
           if (currentUser) {
@@ -655,32 +742,32 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   // Sync to local storage
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.ACCOUNTS, JSON.stringify(allAccounts));
+    safeLocalStorageSet(STORAGE_KEYS.ACCOUNTS, JSON.stringify(allAccounts));
   }, [allAccounts]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.LEVELS, JSON.stringify(levels));
+    safeLocalStorageSet(STORAGE_KEYS.LEVELS, JSON.stringify(levels));
   }, [levels]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.LESSON_PLANS, JSON.stringify(lessonPlans));
+    safeLocalStorageSet(STORAGE_KEYS.LESSON_PLANS, JSON.stringify(lessonPlans));
   }, [lessonPlans]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.CLASSROOMS, JSON.stringify(classrooms));
+    safeLocalStorageSet(STORAGE_KEYS.CLASSROOMS, JSON.stringify(classrooms));
   }, [classrooms]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
+    safeLocalStorageSet(STORAGE_KEYS.AUDIT_LOGS, JSON.stringify(auditLogs));
   }, [auditLogs]);
 
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(schoolProfile));
+    safeLocalStorageSet(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(schoolProfile));
   }, [schoolProfile]);
 
   useEffect(() => {
     if (currentUser) {
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
+      safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, currentUser.id);
     }
   }, [currentUser]);
 
@@ -711,8 +798,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentUser(found);
       setIsAuthenticated(true);
       sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-      localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, found.id);
+      safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+      safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, found.id);
       setSelectedPlan(null);
       addAuditLog('USER_LOGIN', `Switched account session to ${found.name} (${found.role})`, found.id);
       showToast(`Switched account to ${found.name} (${found.role === 'admin' ? 'Principal / Admin' : found.role === 'academic_officer' ? 'Academic Officer' : found.title})`, 'info');
@@ -756,8 +843,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setCurrentUser(accountToUse);
         setIsAuthenticated(true);
         sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-        localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-        localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, accountToUse.id);
+        safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+        safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, accountToUse.id);
         setIsAuthModalOpen(false);
         addAuditLog('USER_LOGIN', `Firebase authenticated as ${accountToUse.name} (${accountToUse.role})`, accountToUse.id);
         showToast(`Firebase Connected! Welcome back, ${accountToUse.name}.`, 'success');
@@ -786,8 +873,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setCurrentUser(found);
     setIsAuthenticated(true);
     sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-    localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-    localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, found.id);
+    safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+    safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, found.id);
     setIsAuthModalOpen(false);
     addAuditLog('USER_LOGIN', `User ${found.name} signed in successfully`, found.id);
 
@@ -860,20 +947,29 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     // Save to Firestore users collection
     try {
-      await setDoc(doc(db, 'users', newUser.id), {
+      const cleanRecord = sanitizeForFirestore({
         id: newUser.id,
         name: newUser.name,
         khmerName: newUser.khmerName,
         email: newUser.email,
+        password: newUser.password,
         role: newUser.role,
         title: newUser.title,
         avatar: newUser.avatar,
+        campusId: newUser.campusId || null,
+        campusName: newUser.campusName || null,
+        registeredCampusIds: newUser.registeredCampusIds || null,
         assignedClassId: newUser.assignedClassId || null,
         assignedClassName: newUser.assignedClassName || null,
         ageGroup: newUser.ageGroup || null,
+        phone: newUser.phone || null,
+        roomNumber: newUser.roomNumber || null,
+        joinedYear: newUser.joinedYear || '2026',
+        bio: newUser.bio || null,
         status: newUser.status,
         createdAt: new Date().toISOString()
       });
+      await setDoc(doc(db, 'users', newUser.id), cleanRecord, { merge: true });
     } catch (err) {
       handleFirestoreError(err, OperationType.CREATE, 'users');
     }
@@ -881,8 +977,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setAllAccounts(prev => [...prev.filter(a => a.email !== email), newUser]);
     setCurrentUser(newUser);
     setIsAuthenticated(true);
-    localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-    localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, newUser.id);
+    safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+    safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, newUser.id);
     setIsAuthModalOpen(false);
     addAuditLog('USER_SIGNUP', `Registered account for ${newUser.name} as ${newUser.role.toUpperCase()} (Firebase synced)`, newUser.id);
     showToast(`Account registered and connected to Firebase! Welcome to DCH, ${newUser.name}.`, 'success');
@@ -929,8 +1025,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setCurrentUser(existing);
       setIsAuthenticated(true);
       sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-      localStorage.setItem(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-      localStorage.setItem(STORAGE_KEYS.CURRENT_USER_ID, existing.id);
+      safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+      safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, existing.id);
       setIsAuthModalOpen(false);
       addAuditLog('USER_LOGIN', `Google authenticated as ${existing.name} (${existing.role})`, existing.id);
       showToast(`Google Sign-In successful! Welcome, ${existing.name}.`, 'success');
@@ -949,8 +1045,8 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setIsAuthenticated(false);
     setCurrentUser(null);
     sessionStorage.removeItem(STORAGE_KEYS.SESSION_ACTIVE);
-    localStorage.removeItem(STORAGE_KEYS.IS_LOGGED_IN);
-    localStorage.removeItem(STORAGE_KEYS.CURRENT_USER_ID);
+    safeLocalStorageRemove(STORAGE_KEYS.IS_LOGGED_IN);
+    safeLocalStorageRemove(STORAGE_KEYS.CURRENT_USER_ID);
     showToast('Signed out of DCH Portal. Please sign in to access.', 'info');
   };
 
@@ -1072,13 +1168,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   // Filtered lesson plans:
-  // - Admin / Academic Officer: see all submissions
-  // - Teacher: can only see their own uploaded lesson plans
-  const userLessonPlans = !currentUser
-    ? []
-    : (currentUser.role === 'admin' || currentUser.role === 'academic_officer')
-    ? lessonPlans
-    : lessonPlans.filter(p => p.teacherId === currentUser.id);
+  // - Admin / Super Admin: see all submissions across the institution
+  // - Regular accounts (teachers/staff): can strictly only see work belonging to their own account
+  const userLessonPlans = useMemo(() => {
+    if (!currentUser) return [];
+    if (isAdminOrSuperAdmin(currentUser)) {
+      return lessonPlans;
+    }
+    const myId = currentUser.id;
+    const myEmail = (currentUser.email || '').toLowerCase().trim();
+    const myName = (currentUser.name || '').toLowerCase().trim();
+
+    return lessonPlans.filter(p => {
+      const matchId = p.teacherId === myId;
+      const matchEmail = Boolean(p.teacherEmail && p.teacherEmail.toLowerCase().trim() === myEmail);
+      const matchName = Boolean(p.teacherName && p.teacherName.toLowerCase().trim() === myName);
+      return matchId || matchEmail || matchName;
+    });
+  }, [currentUser, lessonPlans]);
 
   const createLessonPlan = (planData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'feedbackHistory'>): LessonPlan => {
     const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -1527,7 +1634,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSchoolProfile(updated);
-    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+    safeLocalStorageSet(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
 
     try {
       const cleanProfile = sanitizeForFirestore(updated);
@@ -1557,7 +1664,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSchoolProfile(updated);
-    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+    safeLocalStorageSet(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
 
     try {
       const cleanProfile = sanitizeForFirestore(updated);
@@ -1581,7 +1688,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSchoolProfile(updated);
-    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+    safeLocalStorageSet(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
 
     try {
       const cleanProfile = sanitizeForFirestore(updated);
@@ -1622,7 +1729,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSchoolProfile(updated);
-    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+    safeLocalStorageSet(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
 
     try {
       const cleanProfile = sanitizeForFirestore(updated);
@@ -1657,7 +1764,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     };
 
     setSchoolProfile(updated);
-    localStorage.setItem(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
+    safeLocalStorageSet(STORAGE_KEYS.SCHOOL_PROFILE, JSON.stringify(updated));
 
     try {
       const cleanProfile = sanitizeForFirestore(updated);
