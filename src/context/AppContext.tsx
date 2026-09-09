@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useMemo, useCallback } from 'react';
 import { Classroom, LessonPlan, PlanAttachment, SchoolProfile, SystemAuditLog, UserAccount, UserRole, WeeklyComplianceRecord, SchoolLevel, CampusId, CAMPUS_LIST, isCentralHQUser, isAdminOrSuperAdmin } from '../types';
 import { INITIAL_ACCOUNTS, INITIAL_AUDIT_LOGS, INITIAL_CLASSROOMS, INITIAL_LESSON_PLANS, INITIAL_SCHOOL_PROFILE } from '../data/mockData';
+import { isPlanFromCampus } from '../utils/campusUtils';
 import { 
   auth, 
   db, 
@@ -54,6 +55,7 @@ interface AppContextType {
   signOut: () => Promise<void>;
   updateAccount: (userId: string, updates: Partial<UserAccount>) => void;
   deleteAccount: (userId: string) => void;
+  purgeSampleAccounts: () => Promise<void>;
   registerTeacher: (teacherData: Partial<UserAccount>) => Promise<UserAccount | null>;
   
   // Firebase State & Live Cloud Push
@@ -452,45 +454,64 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       setFirebaseAuthUser(fbUser);
       if (fbUser && fbUser.email) {
         const email = fbUser.email.toLowerCase();
-        const existing = allAccounts.find(a => a.email.toLowerCase() === email || a.firebaseUid === fbUser.uid);
-        if (existing) {
-          setCurrentUser(existing);
-          setIsAuthenticated(true);
-          sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-          safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-          safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, existing.id);
-        } else {
-          const role: UserRole = email.includes('admin') 
-            ? 'admin' 
-            : email === 'vanthanbour@diu.edu.kh' || email.includes('academic') || email.includes('officer')
-            ? 'academic_officer' 
-            : 'teacher';
+        setAllAccounts(prev => {
+          const match = prev.find(a => (a.email && a.email.toLowerCase() === email) || (a.firebaseUid && a.firebaseUid === fbUser.uid));
+          if (match) {
+            const updated: UserAccount = {
+              ...match,
+              firebaseUid: fbUser.uid,
+              avatar: fbUser.photoURL || match.avatar,
+              name: fbUser.displayName || match.name,
+            };
+            setCurrentUser(updated);
+            setIsAuthenticated(true);
+            sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
+            safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+            safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, updated.id);
 
-          const newAccount: UserAccount = {
-            id: `fb_${fbUser.uid}`,
-            firebaseUid: fbUser.uid,
-            name: fbUser.displayName || email.split('@')[0],
-            email: email,
-            avatar: fbUser.photoURL || (role === 'admin' 
-              ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
-              : role === 'academic_officer'
-              ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
-              : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80'),
-            role,
-            title: role === 'admin' ? 'School Administrator / Principal' : role === 'academic_officer' ? 'Academic Review Officer' : 'Early Childhood Lead Educator',
-            assignedClassId: role === 'teacher' ? 'cls_butterflies' : undefined,
-            assignedClassName: role === 'teacher' ? 'Pre-School' : undefined,
-            ageGroup: role === 'teacher' ? 'Pre-School' : undefined,
-            status: 'active',
-            joinedYear: '2026'
-          };
-          setAllAccounts(prev => [...prev.filter(a => a.email.toLowerCase() !== email), newAccount]);
-          setCurrentUser(newAccount);
-          setIsAuthenticated(true);
-          sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
-          safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
-          safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, newAccount.id);
-        }
+            setDoc(doc(db, 'users', updated.id), sanitizeForFirestore(updated), { merge: true }).catch(() => {});
+
+            return prev.map(a => a.id === updated.id ? updated : a);
+          } else {
+            const role: UserRole = email.includes('admin') 
+              ? 'admin' 
+              : email === 'vanthanbour@diu.edu.kh' || email.includes('academic') || email.includes('officer')
+              ? 'academic_officer' 
+              : 'teacher';
+
+            const newAccount: UserAccount = {
+              id: `fb_${fbUser.uid}`,
+              firebaseUid: fbUser.uid,
+              name: fbUser.displayName || email.split('@')[0] || 'DCH Educator',
+              email: email,
+              avatar: fbUser.photoURL || (role === 'admin' 
+                ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
+                : role === 'academic_officer'
+                ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+                : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80'),
+              role,
+              title: role === 'admin' ? 'School Administrator / Principal' : role === 'academic_officer' ? 'Academic Review Officer' : 'Early Childhood Lead Educator',
+              campusId: 'DCH_SYW',
+              campusName: 'DCH SYW',
+              registeredCampusIds: ['DCH_SYW'],
+              assignedClassId: role === 'teacher' ? 'cls_butterflies' : undefined,
+              assignedClassName: role === 'teacher' ? 'Pre-School' : undefined,
+              ageGroup: role === 'teacher' ? 'Pre-School' : undefined,
+              status: 'active',
+              joinedYear: '2026'
+            };
+
+            setCurrentUser(newAccount);
+            setIsAuthenticated(true);
+            sessionStorage.setItem(STORAGE_KEYS.SESSION_ACTIVE, 'true');
+            safeLocalStorageSet(STORAGE_KEYS.IS_LOGGED_IN, 'true');
+            safeLocalStorageSet(STORAGE_KEYS.CURRENT_USER_ID, newAccount.id);
+
+            setDoc(doc(db, 'users', newAccount.id), sanitizeForFirestore(newAccount), { merge: true }).catch(() => {});
+
+            return [...prev.filter(a => a.email.toLowerCase() !== email), newAccount];
+          }
+        });
       }
     });
 
@@ -617,20 +638,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const docData = docSnap.data() as UserAccount;
           remoteUsers.push({ ...docData, id: docSnap.id });
         });
+        const remoteIds = new Set(remoteUsers.map(u => u.id));
+
         setAllAccounts(prev => {
-          const map = new Map<string, UserAccount>();
-          prev.forEach(u => map.set(u.id, u));
-          remoteUsers.forEach(u => {
-            const existing = map.get(u.id);
+          const merged: UserAccount[] = remoteUsers.map(u => {
+            const existing = prev.find(p => p.id === u.id);
             const originalPassword = u.password || existing?.password || (INITIAL_ACCOUNTS.find(a => a.id === u.id || a.email.toLowerCase() === u.email.toLowerCase())?.password);
-            map.set(u.id, {
+            return {
               ...existing,
               ...u,
               ...(originalPassword ? { password: originalPassword } : {})
-            });
+            };
           });
-          const merged = Array.from(map.values());
-          
+
+          // Also preserve active currentUser if temporarily not in remoteIds
+          prev.forEach(p => {
+            if (!remoteIds.has(p.id) && currentUser && p.id === currentUser.id) {
+              merged.push(p);
+            }
+          });
+
           if (currentUser) {
             const freshCurrentUser = merged.find(u => u.id === currentUser.id);
             if (freshCurrentUser && JSON.stringify(freshCurrentUser) !== JSON.stringify(currentUser)) {
@@ -638,6 +665,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
             }
           }
           return merged;
+        });
+      } else {
+        // If Firestore users collection is currently empty, seed initial accounts to Firestore
+        INITIAL_ACCOUNTS.forEach(async (acc) => {
+          try {
+            await setDoc(doc(db, 'users', acc.id), sanitizeForFirestore(acc), { merge: true });
+          } catch {}
         });
       }
     }, (err) => {
@@ -997,17 +1031,24 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         ? 'academic_officer'
         : 'teacher';
 
-      let existing = allAccounts.find(a => a.email.toLowerCase() === email || a.firebaseUid === fbUser.uid);
+      let existing = allAccounts.find(a => (email && a.email.toLowerCase() === email) || (a.firebaseUid && a.firebaseUid === fbUser.uid));
 
       if (!existing) {
         existing = {
           id: `fb_${fbUser.uid}`,
           firebaseUid: fbUser.uid,
-          name: fbUser.displayName || email.split('@')[0],
-          email,
-          avatar: fbUser.photoURL || 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80',
+          name: fbUser.displayName || (email ? email.split('@')[0] : 'DCH Educator'),
+          email: email || `user_${fbUser.uid.substring(0, 6)}@dch.edu.kh`,
+          avatar: fbUser.photoURL || (role === 'admin' 
+            ? 'https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?w=150&auto=format&fit=crop&q=80'
+            : role === 'academic_officer'
+            ? 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80'
+            : 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=150&auto=format&fit=crop&q=80'),
           role,
-          title: role === 'admin' ? 'School Administrator' : role === 'academic_officer' ? 'Academic Review Officer' : 'Early Childhood Educator',
+          title: role === 'admin' ? 'School Administrator / Principal' : role === 'academic_officer' ? 'Academic Review Officer' : 'Early Childhood Lead Educator',
+          campusId: 'DCH_SYW',
+          campusName: 'DCH SYW',
+          registeredCampusIds: ['DCH_SYW'],
           assignedClassId: role === 'teacher' ? 'cls_butterflies' : undefined,
           assignedClassName: role === 'teacher' ? 'Pre-School' : undefined,
           ageGroup: role === 'teacher' ? 'Pre-School' : undefined,
@@ -1016,10 +1057,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         };
 
         try {
-          await setDoc(doc(db, 'users', existing.id), existing);
+          await setDoc(doc(db, 'users', existing.id), sanitizeForFirestore(existing), { merge: true });
         } catch {}
 
         setAllAccounts(prev => [...prev, existing!]);
+      } else {
+        const updatedUser: UserAccount = {
+          ...existing,
+          firebaseUid: fbUser.uid,
+          avatar: fbUser.photoURL || existing.avatar,
+          name: fbUser.displayName || existing.name,
+        };
+        existing = updatedUser;
+        setAllAccounts(prev => prev.map(a => a.id === updatedUser.id ? updatedUser : a));
+        try {
+          await setDoc(doc(db, 'users', updatedUser.id), sanitizeForFirestore(updatedUser), { merge: true });
+        } catch {}
       }
 
       setCurrentUser(existing);
@@ -1033,7 +1086,15 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return true;
     } catch (error: any) {
       console.warn('Google Sign-In note:', error);
-      showToast('Google Sign-In canceled or popup closed.', 'info');
+      if (error?.code === 'auth/popup-blocked') {
+        showToast('Google Sign-In popup was blocked by browser. Please enable popups.', 'error');
+      } else if (error?.code === 'auth/popup-closed-by-user' || error?.code === 'auth/cancelled-popup-request') {
+        showToast('Google Sign-In window closed.', 'info');
+      } else if (error?.code === 'auth/unauthorized-domain') {
+        showToast('Google Sign-In domain is unauthorized in Firebase console.', 'error');
+      } else {
+        showToast(`Google Sign-In note: ${error?.message || 'Unable to sign in with Google'}`, 'info');
+      }
       return false;
     }
   };
@@ -1157,7 +1218,34 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       broadcastLiveSync('ACCOUNTS_UPDATED', updatedList);
     }
     addAuditLog('DELETE_USER', `Deleted account of ${target?.name || userId}`, userId);
-    showToast(`Account for ${target?.name || 'user'} has been removed.`, 'info');
+    showToast(`Account for ${target?.name || 'user'} has been removed from Firebase database.`, 'info');
+  };
+
+  const purgeSampleAccounts = async (): Promise<void> => {
+    const sampleIds = ['teacher_alice', 'teacher_sokha', 'teacher_meiling', 'teacher_david', 'teacher_chamnan'];
+    
+    // Filter out sample accounts locally
+    let updatedList: UserAccount[] = [];
+    setAllAccounts(prev => {
+      updatedList = prev.filter(a => !sampleIds.includes(a.id) && !a.id.startsWith('teacher_sample'));
+      return updatedList;
+    });
+
+    // Delete sample documents from Firestore users collection
+    for (const id of sampleIds) {
+      try {
+        await deleteDoc(doc(db, 'users', id));
+      } catch (err) {
+        console.warn(`Firestore user deletion notice for ${id}:`, err);
+      }
+    }
+
+    if (updatedList.length > 0) {
+      broadcastLiveSync('ACCOUNTS_UPDATED', updatedList);
+    }
+
+    addAuditLog('DELETE_USER', 'Purged all sample demo accounts from database, retaining real teachers and staff.', currentUser?.id || 'admin');
+    showToast('Purged sample accounts from Firestore. Only real teacher and staff accounts remain.', 'success');
   };
 
   const registerTeacher = async (teacherData: Partial<UserAccount>): Promise<UserAccount | null> => {
@@ -1172,20 +1260,26 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   // - Regular accounts (teachers/staff): can strictly only see work belonging to their own account
   const userLessonPlans = useMemo(() => {
     if (!currentUser) return [];
-    if (isAdminOrSuperAdmin(currentUser)) {
-      return lessonPlans;
-    }
-    const myId = currentUser.id;
-    const myEmail = (currentUser.email || '').toLowerCase().trim();
-    const myName = (currentUser.name || '').toLowerCase().trim();
+    let base = lessonPlans;
+    if (!isAdminOrSuperAdmin(currentUser)) {
+      const myId = currentUser.id;
+      const myEmail = (currentUser.email || '').toLowerCase().trim();
+      const myName = (currentUser.name || '').toLowerCase().trim();
 
-    return lessonPlans.filter(p => {
-      const matchId = p.teacherId === myId;
-      const matchEmail = Boolean(p.teacherEmail && p.teacherEmail.toLowerCase().trim() === myEmail);
-      const matchName = Boolean(p.teacherName && p.teacherName.toLowerCase().trim() === myName);
-      return matchId || matchEmail || matchName;
-    });
-  }, [currentUser, lessonPlans]);
+      base = lessonPlans.filter(p => {
+        const matchId = p.teacherId === myId;
+        const matchEmail = Boolean(p.teacherEmail && p.teacherEmail.toLowerCase().trim() === myEmail);
+        const matchName = Boolean(p.teacherName && p.teacherName.toLowerCase().trim() === myName);
+        return matchId || matchEmail || matchName;
+      });
+    }
+
+    if (selectedCampusId && selectedCampusId !== 'ALL') {
+      base = base.filter(p => isPlanFromCampus(p, selectedCampusId, classrooms, allAccounts));
+    }
+
+    return base;
+  }, [currentUser, lessonPlans, selectedCampusId, classrooms, allAccounts]);
 
   const createLessonPlan = (planData: Omit<LessonPlan, 'id' | 'createdAt' | 'updatedAt' | 'feedbackHistory'>): LessonPlan => {
     const now = new Date().toISOString().replace('T', ' ').substring(0, 16);
@@ -1555,7 +1649,13 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const getWeeklyCompliance = (weekNumber: number): WeeklyComplianceRecord[] => {
-    const teachers = allAccounts.filter(a => a.role === 'teacher');
+    const teachers = allAccounts.filter(a => {
+      if (a.role !== 'teacher') return false;
+      if (selectedCampusId && selectedCampusId !== 'ALL') {
+        return a.campusId === selectedCampusId || a.registeredCampusIds?.includes(selectedCampusId);
+      }
+      return true;
+    });
     return teachers.map(teacher => {
       const plan = lessonPlans.find(p => p.teacherId === teacher.id && p.weekNumber === weekNumber);
       return {
@@ -1804,6 +1904,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         signOut,
         updateAccount,
         deleteAccount,
+        purgeSampleAccounts,
         registerTeacher,
         isFirebaseConnected,
         firebaseAuthUser,

@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { Classroom, LessonPlan, CAMPUS_LIST } from '../types';
+import { Classroom, LessonPlan, CAMPUS_LIST, isAdminOrSuperAdmin } from '../types';
 import { ClassroomModal } from './ClassroomModal';
 import { 
   Users, 
@@ -21,11 +21,13 @@ interface ClassroomDirectoryProps {
 }
 
 export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelectPlan }) => {
-  const { classrooms, allAccounts, lessonPlans, currentUser, deleteClassroom, selectedCampusId, formatAgeGroup } = useApp();
+  const { classrooms, allAccounts, lessonPlans, userLessonPlans, currentUser, deleteClassroom, selectedCampusId, formatAgeGroup } = useApp();
   const [isClassroomModalOpen, setIsClassroomModalOpen] = useState(false);
   const [selectedClassroomToEdit, setSelectedClassroomToEdit] = useState<Classroom | null>(null);
 
   const isAdmin = currentUser?.role === 'admin';
+  const isSuperOrAdmin = isAdminOrSuperAdmin(currentUser);
+  const availablePlans = isSuperOrAdmin ? lessonPlans : userLessonPlans;
 
   const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
   const isDKCampus = activeCampus?.brand === 'DK' || selectedCampusId?.startsWith('DK_');
@@ -91,8 +93,8 @@ export const ClassroomDirectory: React.FC<ClassroomDirectoryProps> = ({ onSelect
           ) : (
             displayedClassrooms.map((cls) => {
               const leadTeacher = allAccounts.find(a => a.id === cls.leadTeacherId);
-              const activePlan = lessonPlans.find(p => p.classId === cls.id && p.status === 'approved') || 
-                                 lessonPlans.find(p => p.classId === cls.id);
+              const activePlan = availablePlans.find(p => p.classId === cls.id && p.status === 'approved') || 
+                                 availablePlans.find(p => p.classId === cls.id);
               const campusInfo = CAMPUS_LIST.find(c => c.id === cls.campusId);
 
               return (

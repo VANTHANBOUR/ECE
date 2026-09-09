@@ -6,6 +6,7 @@ import { ClassroomModal } from './ClassroomModal';
 import { SchoolProfileSettings } from './SchoolProfileSettings';
 import { SignUpControlModal } from './SignUpControlModal';
 import { formatDateDDMMYYYY, formatDateTimeDDMMYYYY } from '../utils/dateUtils';
+import { isPlanFromCampus } from '../utils/campusUtils';
 import { 
   ShieldCheck, 
   Users, 
@@ -37,9 +38,16 @@ import {
   Image as ImageIcon,
   Printer,
   Copy,
-  Check
+  Check,
+  Database
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+
+const SAMPLE_ACCOUNT_IDS = new Set(['teacher_alice', 'teacher_sokha', 'teacher_meiling', 'teacher_david', 'teacher_chamnan']);
+
+export const isSampleAccount = (u: UserAccount) => {
+  return SAMPLE_ACCOUNT_IDS.has(u.id) || u.id.startsWith('teacher_sample');
+};
 
 interface AdminConsoleProps {
   onSelectPlan: (plan: LessonPlan, autoPrint?: boolean) => void;
@@ -57,6 +65,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
     classrooms, 
     updateAccount, 
     deleteAccount, 
+    purgeSampleAccounts,
     deleteLessonPlan,
     batchApprovePlans,
     updateClassroom,
@@ -64,7 +73,8 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
     showToast,
     openSignUpModal,
     schoolProfile,
-    formatAgeGroup
+    formatAgeGroup,
+    selectedCampusId
   } = useApp();
 
   const [activeSubTab, setActiveSubTab] = useState<'users' | 'plans' | 'classrooms' | 'logs' | 'profile'>('users');
@@ -73,11 +83,13 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
   
   // User Management Filters & State
   const [userRoleFilter, setUserRoleFilter] = useState<string>('all');
+  const [userCategoryFilter, setUserCategoryFilter] = useState<'all' | 'real' | 'sample'>('all');
   const [userSearch, setUserSearch] = useState<string>('');
   const [editingStaffUser, setEditingStaffUser] = useState<UserAccount | null>(null);
   const [showAllPasswords, setShowAllPasswords] = useState<boolean>(false);
   const [visiblePasswordsMap, setVisiblePasswordsMap] = useState<Record<string, boolean>>({});
   const [copiedUserId, setCopiedUserId] = useState<string | null>(null);
+  const [isPurgeModalOpen, setIsPurgeModalOpen] = useState<boolean>(false);
 
   const togglePasswordVisibility = (userId: string) => {
     setVisiblePasswordsMap(prev => ({
@@ -113,7 +125,12 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
     ? allAccounts 
     : allAccounts.filter(u => u.id === currentUser?.id || (u.email && u.email.toLowerCase() === currentUser?.email.toLowerCase()));
 
+  const sampleUsersCount = allAccounts.filter(isSampleAccount).length;
+  const realUsersCount = allAccounts.length - sampleUsersCount;
+
   const filteredUsers = userBase.filter((u) => {
+    if (userCategoryFilter === 'real' && isSampleAccount(u)) return false;
+    if (userCategoryFilter === 'sample' && !isSampleAccount(u)) return false;
     if (selectedConsoleCampus !== 'all') {
       if (u.campusId !== selectedConsoleCampus && !u.registeredCampusIds?.includes(selectedConsoleCampus as any)) {
         return false;
@@ -141,10 +158,10 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
       );
 
   const filteredPlans = planBase.filter((p) => {
-    if (selectedConsoleCampus !== 'all') {
-      const cls = classrooms.find(c => c.id === p.classId);
-      if (p.campusId && p.campusId !== selectedConsoleCampus) return false;
-      if (!p.campusId && cls && cls.campusId !== selectedConsoleCampus) return false;
+    if (selectedCampusId && selectedCampusId !== 'ALL') {
+      if (!isPlanFromCampus(p, selectedCampusId, classrooms, allAccounts)) return false;
+    } else if (selectedConsoleCampus !== 'all') {
+      if (!isPlanFromCampus(p, selectedConsoleCampus, classrooms, allAccounts)) return false;
     }
     if (planStatusFilter !== 'all' && p.status !== planStatusFilter) return false;
     if (planSearch.trim()) {
@@ -424,7 +441,73 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
 
       {/* 1. USERS & STAFF DIRECTORY */}
       {activeSubTab === 'users' && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden space-y-4">
+        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-2xs overflow-hidden space-y-0">
+          {/* Firestore Database Live Summary & Purge Controls */}
+          <div className="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white flex flex-col md:flex-row items-start md:items-center justify-between gap-4 border-b border-slate-800">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-emerald-500/20 rounded-2xl border border-emerald-400/30 text-emerald-400 shrink-0">
+                <Database className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-black text-emerald-300 uppercase tracking-wide">
+                    Firebase Firestore Database (`users` collection)
+                  </span>
+                  <span className="flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-500/30 text-emerald-300 text-[10px] font-bold border border-emerald-400/30">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                    Live Synced
+                  </span>
+                </div>
+                <p className="text-xs text-slate-300 mt-0.5">
+                  Total Accounts: <strong className="text-white">{allAccounts.length}</strong> · Real Staff: <strong className="text-emerald-300">{realUsersCount}</strong> · Sample Accounts: <strong className="text-amber-300">{sampleUsersCount}</strong>
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Category filter pills */}
+              <div className="flex items-center bg-slate-800/80 p-1 rounded-xl border border-slate-700/60 text-xs">
+                <button
+                  type="button"
+                  onClick={() => setUserCategoryFilter('all')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${userCategoryFilter === 'all' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'}`}
+                >
+                  All ({allAccounts.length})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserCategoryFilter('real')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${userCategoryFilter === 'real' ? 'bg-emerald-600 text-white shadow-xs' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Real Teachers ({realUsersCount})
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setUserCategoryFilter('sample')}
+                  className={`px-3 py-1 rounded-lg font-bold transition-all ${userCategoryFilter === 'sample' ? 'bg-amber-500 text-slate-950 shadow-xs' : 'text-slate-400 hover:text-white'}`}
+                >
+                  Sample Accounts ({sampleUsersCount})
+                </button>
+              </div>
+
+              {/* Purge sample accounts button */}
+              {isSuperOrAdmin && sampleUsersCount > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setIsPurgeModalOpen(true)}
+                  className="px-3.5 py-2 bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-500 hover:to-amber-500 text-white font-extrabold text-xs rounded-xl shadow-sm border border-rose-400/40 flex items-center gap-1.5 transition-all active:scale-95"
+                  title="Remove all sample mock teacher accounts from Firebase Firestore"
+                >
+                  <Trash2 className="w-3.5 h-3.5 text-rose-100" />
+                  <span>Purge Sample Accounts</span>
+                  <span className="px-1.5 py-0.2 rounded-full bg-white/20 text-white text-[10px] font-black">
+                    {sampleUsersCount}
+                  </span>
+                </button>
+              )}
+            </div>
+          </div>
+
           <div className="p-4 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div className="relative flex-1 max-w-md">
               <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
@@ -459,7 +542,7 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                   onChange={(e) => setUserRoleFilter(e.target.value)}
                   className="px-3 py-1.5 bg-slate-50 border border-slate-300 rounded-xl text-xs font-bold text-slate-800"
                 >
-                  <option value="all">All Roles ({allAccounts.length})</option>
+                  <option value="all">All Roles ({filteredUsers.length})</option>
                   <option value="admin">Administrators</option>
                   <option value="academic_officer">Academic Officers</option>
                   <option value="teacher">Lead Teachers</option>
@@ -519,6 +602,21 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                             <p className="text-[11px] text-slate-500 font-['Battambang']">{user.khmerName}</p>
                           )}
                           <p className="text-[10px] text-slate-400">{user.email}</p>
+                          <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                            {user.firebaseUid ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-emerald-100 text-emerald-950 text-[9px] font-black uppercase border border-emerald-300">
+                                🔥 Firebase Auth
+                              </span>
+                            ) : isSampleAccount(user) ? (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-amber-100 text-amber-950 text-[9px] font-black uppercase border border-amber-300">
+                                🧪 Sample User
+                              </span>
+                            ) : (
+                              <span className="inline-flex items-center gap-1 px-1.5 py-0.2 rounded bg-blue-100 text-blue-950 text-[9px] font-black uppercase border border-blue-300">
+                                👩‍🏫 Real Staff
+                              </span>
+                            )}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -1196,6 +1294,54 @@ export const AdminConsole: React.FC<AdminConsoleProps> = ({
                 className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs"
               >
                 Delete Plan
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Confirmation Dialog for Purging Sample Accounts */}
+      {isPurgeModalOpen && (
+        <div className="fixed inset-0 z-50 bg-slate-950/70 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl p-6 max-w-md w-full shadow-2xl border border-rose-100 space-y-4 animate-in fade-in zoom-in-95">
+            <div className="flex items-center gap-3 text-rose-600">
+              <div className="p-2.5 bg-rose-100 rounded-xl">
+                <Trash2 className="w-6 h-6" />
+              </div>
+              <div>
+                <h3 className="text-base font-extrabold text-slate-900">Remove Sample Accounts</h3>
+                <p className="text-xs text-rose-600 font-semibold">Firebase Firestore Database Purge</p>
+              </div>
+            </div>
+
+            <p className="text-xs text-slate-600 leading-relaxed">
+              This will permanently delete all <strong className="text-slate-900">{sampleUsersCount} sample demo accounts</strong> (Teacher Alice, Teacher Sokha, Teacher Mei-Ling, Teacher David, Teacher Chamnan) from Firebase Firestore.
+            </p>
+            <div className="p-3 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center gap-2">
+              <CheckCircle2 className="w-5 h-5 text-emerald-600 shrink-0" />
+              <p className="text-[11px] font-bold text-emerald-800">
+                All real teacher accounts, Google sign-in users, and staff accounts will remain intact in Firestore.
+              </p>
+            </div>
+
+            <div className="flex items-center justify-end gap-2 pt-2 border-t border-slate-100">
+              <button
+                type="button"
+                onClick={() => setIsPurgeModalOpen(false)}
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={async () => {
+                  await purgeSampleAccounts();
+                  setIsPurgeModalOpen(false);
+                }}
+                className="px-4 py-2 bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold rounded-xl shadow-xs flex items-center gap-1.5"
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                <span>Confirm Purge ({sampleUsersCount} Accounts)</span>
               </button>
             </div>
           </div>

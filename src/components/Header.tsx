@@ -4,6 +4,7 @@ import { BrandLogo } from './BrandLogo';
 import { UserProfileModal } from './UserProfileModal';
 import { CampusTabsBar } from './CampusTabsBar';
 import { isCentralHQUser, isAdminOrSuperAdmin } from '../types';
+import { isPlanFromCampus } from '../utils/campusUtils';
 import { 
   Users, 
   ShieldCheck, 
@@ -48,6 +49,7 @@ export const Header: React.FC<HeaderProps> = ({
     setActiveTab,
     lessonPlans,
     userLessonPlans,
+    classrooms,
     openSignInModal,
     openSignUpModal,
     signOut,
@@ -56,6 +58,13 @@ export const Header: React.FC<HeaderProps> = ({
     setSelectedCampusId,
   } = useApp();
 
+  const displayedPlansCount = React.useMemo(() => {
+    if (isAdminOrSuperAdmin(currentUser)) {
+      if (!selectedCampusId || selectedCampusId === 'ALL') return lessonPlans.length;
+      return lessonPlans.filter(p => isPlanFromCampus(p, selectedCampusId, classrooms, allAccounts)).length;
+    }
+    return userLessonPlans.length;
+  }, [currentUser, lessonPlans, userLessonPlans, selectedCampusId, classrooms, allAccounts]);
   const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isUserProfileEditorOpen, setIsUserProfileEditorOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -124,8 +133,8 @@ export const Header: React.FC<HeaderProps> = ({
               }`}
             >
               {isAdminOrSuperAdmin(currentUser)
-                ? `All Lesson Plans (${lessonPlans.length})`
-                : `My Lesson Plans (${userLessonPlans.length})`}
+                ? `All Lesson Plans (${displayedPlansCount})`
+                : `My Lesson Plans (${displayedPlansCount})`}
             </button>
 
             <button
@@ -472,7 +481,7 @@ export const Header: React.FC<HeaderProps> = ({
                 activeTab === 'lesson_plans' ? 'bg-emerald-600 text-white border-emerald-600' : 'bg-slate-50 border-slate-200 text-slate-700'
               }`}
             >
-              📚 {isAdminOrSuperAdmin(currentUser) ? `All Plans (${lessonPlans.length})` : `My Plans (${userLessonPlans.length})`}
+              📚 {isAdminOrSuperAdmin(currentUser) ? `All Plans (${displayedPlansCount})` : `My Plans (${displayedPlansCount})`}
             </button>
             <button
               onClick={() => {

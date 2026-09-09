@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useApp } from '../context/AppContext';
-import { LessonPlan } from '../types';
+import { LessonPlan, CAMPUS_LIST } from '../types';
 import { UserProfileModal } from './UserProfileModal';
 import { formatDateRange } from '../utils/dateUtils';
 import { 
@@ -39,7 +39,8 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
   onSelectPlan,
   onEditPlan,
 }) => {
-  const { currentUser, userLessonPlans, submitLessonPlan, classrooms, showToast, formatAgeGroup } = useApp();
+  const { currentUser, userLessonPlans, submitLessonPlan, classrooms, showToast, formatAgeGroup, selectedCampusId } = useApp();
+  const activeCampus = selectedCampusId ? CAMPUS_LIST.find(c => c.id === selectedCampusId) : null;
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [isProfileModalOpen, setIsProfileModalOpen] = useState(false);
 
@@ -260,8 +261,13 @@ export const TeacherDashboard: React.FC<TeacherDashboardProps> = ({
         {/* Section Header with Filter Tabs */}
         <div className="p-5 sm:p-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <h2 className="text-base font-extrabold text-slate-900">
-              My Uploaded Lesson Plans & Submissions
+            <h2 className="text-base font-extrabold text-slate-900 flex items-center gap-2">
+              <span>My Uploaded Lesson Plans & Submissions</span>
+              {activeCampus && activeCampus.id !== 'ALL' && (
+                <span className="text-xs px-2.5 py-0.5 rounded-full bg-emerald-100 text-[#007A43] border border-emerald-300 font-extrabold">
+                  {activeCampus.shortName}
+                </span>
+              )}
             </h2>
             <p className="text-xs text-slate-500 mt-0.5">
               Only you and the School Principal can view submissions associated with your account.

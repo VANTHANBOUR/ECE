@@ -5,6 +5,7 @@ import { StaffManagementModal } from './StaffManagementModal';
 import { ClassroomModal } from './ClassroomModal';
 import { ClassroomsAndLevelsTab } from './ClassroomsAndLevelsTab';
 import { formatDateDDMMYYYY, formatDateRange, formatDateTimeDDMMYYYY } from '../utils/dateUtils';
+import { isPlanFromCampus } from '../utils/campusUtils';
 import { 
   ShieldCheck, 
   BookOpen, 
@@ -106,13 +107,9 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   // Filtered master submissions list
   const filteredPlans = lessonPlans.filter((plan) => {
     if (selectedCampusId && selectedCampusId !== 'ALL') {
-      const cls = classrooms.find(c => c.id === plan.classId);
-      if (plan.campusId && plan.campusId !== selectedCampusId) return false;
-      if (!plan.campusId && cls && cls.campusId !== selectedCampusId) return false;
+      if (!isPlanFromCampus(plan, selectedCampusId, classrooms, allAccounts)) return false;
     } else if (selectedCampusFilter !== 'all') {
-      const cls = classrooms.find(c => c.id === plan.classId);
-      if (plan.campusId && plan.campusId !== selectedCampusFilter) return false;
-      if (!plan.campusId && cls && cls.campusId !== selectedCampusFilter) return false;
+      if (!isPlanFromCampus(plan, selectedCampusFilter, classrooms, allAccounts)) return false;
     }
     if (selectedTeacherId !== 'all' && plan.teacherId !== selectedTeacherId) return false;
     if (selectedAgeGroup !== 'all' && plan.ageGroup !== selectedAgeGroup) return false;
@@ -133,11 +130,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
     return branches.map(campus => {
       const branchClassrooms = classrooms.filter(c => c.campusId === campus.id);
       const branchTeachers = allAccounts.filter(a => a.role === 'teacher' && (a.campusId === campus.id || a.registeredCampusIds?.includes(campus.id)));
-      const branchPlans = lessonPlans.filter(p => {
-        if (p.campusId === campus.id) return true;
-        const cls = classrooms.find(c => c.id === p.classId);
-        return !p.campusId && cls && cls.campusId === campus.id;
-      });
+      const branchPlans = lessonPlans.filter(p => isPlanFromCampus(p, campus.id, classrooms, allAccounts));
       const approved = branchPlans.filter(p => p.status === 'approved').length;
       const pending = branchPlans.filter(p => p.status === 'submitted' || p.status === 'under_review').length;
       const revisions = branchPlans.filter(p => p.status === 'revision_requested').length;
@@ -159,11 +152,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({
   }, [classrooms, allAccounts, lessonPlans]);
 
   // KPIs based on campus filtering
-  const campusPlans = lessonPlans.filter(plan => {
-    if (!selectedCampusId || selectedCampusId === 'ALL') return true;
-    const cls = classrooms.find(c => c.id === plan.classId);
-    return plan.campusId === selectedCampusId || (cls && cls.campusId === selectedCampusId);
-  });
+  const campusPlans = lessonPlans.filter(plan => isPlanFromCampus(plan, selectedCampusId, classrooms, allAccounts));
   const totalSubmissions = campusPlans.length;
   const pendingReview = campusPlans.filter(p => p.status === 'submitted' || p.status === 'under_review').length;
   const approvedCount = campusPlans.filter(p => p.status === 'approved').length;
